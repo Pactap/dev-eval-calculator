@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.code-review-graph/
+.claude/
+.mcp.json
+*.log
+.DS_Store
+Thumbs.db
