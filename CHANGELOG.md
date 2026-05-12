@@ -6,6 +6,10 @@ The format is inspired by Keep a Changelog, and this project follows practical s
 
 ## Unreleased
 
+No unreleased changes.
+
+## 3.1.0 - 2026-05-12
+
 ### Added
 
 - Professional repository documentation set in `docs/`.
