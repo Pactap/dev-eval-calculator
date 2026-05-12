@@ -92,6 +92,7 @@ docs/
 - [Architecture](docs/ARCHITECTURE.md)
 - [Scoring Framework](docs/SCORING.md)
 - [Frontend System](docs/FRONTEND.md)
+- [Deployment](docs/DEPLOYMENT.md)
 - [Git Workflow](docs/GIT_WORKFLOW.md)
 - [Contributing](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)
