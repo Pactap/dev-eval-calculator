@@ -6,9 +6,9 @@ The format is inspired by Keep a Changelog, and this project follows practical s
 
 ## Unreleased
 
-### Added
+### Removed
 
-- GitHub Pages deployment workflow (`.github/workflows/deploy-pages.yml`) and `docs/DEPLOYMENT.md`.
+- GitHub Pages deployment workflow, `docs/DEPLOYMENT.md`, and Vite production base-path override. Pages is not supported on this repository under the organization's current plan; the project ships as code-only.
 
 ### Changed
 
