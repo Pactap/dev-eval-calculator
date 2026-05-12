@@ -1,17 +1,17 @@
 import {
   PLANNED_HOURS_BANDS, CODE_QUALITY_OPTIONS,
   EFFICIENCY_BANDS, ISSUE_PERSIST_BANDS, WEIGHTS,
-} from "./constants";
-import { getBand } from "./utils";
+} from "./constants.js";
+import { getBand } from "./utils.js";
 
 export function computeSprintResult(sprint, dailyRate, dailyCapacity) {
-  const wd = parseFloat(sprint.workingDays) || 0;
+  const wd = Math.max(0, parseFloat(sprint.workingDays) || 0);
   const bp = dailyRate * wd;
   const ah = dailyCapacity * wd;
-  const comp = parseFloat(sprint.completedHours) || 0;
-  const collab = parseFloat(sprint.collaborationHours) || 0;
-  const reop = parseFloat(sprint.reopenedTickets) || 0;
-  const done = parseFloat(sprint.doneTickets) || 0;
+  const comp = Math.max(0, parseFloat(sprint.completedHours) || 0);
+  const collab = Math.max(0, parseFloat(sprint.collaborationHours) || 0);
+  const reop = Math.max(0, parseFloat(sprint.reopenedTickets) || 0);
+  const done = Math.max(0, parseFloat(sprint.doneTickets) || 0);
   const phPct = ah > 0 ? ((comp + collab) / ah) * 100 : 0;
   const effPct = ah > 0 ? (comp / ah) * 100 : 0;
   const zeroDone = done === 0;
@@ -23,7 +23,7 @@ export function computeSprintResult(sprint, dailyRate, dailyCapacity) {
   const phA = bp * WEIGHTS.ph, cqA = bp * WEIGHTS.cq, effA = bp * WEIGHTS.eff, ipA = bp * WEIGHTS.ip;
   const phAch = phA * phB.multiplier, cqAch = cqA * cqO.multiplier, effAch = effA * effB.multiplier, ipAch = ipA * ipB.multiplier;
   const total = phAch + cqAch + effAch + ipAch;
-  return { wd, bp, ah, phPct, effPct, ipPct, zeroDone, phB, cqO, effB, ipB, phA, cqA, effA, ipA, phAch, cqAch, effAch, ipAch, total, name: sprint.name };
+  return { wd, bp, ah, phPct, effPct, ipPct, zeroDone, reop, phB, cqO, effB, ipB, phA, cqA, effA, ipA, phAch, cqAch, effAch, ipAch, total, name: sprint.name };
 }
 
 export function computeQuarterlySummary(sprintResults, totalWorkingDays, dailyRate) {

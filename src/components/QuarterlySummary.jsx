@@ -7,7 +7,15 @@ export function QuarterlySummary({ sprints, sprintResults, summary, totalWorking
 
   return (
     <div className="q-summary">
-      <h2 className="q-summary__title">Quarterly summary</h2>
+      <div className="q-summary__header">
+        <div>
+          <div className="eyebrow">Quarter Summary</div>
+          <h2 className="q-summary__title">Executive rollup</h2>
+        </div>
+        <div className={`q-summary__total-value ${summary.ta >= summary.tb ? "q-summary__total-value--positive" : "q-summary__total-value--negative"}`}>
+          {summary.ta.toFixed(2)}
+        </div>
+      </div>
 
       <div className="q-summary__stats">
         {stats.map((m, i) => (
@@ -22,7 +30,7 @@ export function QuarterlySummary({ sprints, sprintResults, summary, totalWorking
         <table>
           <thead>
             <tr>
-              {["Sprint", "Days", "Base", "Achieved", ""].map(h => (
+              {["Sprint", "Days", "Base", "Achieved", "Status"].map(h => (
                 <th key={h}>{h}</th>
               ))}
             </tr>
@@ -34,7 +42,7 @@ export function QuarterlySummary({ sprints, sprintResults, summary, totalWorking
                 <td className="mono">{r.wd}</td>
                 <td className="mono">{r.bp.toFixed(2)}</td>
                 <td className={r.total >= r.bp ? "q-summary__achieved--positive" : "q-summary__achieved--negative"}>
-                  {r.wd > 0 ? r.total.toFixed(2) : "—"}
+                  {r.wd > 0 ? r.total.toFixed(2) : "-"}
                 </td>
                 <td>
                   {sprints[i].locked
@@ -49,15 +57,10 @@ export function QuarterlySummary({ sprints, sprintResults, summary, totalWorking
 
       <div className="q-summary__footer">
         <div>
-          <div className="q-summary__total-label">Total achieved</div>
-          <div className={`q-summary__total-value ${summary.ta >= summary.tb ? "q-summary__total-value--positive" : "q-summary__total-value--negative"}`}>
-            {summary.ta.toFixed(2)}
-          </div>
+          <div className="q-summary__total-label">Remaining allocation</div>
+          <div className="q-summary__remaining">{summary.rb.toFixed(2)} pts / {summary.rw} days</div>
         </div>
-        <div className="q-summary__remaining">
-          <div>Remaining: {summary.rb.toFixed(2)} pts / {summary.rw} days</div>
-          <div>Quarter base: {quarterBase}</div>
-        </div>
+        <div className="q-summary__remaining">Quarter base {quarterBase}</div>
       </div>
     </div>
   );
