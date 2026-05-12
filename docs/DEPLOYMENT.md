@@ -33,7 +33,6 @@ The workflow:
 The workflow runs on pushes to:
 
 - `master`
-- `codex-professional-repo-docs`
 
 It can also be started manually from GitHub Actions through `workflow_dispatch`.
 

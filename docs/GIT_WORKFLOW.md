@@ -7,7 +7,7 @@ Use short, task-focused branches.
 Recommended naming:
 
 ```text
-codex/<short-task-name>
+task/<short-task-name>
 feature/<short-feature-name>
 fix/<short-bug-name>
 docs/<short-doc-name>
@@ -16,7 +16,7 @@ docs/<short-doc-name>
 Examples:
 
 ```text
-codex/professional-repo-docs
+task/professional-repo-docs
 feature/scoring-audit-log
 fix/locked-sprint-recalculation
 docs/scoring-framework
