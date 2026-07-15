@@ -95,7 +95,7 @@ function ListEditor({ title, addLabel, items, columns, newItem, onChange }) {
 }
 
 export function SettingsPanel() {
-  const { config, updateWeights, updateKey, reset, exportJson, importJson } = useConfig();
+  const { config, updateWeights, updateKey, reset, exportJson, importJson, publishConfig, configApiEnabled } = useConfig();
   const [open, setOpen] = useState(false);
   const [importErr, setImportErr] = useState("");
   const fileInputRef = useRef(null);
@@ -107,10 +107,13 @@ export function SettingsPanel() {
   const [prompting, setPrompting] = useState(false);
   const [keyInput, setKeyInput] = useState("");
   const [keyError, setKeyError] = useState("");
+  const keyRef = useRef("");           // raw key held in memory for server publish
+  const [publishState, setPublishState] = useState(null); // { type, msg }
 
   const submitKey = async (e) => {
     e.preventDefault();
     if (await sha256(keyInput) === PASS_HASH) {
+      keyRef.current = keyInput;
       setUnlocked(true);
       try { sessionStorage.setItem(UNLOCK_KEY, "1"); } catch {}
       setOpen(true);
@@ -123,9 +126,21 @@ export function SettingsPanel() {
   };
 
   const lock = () => {
+    keyRef.current = "";
     setUnlocked(false);
     setOpen(false);
+    setPublishState(null);
     try { sessionStorage.removeItem(UNLOCK_KEY); } catch {}
+  };
+
+  const doPublish = async () => {
+    setPublishState({ type: "info", msg: "Publishing…" });
+    try {
+      await publishConfig(keyRef.current);
+      setPublishState({ type: "ok", msg: "Published to server." });
+    } catch (err) {
+      setPublishState({ type: "err", msg: err.message });
+    }
   };
 
   // Sum over the canonical keys (not Object.values) so a missing key is caught
@@ -228,7 +243,20 @@ export function SettingsPanel() {
             <button className="btn btn--sm" onClick={() => fileInputRef.current?.click()}>Import JSON</button>
             <input ref={fileInputRef} type="file" accept="application/json" style={{ display: "none" }} onChange={doImport} />
             <button className="btn btn--sm btn--danger" onClick={doReset}>Reset defaults</button>
+            {configApiEnabled && (
+              <button className="btn btn--sm btn--primary" onClick={doPublish}>Publish to server</button>
+            )}
           </div>
+          {configApiEnabled && (
+            <p className="settings-panel__desc" style={{ margin: 0 }}>
+              Edits are local until published. Publishing updates the shared config for everyone and is verified against the passkey on the server.
+            </p>
+          )}
+          {publishState && (
+            <div className={publishState.type === "err" ? "settings-panel__error" : "settings-panel__desc"} role="status">
+              {publishState.msg}
+            </div>
+          )}
           {importErr && <div className="settings-panel__error">{importErr}</div>}
 
           <div className="settings-panel__section">

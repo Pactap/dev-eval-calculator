@@ -3,6 +3,9 @@ import { DEFAULT_CONFIG } from "./constants.js";
 import { validateConfig } from "./configValidation.js";
 
 const STORAGE_KEY = "devEvalConfig.v1";
+// Optional backend (Cloudflare Worker). Set VITE_CONFIG_API to enable the shared,
+// server-enforced config; unset -> the app runs local-only, per browser.
+const CONFIG_API = (import.meta.env.VITE_CONFIG_API || "").replace(/\/$/, "");
 const ConfigContext = createContext(null);
 
 function reviveConfig(raw) {
@@ -52,6 +55,30 @@ export function ConfigProvider({ children }) {
     } catch {}
   }, [config]);
 
+  // On load, the server holds the authoritative shared config; adopt it if reachable.
+  useEffect(() => {
+    if (!CONFIG_API) return;
+    let cancelled = false;
+    fetch(`${CONFIG_API}/config`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(remote => { if (!cancelled && remote) setConfig(reviveConfig(remote)); })
+      .catch(() => {}); // offline -> keep local
+    return () => { cancelled = true; };
+  }, []);
+
+  // The real gate: persisting the shared config requires the passkey, verified server-side.
+  const publishConfig = useCallback(async (passkey) => {
+    if (!CONFIG_API) throw new Error("No server configured.");
+    const res = await fetch(`${CONFIG_API}/config`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", "X-Passkey": passkey || "" },
+      body: serializeConfig(config),
+    });
+    if (!res.ok) {
+      throw new Error(res.status === 401 ? "Server rejected the passkey." : `Publish failed (${res.status}).`);
+    }
+  }, [config]);
+
   const reset = useCallback(() => setConfig(DEFAULT_CONFIG), []);
 
   const updateWeights = useCallback((weights) => {
@@ -80,6 +107,7 @@ export function ConfigProvider({ children }) {
       config, reset,
       updateWeights, updateKey,
       exportJson, importJson,
+      publishConfig, configApiEnabled: !!CONFIG_API,
     }}>
       {children}
     </ConfigContext.Provider>
