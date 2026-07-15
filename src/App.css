@@ -1317,7 +1317,9 @@ button {
 @media (max-width: 1180px) {
   .overview-grid,
   .insight-grid {
-    grid-template-columns: 1fr;
+    /* minmax(0,1fr) lets a card shrink to the container width; a wide inner
+       table then scrolls inside its own wrap instead of widening the card. */
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .portfolio-panel__meter {
@@ -1410,6 +1412,20 @@ button {
   .chart-card,
   .q-summary {
     padding: 14px;
+  }
+
+  /* Let the compact rollup/score tables fit the card width instead of scrolling. */
+  .q-summary table,
+  .score-table table {
+    min-width: 0;
+  }
+
+  .q-summary th,
+  .q-summary td,
+  .score-table th,
+  .score-table td {
+    padding-left: 4px;
+    padding-right: 4px;
   }
 }
 
