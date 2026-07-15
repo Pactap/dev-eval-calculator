@@ -1881,6 +1881,139 @@ button {
   font-weight: 600;
 }
 
+/* Weekend-dated holiday: recorded, but flagged as no additional impact. */
+.holiday-chip--weekend {
+  border-style: dashed;
+  color: var(--text-tertiary);
+}
+
+.holiday-chip__tag,
+.avail-chip__tag {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: var(--bg-overlay, var(--bg-subtle));
+  color: var(--text-tertiary);
+}
+
+/* Per-sprint restricted (optional) holiday control */
+.sprint-card__rh {
+  margin: 14px 0 4px;
+  padding: 12px 14px;
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+}
+
+.sprint-card__rh-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-width: 240px;
+}
+
+.sprint-card__rh-opt {
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.sprint-card__rh-note {
+  margin: 8px 0 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-tertiary);
+}
+
+/* Availability & time-off panel */
+.availability__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.availability__hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-align: right;
+  max-width: 220px;
+}
+
+.availability__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.availability__label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--track-caps);
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+}
+
+.availability__sub {
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.availability__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.availability__none {
+  font-size: 12.5px;
+  color: var(--text-tertiary);
+}
+
+.avail-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.avail-chip--muted {
+  border-style: dashed;
+  color: var(--text-tertiary);
+}
+
+.avail-chip--accent {
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+.availability__note {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
 /* Draft sprint badge (auto-generated on quarter lock) */
 .sprint-card__name-row {
   display: flex;

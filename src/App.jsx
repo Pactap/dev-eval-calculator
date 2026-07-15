@@ -1,12 +1,14 @@
 import { useState, useMemo, useEffect } from "react";
 import { createSprint } from "./constants.js";
-import { countWorkingDays, countWorkingDaysInWindow, parseLocalDate, toISO, generateSprintPeriods, quarterEndFrom, addDaysISO } from "./utils.js";
+import { countWorkingDays, countWorkingDaysInWindow, parseLocalDate, toISO, generateSprintPeriods, quarterEndFrom, addDaysISO, isWeekend, formatDate } from "./utils.js";
 import { computeSprintResult, computeQuarterlySummary } from "./scoring.js";
+import { devKeyOf, yearOf, rhUsage, recordRh, clearRh } from "./restrictedHolidays.js";
 import { useConfig } from "./configStore.jsx";
 import { QuarterConfig } from "./components/QuarterConfig.jsx";
 import { SprintCard } from "./components/SprintCard.jsx";
 import { CorrelationChart } from "./components/CorrelationChart.jsx";
 import { QuarterlySummary } from "./components/QuarterlySummary.jsx";
+import { AvailabilityPanel } from "./components/AvailabilityPanel.jsx";
 import { SettingsPanel } from "./components/SettingsPanel.jsx";
 import { Framework } from "./components/Framework.jsx";
 import { APP_VERSION } from "./version.js";
@@ -167,6 +169,73 @@ export default function DevEvaluationCalculator() {
   };
   const removeSprint = (i) => setSprints(p => p.filter((_, j) => j !== i));
 
+  // Mark (or clear, with "") a developer's restricted holiday on a sprint. Enforces
+  // the one-per-calendar-year quota against both the current evaluation and the
+  // cross-quarter per-developer ledger, and rejects invalid dates so the toast
+  // explains exactly why. On rejection the sprint state is left unchanged, which
+  // reverts the (uncontrolled) date input to its prior value.
+  const setSprintRestrictedHoliday = (i, date) => {
+    const sprint = sprints[i];
+    const devKey = devKeyOf(reportMeta);
+    const prev = sprint.restrictedHoliday || "";
+
+    if (!date) {                                  // clear
+      if (prev && devKey) clearRh(devKey, yearOf(prev));
+      setSprints(p => p.map((s, j) => (j === i ? { ...s, restrictedHoliday: "" } : s)));
+      return;
+    }
+    if (date === prev) return;                    // no change
+
+    if ((sprint.startDate && date < sprint.startDate) || (sprint.endDate && date > sprint.endDate)) {
+      setToast({ type: "error", message: "Restricted holiday must fall within the sprint's dates." });
+      return;
+    }
+    if (isWeekend(date)) {
+      setToast({ type: "error", message: "That date is a weekend — already non-working, so no restricted holiday is needed." });
+      return;
+    }
+    if (holidays.includes(date)) {
+      setToast({ type: "error", message: "That date is already a company holiday — the day is off for everyone." });
+      return;
+    }
+
+    const year = yearOf(date);
+    // Cross-quarter quota: the per-developer ledger (only when a dev is identified).
+    const ledgerHit = devKey ? rhUsage(devKey, year) : null;
+    if (ledgerHit && ledgerHit.date !== prev && ledgerHit.date !== date) {
+      setToast({
+        type: "error",
+        message: `${reportMeta.devName || reportMeta.empId || "This developer"} has already used their ${year} restricted holiday on ${formatDate(ledgerHit.date)}${ledgerHit.quarterLabel ? ` (${ledgerHit.quarterLabel})` : ""}.`,
+      });
+      return;
+    }
+    // In-evaluation quota: no other sprint in the same calendar year may hold one.
+    const clash = sprints.find((s, j) => j !== i && s.restrictedHoliday && yearOf(s.restrictedHoliday) === year);
+    if (clash) {
+      setToast({
+        type: "error",
+        message: `A ${year} restricted holiday is already recorded on "${clash.name || "another sprint"}" (${formatDate(clash.restrictedHoliday)}). Only one is allowed per calendar year.`,
+      });
+      return;
+    }
+
+    if (prev && devKey && yearOf(prev) !== year) clearRh(devKey, yearOf(prev)); // moved to a new year
+    if (devKey) {
+      recordRh(devKey, year, {
+        date,
+        sprintName: sprint.name || `Sprint ${i + 1}`,
+        quarterLabel: reportMeta.quarterLabel || "",
+        empId: reportMeta.empId || "",
+        devName: reportMeta.devName || "",
+      });
+    }
+    setSprints(p => p.map((s, j) => (j === i ? { ...s, restrictedHoliday: date } : s)));
+    setToast({
+      type: "success",
+      message: `Restricted holiday recorded for ${formatDate(date)}${devKey ? "" : " (add an Employee ID to track it across quarters)"}.`,
+    });
+  };
+
   const sprintsWithWD = useMemo(() => {
     return sprints.map((s, i) => {
       if (s.locked) return s;
@@ -179,8 +248,13 @@ export default function DevEvaluationCalculator() {
       const sharesStartBoundary = Boolean(s.startDate && prevEnd && s.startDate === prevEnd);
       const countStart = sharesStartBoundary ? addDaysISO(s.startDate, 1) : s.startDate;
 
-      const wdTotal = countWorkingDays(countStart, s.endDate, holidays);
-      const wdInQuarter = countWorkingDaysInWindow(countStart, s.endDate, quarterStart, quarterEnd, holidays);
+      // A restricted holiday is a legitimate day off for THIS developer in THIS
+      // sprint: exclude it like a holiday so the sprint's productive days (and thus
+      // its allotted hours and pro-rata base points) shrink with availability —
+      // non-punitive, since the target scales down with the time away.
+      const sprintHolidays = s.restrictedHoliday ? [...holidays, s.restrictedHoliday] : holidays;
+      const wdTotal = countWorkingDays(countStart, s.endDate, sprintHolidays);
+      const wdInQuarter = countWorkingDaysInWindow(countStart, s.endDate, quarterStart, quarterEnd, sprintHolidays);
       return {
         ...s,
         sharesStartBoundary,
@@ -424,6 +498,7 @@ export default function DevEvaluationCalculator() {
                 quarterEnd={quarterEnd}
                 dailyRate={dailyRate}
                 onUpdate={(f, v) => updateSprint(idx, f, v)}
+                onSetRestrictedHoliday={(date) => setSprintRestrictedHoliday(idx, date)}
                 onToggleLock={() => toggleLock(idx)}
                 onRemove={() => removeSprint(idx)}
                 canRemove={sprints.length > 1 && !s.locked}
@@ -431,6 +506,13 @@ export default function DevEvaluationCalculator() {
             ))}
           </div>
         </section>
+
+        <AvailabilityPanel
+          quarterStart={quarterStart} quarterEnd={quarterEnd}
+          holidays={holidays} sprints={sprints}
+          totalWorkingDays={totalWorkingDays} dailyCapacity={dailyCapacity}
+          hasDevId={Boolean(devKeyOf(reportMeta))}
+        />
 
         <section className="insight-grid" aria-label="Quarter insights">
           <CorrelationChart sprintResults={sprintResults} theme={theme.resolved} />

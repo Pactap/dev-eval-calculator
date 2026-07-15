@@ -1,9 +1,26 @@
 {
   "name": "performance-evaluation-centre",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "private": true,
   "type": "module",
   "description": "Performance Evaluation Centre - Developer Sprint Evaluation Framework with pro-rata scoring",
+  "license": "MIT",
+  "homepage": "https://pactap.github.io/dev-eval-calculator/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Pactap/dev-eval-calculator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Pactap/dev-eval-calculator/issues"
+  },
+  "keywords": [
+    "developer-evaluation",
+    "performance-review",
+    "sprint-scoring",
+    "pro-rata",
+    "react",
+    "vite"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",

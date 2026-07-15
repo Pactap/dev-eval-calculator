@@ -37,9 +37,9 @@ export function Framework() {
 
   const WORKFLOW = [
     ["Set the evaluation period", "Enter a start date — the end date is auto-suggested one quarter later. Both stay editable until the period is locked."],
-    ["Configure capacity & holidays", "Set the base score, daily capacity (hrs/day) and mark any company holidays. Weekends and holidays are excluded from productive days."],
+    ["Configure capacity & holidays", "Set the base score, daily capacity (hrs/day) and mark any company holidays. Weekends and holidays are excluded from productive days; a holiday that falls on a weekend is recorded but flagged as no-impact."],
     ["Lock the period", "Locking scaffolds the quarter into 14-day draft sprints. Drafts are fully editable and removable before you commit each one."],
-    ["Record each sprint", "Enter completed & collaboration hours, the code-quality grade, tickets closed/assigned, and reopened/done tickets."],
+    ["Record each sprint", "Enter completed & collaboration hours, the code-quality grade, tickets closed/assigned, and reopened/done tickets. If the developer took an optional restricted holiday, mark it here (one per calendar year)."],
     ["Lock each sprint", "Locking a sprint freezes its score as an immutable snapshot, immune to later configuration or holiday changes."],
     ["Review & export", "Track the quarterly rollup and score composition, then export a formatted PDF report with optional developer details."],
   ];
@@ -86,6 +86,14 @@ export function Framework() {
           Weekdays (Mon–Fri) in a range, excluding any marked holidays. Drives both allotted hours
           (capacity × days) and the pro-rata base.
         </DefRow>
+        <DefRow term="Restricted holidays &amp; availability">
+          A restricted (optional) holiday is a legitimate day off — up to one per developer per
+          calendar year, tracked so a second cannot be claimed. When marked on a sprint it is
+          excluded from that sprint's productive days, exactly like a company holiday: because
+          scoring is pro-rata, the target shrinks with the time away, so approved leave dilutes the
+          point pool proportionally and is never counted as underperformance. Holidays that land on
+          a weekend are recorded but have no additional impact.
+        </DefRow>
         <DefRow term="Four parameters">
           <div className="doc-params">
             {PARAMS.map(([n, w, d]) => (
@@ -120,6 +128,7 @@ export function Framework() {
           <li>A sprint with no hours and no tickets scores zero — the default grade never awards free points.</li>
           <li>Zero assigned tickets earns no efficiency credit (0×), distinct from closing 0 of N assigned.</li>
           <li>Locked sprints are immutable snapshots and are unaffected by later config, holiday or rate changes.</li>
+          <li>At most one restricted holiday per developer per calendar year — enforced within the evaluation and remembered across quarters by Employee ID.</li>
           <li>Remaining quarter allocation is clamped at zero — it never reads negative.</li>
           <li>A band or grade group can never be fully emptied; the last entry cannot be removed.</li>
           <li>Dates are parsed in local time to avoid timezone day-shifts; report text is sanitised for the PDF font.</li>
@@ -129,7 +138,8 @@ export function Framework() {
       <DocSection eyebrow="What makes it flexible" title="Enablers">
         <ul className="doc-list">
           <li><strong>Configurable scoring</strong> — weights, bands and grades are editable in-app and persist locally; export/import as JSON.</li>
-          <li><strong>Holidays</strong> — a global holiday list refines available productive capacity.</li>
+          <li><strong>Holidays</strong> — a global holiday list refines available productive capacity; weekend-dated holidays are recorded without double-counting.</li>
+          <li><strong>Restricted holidays</strong> — per-sprint optional leave, quota-tracked per developer per year, with a constructive availability summary in-app and in the PDF.</li>
           <li><strong>Draft sprints</strong> — the quarter auto-scaffolds into 14-day drafts you can edit or omit before locking.</li>
           <li><strong>Report metadata</strong> — optional developer name, employee ID, quarter and date-of-joining feed a systematic PDF.</li>
           <li><strong>Theming</strong> — light / system / dark, persisted per user.</li>

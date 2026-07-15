@@ -1,6 +1,7 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { sanitizePdfText as A } from "./utils.js";
+import { summarizeAvailability } from "./availability.js";
 import { APP_VERSION } from "./version.js";
 
 /* ---- Palette (Fortune-500 restrained navy/slate) ---- */
@@ -97,6 +98,40 @@ export function generateQuarterlyReportPDF(data) {
   ];
   keyValueTable(doc, y, contentW, params);
   y = doc.lastAutoTable.finalY + 26;
+
+  /* ---------- section: availability & time off ---------- */
+  const avail = summarizeAvailability({ quarterStart, quarterEnd, holidays, sprints });
+  if (avail.companyHolidays.length || avail.restrictedHolidays.length) {
+    y = ensureSpace(doc, y, 150);
+    y = sectionTitle(doc, "Availability & Time Off", y);
+
+    const holidayLine = avail.companyHolidays.length
+      ? avail.companyHolidays.map(h => `${fmtDate(h.date)}${h.weekend ? " (weekend, no impact)" : ""}`).join(",  ")
+      : "None in this period";
+    const rhLine = avail.restrictedHolidays.length
+      ? avail.restrictedHolidays.map(r => `${fmtDate(r.date)}${r.sprintName ? ` (${r.sprintName})` : ""}`).join(",  ")
+      : "None taken";
+    const dilutedHrs = avail.dilutedDays * (Number(dailyCapacity) || 0);
+
+    keyValueTable(doc, y, contentW, [
+      ["Company holidays", holidayLine, "On weekend (no impact)", `${avail.weekendHolidays}`],
+      ["Restricted holiday", rhLine, "Annual entitlement", "1 / calendar year"],
+      ["Productive days lost", `${avail.dilutedDays} (~${dilutedHrs.toFixed(0)} hrs)`, "Basis", "Pro-rata to productive days"],
+    ]);
+    y = doc.lastAutoTable.finalY + 10;
+
+    // Constructive framing: time away scales the target down, it is not a penalty.
+    const note = avail.dilutedDays > 0
+      ? "Scoring is pro-rata to productive days. Company holidays and approved restricted leave reduce the point pool proportionally and are not attributed to the developer; measured per-day performance is unaffected."
+      : "The recorded holidays fell on weekends, which are already non-working days, so they had no additional impact on productive days or the score.";
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(8.5);
+    doc.setTextColor(...MUTED);
+    const noteLines = doc.splitTextToSize(A(note), contentW);
+    doc.text(noteLines, MARGIN.left, y);
+    doc.setFont("helvetica", "normal");
+    y += noteLines.length * 11 + 20;
+  }
 
   /* ---------- section: weighting model ---------- */
   y = ensureSpace(doc, y, 120);

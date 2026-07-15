@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { formatDate, parseLocalDate } from "../utils.js";
+import { formatDate, isWeekend } from "../utils.js";
 import { useConfig } from "../configStore.jsx";
 
 export function QuarterConfig({
@@ -33,12 +33,9 @@ export function QuarterConfig({
       setHolidayError("That date is already marked as a holiday.");
       return;
     }
-    const parsed = parseLocalDate(newHoliday);
-    const day = parsed ? parsed.getDay() : -1;
-    if (day === 0 || day === 6) {
-      setHolidayError("That date is a weekend — already excluded.");
-      return;
-    }
+    // Weekend-dated holidays are allowed (some fall on Sat/Sun): they are recorded
+    // for the report but flagged, since weekends are already non-working and so they
+    // never reduce productive days a second time.
     setHolidayError("");
     onChangeHolidays([...holidays, newHoliday]);
     setNewHoliday("");
@@ -138,8 +135,9 @@ export function QuarterConfig({
         {sortedHolidays.length > 0 && (
           <div className="quarter-config__holidays-list">
             {sortedHolidays.map(date => (
-              <span key={date} className="holiday-chip">
+              <span key={date} className={`holiday-chip${isWeekend(date) ? " holiday-chip--weekend" : ""}`}>
                 {formatDate(date)}
+                {isWeekend(date) && <span className="holiday-chip__tag" title="Falls on a weekend — already non-working, no additional impact">wknd</span>}
                 {holidaysEditable && (
                   <button className="holiday-chip__x" aria-label={`Remove ${date}`} onClick={() => removeHoliday(date)}>×</button>
                 )}

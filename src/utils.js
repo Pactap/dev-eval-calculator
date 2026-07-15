@@ -32,6 +32,17 @@ export function parseLocalDate(str) {
 }
 
 /**
+ * True if an ISO "YYYY-MM-DD" date falls on a Saturday or Sunday (parsed local time).
+ * Weekends are already non-productive, so a holiday landing on one has no scoring impact.
+ */
+export function isWeekend(str) {
+  const d = parseLocalDate(str);
+  if (!d) return false;
+  const day = d.getDay();
+  return day === 0 || day === 6;
+}
+
+/**
  * Count productive days between two date strings (inclusive):
  * weekdays (Mon–Fri) that are NOT in the holidays list.
  * @param {string[]} holidays - array of "YYYY-MM-DD" strings.
