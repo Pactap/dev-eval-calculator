@@ -16,6 +16,19 @@ const BAND_GROUPS = [
 
 const num = (v) => (v === "" ? 0 : parseFloat(v));
 
+// Editing the scoring rules is gated by a passkey. Only the SHA-256 hash ships,
+// so the plaintext key isn't in the bundle. NOTE: this is a client-side gate on a
+// static site — it hides the key and deters casual edits, it is NOT real access
+// control (a determined user can bypass it via devtools/localStorage). Real
+// enforcement needs a backend.
+const PASS_HASH = "49efb886446cb7b6b3018bff28018333edf402f4cdf2b4074deda5cbe82a54f4";
+const UNLOCK_KEY = "pec.settingsUnlocked";
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
 function fmtMax(v) {
   if (v === Infinity || v === null || v === undefined) return "";
   return v;
@@ -87,6 +100,34 @@ export function SettingsPanel() {
   const [importErr, setImportErr] = useState("");
   const fileInputRef = useRef(null);
 
+  // Passkey gate for editing (persists for the browser session once unlocked).
+  const [unlocked, setUnlocked] = useState(() => {
+    try { return sessionStorage.getItem(UNLOCK_KEY) === "1"; } catch { return false; }
+  });
+  const [prompting, setPrompting] = useState(false);
+  const [keyInput, setKeyInput] = useState("");
+  const [keyError, setKeyError] = useState("");
+
+  const submitKey = async (e) => {
+    e.preventDefault();
+    if (await sha256(keyInput) === PASS_HASH) {
+      setUnlocked(true);
+      try { sessionStorage.setItem(UNLOCK_KEY, "1"); } catch {}
+      setOpen(true);
+      setPrompting(false);
+      setKeyInput("");
+      setKeyError("");
+    } else {
+      setKeyError("Incorrect passkey.");
+    }
+  };
+
+  const lock = () => {
+    setUnlocked(false);
+    setOpen(false);
+    try { sessionStorage.removeItem(UNLOCK_KEY); } catch {}
+  };
+
   // Sum over the canonical keys (not Object.values) so a missing key is caught
   // rather than silently excluded from the total.
   const weightSum = WEIGHT_KEYS.reduce((a, w) => a + (Number(config.weights[w.key]) || 0), 0);
@@ -146,13 +187,41 @@ export function SettingsPanel() {
           </p>
         </div>
         <div className="settings-panel__actions">
-          <button className="btn btn--sm" onClick={() => setOpen(o => !o)}>
-            {open ? "Collapse" : "Configure"}
-          </button>
+          {unlocked ? (
+            <>
+              <button className="btn btn--sm" onClick={() => setOpen(o => !o)}>
+                {open ? "Collapse" : "Configure"}
+              </button>
+              <button className="btn btn--sm" onClick={lock} title="Lock editing">Lock</button>
+            </>
+          ) : (
+            <button className="btn btn--sm" onClick={() => { setPrompting(p => !p); setKeyError(""); }}>
+              Configure
+            </button>
+          )}
         </div>
       </div>
 
-      {open && (
+      {!unlocked && prompting && (
+        <form className="settings-panel__unlock" onSubmit={submitKey}>
+          <span className="settings-panel__unlock-label">Passkey required to edit evaluation parameters</span>
+          <div className="settings-panel__unlock-row">
+            <input
+              type="password"
+              className="input"
+              value={keyInput}
+              autoFocus
+              autoComplete="off"
+              placeholder="Enter passkey"
+              onChange={e => { setKeyInput(e.target.value); setKeyError(""); }}
+            />
+            <button className="btn btn--sm btn--primary" type="submit">Unlock</button>
+          </div>
+          {keyError && <span className="settings-panel__warn">{keyError}</span>}
+        </form>
+      )}
+
+      {open && unlocked && (
         <div className="settings-panel__body">
           <div className="settings-panel__toolbar">
             <button className="btn btn--sm" onClick={doExport}>Export JSON</button>

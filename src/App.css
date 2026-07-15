@@ -1531,6 +1531,33 @@ button {
   font-size: 12px;
 }
 
+.settings-panel__unlock {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-panel__unlock-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.settings-panel__unlock-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  max-width: 360px;
+}
+
+.settings-panel__unlock-row .input {
+  flex: 1;
+  min-width: 0;
+}
+
 .settings-panel__section h3 {
   margin: 0 0 12px;
   font-size: 13px;
