@@ -50,8 +50,8 @@ test("summarizeAvailability separates weekday vs weekend holidays and counts dil
     ],
   });
   assert.deepEqual(a.companyHolidays, [
-    { date: "2026-01-09", weekend: false },
-    { date: "2026-02-28", weekend: true },
+    { date: "2026-01-09", name: "", weekend: false },
+    { date: "2026-02-28", name: "", weekend: true },
   ]);
   assert.equal(a.weekendHolidays, 1);
   assert.equal(a.impactingHolidays, 1);
@@ -59,6 +59,20 @@ test("summarizeAvailability separates weekday vs weekend holidays and counts dil
   assert.equal(a.restrictedHolidays[0].date, "2026-03-13");
   assert.equal(a.restrictedHolidays[0].sprintName, "Sprint 1");
   assert.equal(a.dilutedDays, 2); // 1 weekday holiday + 1 weekday restricted holiday
+});
+
+test("summarizeAvailability attaches company holiday names and restricted-holiday pool labels", () => {
+  const a = summarizeAvailability({
+    quarterStart: "2026-01-01",
+    quarterEnd: "2026-12-31",
+    holidays: ["2026-01-09"],
+    holidayNames: { "2026-01-09": "Founders Day" },
+    restrictedHolidayPool: [{ date: "2026-03-13", label: "Holi" }, { date: "2026-08-15", label: "Independence Day" }],
+    sprints: [{ name: "Sprint 1", restrictedHoliday: "2026-03-13" }],
+  });
+  assert.equal(a.companyHolidays[0].name, "Founders Day");
+  assert.equal(a.restrictedHolidays[0].label, "Holi");        // label resolved from the pool
+  assert.equal(a.restrictedHolidays[0].date, "2026-03-13");
 });
 
 test("summarizeAvailability excludes holidays outside the quarter window", () => {

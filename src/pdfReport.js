@@ -38,6 +38,7 @@ const dash = (v) => (v == null || v === "" ? "-" : A(v));
 export function generateQuarterlyReportPDF(data) {
   const {
     quarterStart, quarterEnd, quarterBase, dailyCapacity, holidays = [],
+    holidayNames = {}, restrictedHolidayPool = [],
     totalWorkingDays, dailyRate, config, sprints, sprintResults, summary,
     reportMeta = {}, generatedAt,
   } = data;
@@ -100,17 +101,17 @@ export function generateQuarterlyReportPDF(data) {
   y = doc.lastAutoTable.finalY + 26;
 
   /* ---------- section: availability & time off ---------- */
-  const avail = summarizeAvailability({ quarterStart, quarterEnd, holidays, sprints });
+  const avail = summarizeAvailability({ quarterStart, quarterEnd, holidays, holidayNames, restrictedHolidayPool, sprints });
   if (avail.companyHolidays.length || avail.restrictedHolidays.length) {
     y = ensureSpace(doc, y, 150);
     y = sectionTitle(doc, "Availability & Time Off", y);
 
     const holidayLine = avail.companyHolidays.length
-      ? avail.companyHolidays.map(h => `${fmtDate(h.date)}${h.weekend ? " (weekend, no impact)" : ""}`).join(",  ")
+      ? avail.companyHolidays.map(h => `${h.name ? h.name + " - " : ""}${fmtDate(h.date)}${h.weekend ? " (weekend, no impact)" : ""}`).join(",  ")
       : "None in this period";
     const rhLine = avail.restrictedHolidays.length
-      ? avail.restrictedHolidays.map(r => `${fmtDate(r.date)}${r.sprintName ? ` (${r.sprintName})` : ""}`).join(",  ")
-      : "None taken";
+      ? avail.restrictedHolidays.map(r => `${r.label ? r.label + " - " : ""}${fmtDate(r.date)}${r.sprintName ? ` (${r.sprintName})` : ""}`).join(",  ")
+      : "None availed";
     const dilutedHrs = avail.dilutedDays * (Number(dailyCapacity) || 0);
 
     keyValueTable(doc, y, contentW, [

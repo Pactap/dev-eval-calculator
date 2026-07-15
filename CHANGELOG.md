@@ -4,6 +4,22 @@ All notable changes to this project are documented here.
 
 The format is inspired by Keep a Changelog, and this project follows semantic versioning.
 
+## 4.2.0 - 2026-07-15
+
+Admin-declared restricted-holiday pool and a multi-year holiday calendar.
+
+### Added
+
+- **Holiday calendar manager** (`components/HolidayManager.jsx`) with a year selector spanning 2025–2050, managing both company holidays and the restricted-holiday pool one year at a time; editing is passkey-gated, read-only otherwise.
+- **Admin-declared restricted-holiday pool** (`config.restrictedHolidayPool`): named, dated optional holidays. A developer avails one per calendar year by choosing it from a dropdown on the sprint.
+- **Named holidays**: company holidays carry optional names (`config.holidayNames`); restricted holidays carry pool labels — shown across the app and PDF.
+- Redesigned the Availability & time-off summary into stat tiles + named holiday chips.
+
+### Changed
+
+- Restricted holidays are no longer free-date entry; they must come from the admin pool. Company-holiday editing moved out of the Quarter panel into the Holiday calendar manager.
+- Config gains `holidayNames` and `restrictedHolidayPool` (both optional, defaulted and validated); 66 tests total.
+
 ## 4.1.0 - 2026-07-15
 
 Restricted-holiday tracking and constructive availability reporting.

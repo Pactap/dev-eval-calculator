@@ -5,6 +5,7 @@ import { computeSprintResult, computeQuarterlySummary } from "./scoring.js";
 import { devKeyOf, yearOf, rhUsage, recordRh, clearRh } from "./restrictedHolidays.js";
 import { useConfig } from "./configStore.jsx";
 import { QuarterConfig } from "./components/QuarterConfig.jsx";
+import { HolidayManager } from "./components/HolidayManager.jsx";
 import { SprintCard } from "./components/SprintCard.jsx";
 import { CorrelationChart } from "./components/CorrelationChart.jsx";
 import { QuarterlySummary } from "./components/QuarterlySummary.jsx";
@@ -135,6 +136,8 @@ export default function DevEvaluationCalculator() {
   const theme = useTheme();
   const { config, updateKey } = useConfig();
   const holidays = config.holidays || [];
+  const holidayNames = config.holidayNames || {};
+  const restrictedHolidayPool = config.restrictedHolidayPool || [];
   const [quarterStart, setQuarterStart] = useState("");
   const [quarterEnd, setQuarterEnd] = useState("");
   const [endEdited, setEndEdited] = useState(false); // true once the user manually sets the end date
@@ -191,6 +194,12 @@ export default function DevEvaluationCalculator() {
       return;
     }
     if (date === prev) return;                    // no change
+
+    // The date must be one the admin declared in the restricted-holiday pool.
+    if (!restrictedHolidayPool.some(e => e.date === date)) {
+      setToast({ type: "error", message: "Pick a restricted holiday the admin has declared in the pool for this sprint." });
+      return;
+    }
 
     // A shared start-boundary day already counts in the previous sprint, so an RH
     // there would spend the yearly quota while excluding no day. Validate against
@@ -367,7 +376,7 @@ export default function DevEvaluationCalculator() {
       // Lazy-loaded so the ~500 KB PDF stack stays out of the initial bundle.
       const { generateQuarterlyReportPDF } = await import("./pdfReport.js");
       generateQuarterlyReportPDF({
-        quarterStart, quarterEnd, quarterBase, dailyCapacity, holidays,
+        quarterStart, quarterEnd, quarterBase, dailyCapacity, holidays, holidayNames, restrictedHolidayPool,
         totalWorkingDays, dailyRate, config, sprints, sprintResults, summary: qSummary,
         reportMeta,
       });
@@ -442,7 +451,7 @@ export default function DevEvaluationCalculator() {
             quarterLocked={quarterLocked}
             totalWorkingDays={totalWorkingDays} dailyRate={dailyRate}
             sprintCount={sprints.length}
-            holidays={holidays} onChangeHolidays={h => updateKey("holidays", h)}
+            holidays={holidays}
             onChangeStart={handleQuarterStartChange} onChangeEnd={handleQuarterEndChange}
             onChangeBase={setQuarterBase} onChangeCapacity={setDailyCapacity}
             onToggleLock={handleQuarterLock}
@@ -487,6 +496,8 @@ export default function DevEvaluationCalculator() {
 
         <ReportDetails meta={reportMeta} onChange={setReportMeta} />
 
+        <HolidayManager defaultYear={quarterStart ? quarterStart.slice(0, 4) : undefined} />
+
         <SettingsPanel />
 
         <section className="workspace" aria-label="Sprint ledger">
@@ -513,6 +524,7 @@ export default function DevEvaluationCalculator() {
                 quarterStart={quarterStart}
                 quarterEnd={quarterEnd}
                 dailyRate={dailyRate}
+                restrictedHolidayPool={restrictedHolidayPool}
                 onUpdate={(f, v) => updateSprint(idx, f, v)}
                 onSetRestrictedHoliday={(date) => setSprintRestrictedHoliday(idx, date)}
                 onToggleLock={() => toggleLock(idx)}
@@ -525,7 +537,8 @@ export default function DevEvaluationCalculator() {
 
         <AvailabilityPanel
           quarterStart={quarterStart} quarterEnd={quarterEnd}
-          holidays={holidays} sprints={sprints}
+          holidays={holidays} holidayNames={holidayNames}
+          restrictedHolidayPool={restrictedHolidayPool} sprints={sprints}
           totalWorkingDays={totalWorkingDays} dailyCapacity={dailyCapacity}
           hasDevId={Boolean(devKeyOf(reportMeta))}
         />

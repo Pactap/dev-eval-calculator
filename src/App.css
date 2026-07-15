@@ -2014,6 +2014,206 @@ button {
   color: var(--text-secondary);
 }
 
+/* Availability stat tiles */
+.availability__tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.avail-tile {
+  padding: 12px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+}
+
+.avail-tile__label {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--track-caps);
+  color: var(--text-tertiary);
+}
+
+.avail-tile__value {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 4px 0 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.avail-tile__sub {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.availability__lists {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.avail-chip__name { font-weight: 700; color: var(--text-primary); }
+.avail-chip--muted .avail-chip__name,
+.avail-chip--accent .avail-chip__name { color: inherit; }
+.avail-chip__date { color: var(--text-tertiary); }
+
+.availability__sub-note {
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-tertiary);
+}
+
+/* Holiday calendar manager (company holidays + restricted-holiday pool, per year) */
+.holiday-manager__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.holiday-manager__year {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 120px;
+}
+
+.holiday-manager__hint {
+  margin-bottom: 12px;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.holiday-manager__cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 22px;
+}
+
+.holiday-manager__col-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.holiday-manager__col-head h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.holiday-manager__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--accent-subtle);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.holiday-manager__desc {
+  margin: 0 0 12px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-tertiary);
+}
+
+.holiday-manager__add {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.holiday-manager__add .input { flex: 1; min-width: 120px; }
+.holiday-manager__add .input[type="date"] { flex: 0 0 auto; }
+
+.holiday-manager__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.holiday-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  font-size: 12.5px;
+}
+
+.holiday-row--weekend { border-style: dashed; }
+
+.holiday-row__date {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--text-primary);
+  min-width: 58px;
+}
+
+.holiday-row__name {
+  flex: 1;
+  color: var(--text-secondary);
+}
+
+.holiday-row__name em { color: var(--text-tertiary); font-style: italic; }
+
+.holiday-row__tag {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: var(--bg-subtle);
+  color: var(--text-tertiary);
+}
+
+.holiday-row__x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.holiday-row__x:hover { background: var(--negative-bg); color: var(--negative); }
+
+.holiday-manager__empty {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  padding: 8px 0;
+}
+
 /* Draft sprint badge (auto-generated on quarter lock) */
 .sprint-card__name-row {
   display: flex;

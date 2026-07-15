@@ -23,16 +23,16 @@ Weights, bands, and grades are editable in-app (Settings panel) and persist loca
 
 - Pro-rata allocation across variable-length sprints; configurable base score and daily capacity.
 - Cross-quarter sprints scored proportionally; shared-boundary sprints count the boundary day once.
-- Configurable holidays excluded from productive days; weekend-dated holidays are recorded but flagged as no-impact (counted once, never twice).
-- Restricted (optional) holidays: one per developer per calendar year, marked per sprint and remembered across quarters, excluded from productive days pro-rata so leave never reads as underperformance.
-- Constructive **Availability & time-off** summary (in-app panel and PDF section) explaining holidays, restricted leave, and the pro-rata dilution of productive hours in no-fault language.
+- **Holiday calendar** managed per year (2025–2050): named company holidays and an admin-declared restricted-holiday pool. Weekend-dated holidays are recorded but flagged as no-impact (counted once, never twice).
+- **Restricted (optional) holidays**: a developer avails one per calendar year, picked per sprint from the admin pool and remembered across quarters, excluded from productive days pro-rata so leave never reads as underperformance.
+- Constructive **Availability & time-off** summary (in-app stat tiles + PDF section) explaining holidays, restricted leave, and the pro-rata dilution of productive hours in no-fault language.
 - Auto-generated 14-day draft sprints on quarter lock; auto-suggested period end date.
 - Lockable quarters and immutable locked-sprint snapshots.
 - Integrity rules: empty sprints score zero; zero-ticket efficiency awards nothing.
 - Per-sprint score-composition chart; quarterly executive rollup.
 - Formatted PDF report with optional developer/quarter metadata.
 - In-app **Framework** tab: workflows, definitions, constraints, enablers, and version history.
-- Light / system / dark themes; error boundary; 62 automated tests.
+- Light / system / dark themes; error boundary; 66 automated tests.
 
 ## Tech stack
 
@@ -49,7 +49,7 @@ Weights, bands, and grades are editable in-app (Settings panel) and persist loca
 ```bash
 npm install
 npm run dev      # start dev server
-npm run test     # run scoring / utility / edge-case tests (62)
+npm run test     # run scoring / utility / edge-case tests (66)
 npm run build    # production build to dist/
 npm run check    # test + build
 ```
@@ -81,9 +81,10 @@ src/
   pdfReport.js           Formatted PDF report generator
   ErrorBoundary.jsx      Top-level error boundary
   components/
-    QuarterConfig.jsx    Quarter period, capacity, holidays
-    SprintCard.jsx       Sprint inputs, metrics, restricted holiday, lock controls
-    AvailabilityPanel.jsx  Constructive availability & time-off summary
+    QuarterConfig.jsx    Quarter period, capacity, productive-day stats
+    HolidayManager.jsx   Per-year (2025–2050) company holidays + restricted-holiday pool
+    SprintCard.jsx       Sprint inputs, metrics, restricted-holiday picker, lock controls
+    AvailabilityPanel.jsx  Constructive availability & time-off summary (stat tiles)
     SettingsPanel.jsx    Editable weights / bands / grades
     ReportDetails ...    (in App.jsx) optional report metadata
     ScoreTable.jsx       Per-sprint score breakdown

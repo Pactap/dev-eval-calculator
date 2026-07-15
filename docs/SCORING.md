@@ -55,13 +55,15 @@ bound and exclusive of their upper.
 
 ## Holidays, restricted holidays & availability
 
+- The **Holiday calendar manager** (`components/HolidayManager.jsx`) manages both lists one year at a time
+  (2025–2050); editing is passkey-gated. Company holidays and restricted-holiday pool entries can be named.
 - **Company holidays** are excluded from productive days alongside weekends. A holiday that falls on a
   weekend is recorded but has **no additional impact** — weekends are already non-working, so it is counted
   once, never twice.
-- **Restricted (optional) holidays** are a developer's personal day off — at most **one per developer per
-  calendar year**, enforced within the evaluation and remembered across quarters by Employee ID
-  (`src/restrictedHolidays.js`). A restricted holiday marked on a sprint is excluded from that sprint's
-  productive days exactly like a company holiday.
+- **Restricted (optional) holidays** come from an **admin-declared pool** (`config.restrictedHolidayPool`,
+  named + dated). A developer avails **one per calendar year**, chosen per sprint from that pool, enforced
+  within the evaluation and remembered across quarters by Employee ID (`src/restrictedHolidays.js`). An
+  availed restricted holiday is excluded from that sprint's productive days exactly like a company holiday.
 - Because scoring is **pro-rata to productive days**, holidays and restricted leave shrink the point pool
   proportionally: the target scales down with the time away, so approved leave is **never counted as
   underperformance**. The Availability & time-off summary (`src/availability.js`) states this in the app and

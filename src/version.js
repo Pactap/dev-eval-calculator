@@ -1,9 +1,21 @@
 // Single source of truth for the app version and its history.
 // Bump APP_VERSION and prepend a CHANGELOG entry on every release
 // (semantic versioning: MAJOR.MINOR.PATCH).
-export const APP_VERSION = "4.1.0";
+export const APP_VERSION = "4.2.0";
 
 export const CHANGELOG = [
+  {
+    version: "4.2.0",
+    date: "2026-07-15",
+    title: "Admin restricted-holiday pool & multi-year calendar",
+    type: "minor",
+    changes: [
+      "Restricted holidays are now an admin-declared pool: admins name and date optional holidays, and a developer avails one per calendar year by picking it from a dropdown on the sprint (free-date entry removed).",
+      "New Holiday calendar manager with a year selector (2025–2050) covering both company holidays and the restricted-holiday pool, each entry optionally named.",
+      "Company holidays and restricted holidays now carry names, shown across the app and the PDF report.",
+      "Redesigned the Availability & time-off summary into stat tiles (productive days, holidays, restricted leave, hours diluted) with named holiday chips.",
+    ],
+  },
   {
     version: "4.1.0",
     date: "2026-07-15",

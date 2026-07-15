@@ -1,6 +1,8 @@
 export const DEFAULT_CONFIG = {
   weights: { ph: 0.40, cq: 0.20, eff: 0.40, ip: 0.00 },
-  holidays: [],
+  holidays: [],                 // company holidays: array of "YYYY-MM-DD" (scoring source of truth)
+  holidayNames: {},             // optional { "YYYY-MM-DD": "Diwali" } labels for company holidays
+  restrictedHolidayPool: [],    // admin-declared optional holidays: [{ date: "YYYY-MM-DD", label: "Holi" }] — a developer may avail one per calendar year
   plannedHoursBands: [
     { label: "90-100", min: 90, max: 100.01, multiplier: 1.75 },
     { label: "80-90", min: 80, max: 90, multiplier: 1.50 },

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { formatDate, addDaysISO } from "../utils.js";
+import { formatDate, addDaysISO, isWeekend } from "../utils.js";
 import { useConfig } from "../configStore.jsx";
 import { Pill } from "./Pill.jsx";
 import { MetricSection } from "./MetricSection.jsx";
@@ -7,7 +7,7 @@ import { ScoreTable } from "./ScoreTable.jsx";
 
 export function SprintCard({
   index, sprint, sprintWithWD, result, isLocked, exceedsQuarter,
-  quarterLocked, quarterStart, quarterEnd, dailyRate,
+  quarterLocked, quarterStart, quarterEnd, dailyRate, restrictedHolidayPool = [],
   onUpdate, onSetRestrictedHoliday, onToggleLock, onRemove, canRemove,
 }) {
   const { config } = useConfig();
@@ -24,6 +24,14 @@ export function SprintCard({
   const sw = sprintWithWD;
   const r = result;
   const hasInput = r.wdTotal > 0;
+
+  // Restricted-holiday options: admin-declared pool entries that fall on a working
+  // day this sprint actually owns (shared-boundary start day excluded).
+  const rhEffMin = sw.sharesStartBoundary ? addDaysISO(s.startDate, 1) : s.startDate;
+  const rhOptions = (restrictedHolidayPool || [])
+    .filter(e => !isWeekend(e.date) && s.startDate && s.endDate && e.date >= rhEffMin && e.date <= s.endDate)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const availedRh = (restrictedHolidayPool || []).find(e => e.date === s.restrictedHoliday) || null;
 
   const [localStartDate, setLocalStartDate] = useState(s.startDate);
   const [localEndDate, setLocalEndDate] = useState(s.endDate);
@@ -219,22 +227,31 @@ export function SprintCard({
         <div className="sprint-card__rh">
           <div className="sprint-card__rh-field">
             <label className="label">Restricted holiday <span className="sprint-card__rh-opt">optional · 1 / year</span></label>
-            <input type="date" value={s.restrictedHoliday || ""}
-              min={sw.sharesStartBoundary ? addDaysISO(s.startDate, 1) : s.startDate} max={s.endDate}
-              className="input"
-              onChange={e => onSetRestrictedHoliday(e.target.value)} />
+            <select className="input" value={s.restrictedHoliday || ""}
+              disabled={rhOptions.length === 0 && !s.restrictedHoliday}
+              onChange={e => onSetRestrictedHoliday(e.target.value)}>
+              <option value="">None</option>
+              {rhOptions.map(e => (
+                <option key={e.date} value={e.date}>{e.label} · {formatDate(e.date)}</option>
+              ))}
+              {s.restrictedHoliday && !rhOptions.some(o => o.date === s.restrictedHoliday) && (
+                <option value={s.restrictedHoliday}>{(availedRh && availedRh.label) || "Availed"} · {formatDate(s.restrictedHoliday)}</option>
+              )}
+            </select>
           </div>
           <p className="sprint-card__rh-note">
             {s.restrictedHoliday
-              ? `Recorded for ${formatDate(s.restrictedHoliday)} — excluded from this sprint's productive hours. Pro-rata, so it lowers the target proportionally, not the developer's score.`
-              : "If the developer took an optional (restricted) holiday this sprint, mark it here. It is treated like a company holiday for this sprint only — never counted as underperformance."}
+              ? `${availedRh ? availedRh.label + " — " : ""}excluded from this sprint's productive hours. Pro-rata, so it lowers the target proportionally, not the developer's score.`
+              : rhOptions.length
+                ? "If the developer availed an optional (restricted) holiday this sprint, pick it from the admin's pool. One per calendar year."
+                : "No pool restricted holidays fall in this sprint. Admins declare them in the Holiday calendar."}
           </p>
         </div>
       )}
 
       {isLocked && s.restrictedHoliday && (
         <div className="sprint-card__leak-note">
-          Restricted holiday on {formatDate(s.restrictedHoliday)} — excluded from this sprint's productive days (non-punitive).
+          Restricted holiday{availedRh ? ` (${availedRh.label})` : ""} on {formatDate(s.restrictedHoliday)} — excluded from this sprint's productive days (non-punitive).
         </div>
       )}
 

@@ -55,5 +55,23 @@ export function validateConfig(raw) {
   if (raw.holidays !== undefined && !Array.isArray(raw.holidays)) {
     throw new Error("`holidays` must be an array of date strings.");
   }
+  if (raw.holidayNames !== undefined) {
+    if (typeof raw.holidayNames !== "object" || Array.isArray(raw.holidayNames) || raw.holidayNames === null) {
+      throw new Error("`holidayNames` must be an object of { date: name }.");
+    }
+    for (const k of Object.keys(raw.holidayNames)) {
+      if (typeof raw.holidayNames[k] !== "string") throw new Error(`\`holidayNames["${k}"]\` must be a string.`);
+    }
+  }
+  if (raw.restrictedHolidayPool !== undefined) {
+    if (!Array.isArray(raw.restrictedHolidayPool)) {
+      throw new Error("`restrictedHolidayPool` must be an array of { date, label }.");
+    }
+    raw.restrictedHolidayPool.forEach((e, i) => {
+      if (!e || typeof e !== "object" || Array.isArray(e)) throw new Error(`\`restrictedHolidayPool[${i}]\` must be an object.`);
+      if (typeof e.date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(e.date)) throw new Error(`\`restrictedHolidayPool[${i}].date\` must be a "YYYY-MM-DD" string.`);
+      if (e.label !== undefined && typeof e.label !== "string") throw new Error(`\`restrictedHolidayPool[${i}].label\` must be a string.`);
+    });
+  }
   return true;
 }
