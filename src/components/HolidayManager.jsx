@@ -32,6 +32,7 @@ export function HolidayManager({ defaultYear }) {
     if (!newHoliday) return;
     if (yearOf(newHoliday) !== year) { setError(`Pick a date in ${year}.`); return; }
     if (holidays.includes(newHoliday)) { setError("That date is already a company holiday."); return; }
+    if (pool.some((e) => e.date === newHoliday)) { setError("That date is in the restricted-holiday pool — remove it there first."); return; }
     updateKey("holidays", [...holidays, newHoliday]);
     if (newHolidayName.trim()) updateKey("holidayNames", { ...holidayNames, [newHoliday]: newHolidayName.trim() });
     setNewHoliday(""); setNewHolidayName(""); setError("");
@@ -51,6 +52,7 @@ export function HolidayManager({ defaultYear }) {
     if (yearOf(newRhDate) !== year) { setError(`Pick a date in ${year}.`); return; }
     if (!newRhLabel.trim()) { setError("Give the restricted holiday a name (e.g. Holi)."); return; }
     if (pool.some((e) => e.date === newRhDate)) { setError("That date is already in the restricted-holiday pool."); return; }
+    if (holidays.includes(newRhDate)) { setError("That date is already a company holiday — everyone is off, so it can't be a restricted holiday."); return; }
     updateKey("restrictedHolidayPool", [...pool, { date: newRhDate, label: newRhLabel.trim() }]);
     setNewRhDate(""); setNewRhLabel(""); setError("");
   };

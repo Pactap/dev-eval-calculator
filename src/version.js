@@ -1,9 +1,19 @@
 // Single source of truth for the app version and its history.
 // Bump APP_VERSION and prepend a CHANGELOG entry on every release
 // (semantic versioning: MAJOR.MINOR.PATCH).
-export const APP_VERSION = "4.2.0";
+export const APP_VERSION = "4.3.0";
 
 export const CHANGELOG = [
+  {
+    version: "4.3.0",
+    date: "2026-07-15",
+    title: "Server-authoritative restricted-holiday quota",
+    type: "minor",
+    changes: [
+      "The one-per-developer-per-calendar-year restricted-holiday quota is now enforced by the Cloudflare Worker (new /rh, /rh/claim, /rh/release endpoints, KV-backed) when a backend is configured — authoritative across machines, not just per browser. Recording an RH becomes a passkey-gated write; falls back to the per-browser ledger when no server is set.",
+      "Hardening from code review: the shared/remote config is validated before it is adopted; a date cannot be both a company holiday and a restricted-holiday pool entry; company-holiday dates are excluded from the restricted-holiday dropdown.",
+    ],
+  },
   {
     version: "4.2.0",
     date: "2026-07-15",

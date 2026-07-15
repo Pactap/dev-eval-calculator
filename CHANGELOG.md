@@ -4,6 +4,20 @@ All notable changes to this project are documented here.
 
 The format is inspired by Keep a Changelog, and this project follows semantic versioning.
 
+## 4.3.0 - 2026-07-15
+
+Server-authoritative restricted-holiday quota, plus code-review hardening.
+
+### Added
+
+- **Worker restricted-holiday ledger** (`worker/worker.js`): `GET /rh` (public read), `POST /rh/claim` and `POST /rh/release` (passkey-gated). The Worker enforces one restricted holiday per developer per calendar year across machines — a second, different date for the same dev+year returns 409. KV-backed under key `rhLedger`; 7 new Worker tests.
+- Client uses the server ledger when `VITE_CONFIG_API` is set (recording an RH becomes a passkey-gated write via `configStore.claimRh`/`releaseRh`); falls back to the per-browser ledger otherwise, and to local if the Worker lacks `/rh` (so front-end and Worker deploys need not be simultaneous).
+
+### Changed / Fixed (from code review)
+
+- The shared/remote config is now validated (`validateConfig`) before it is adopted, so a malformed remote `restrictedHolidayPool` can't reach render.
+- The Holiday calendar rejects a date that is both a company holiday and a restricted-holiday pool entry; company-holiday dates are excluded from the restricted-holiday dropdown (no dead options).
+
 ## 4.2.0 - 2026-07-15
 
 Admin-declared restricted-holiday pool and a multi-year holiday calendar.

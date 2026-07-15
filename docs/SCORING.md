@@ -61,9 +61,12 @@ bound and exclusive of their upper.
   weekend is recorded but has **no additional impact** — weekends are already non-working, so it is counted
   once, never twice.
 - **Restricted (optional) holidays** come from an **admin-declared pool** (`config.restrictedHolidayPool`,
-  named + dated). A developer avails **one per calendar year**, chosen per sprint from that pool, enforced
-  within the evaluation and remembered across quarters by Employee ID (`src/restrictedHolidays.js`). An
-  availed restricted holiday is excluded from that sprint's productive days exactly like a company holiday.
+  named + dated). A developer avails **one per calendar year**, chosen per sprint from that pool. The quota
+  is enforced within the evaluation and per developer by Employee ID: when the Cloudflare Worker backend is
+  configured it is **server-authoritative** (the Worker's `/rh/claim` rejects a second date for the same
+  dev+year with 409, and recording requires the passkey) so it holds **across machines**; without a backend
+  it falls back to a per-browser ledger (`src/restrictedHolidays.js`). An availed restricted holiday is
+  excluded from that sprint's productive days exactly like a company holiday.
 - Because scoring is **pro-rata to productive days**, holidays and restricted leave shrink the point pool
   proportionally: the target scales down with the time away, so approved leave is **never counted as
   underperformance**. The Availability & time-off summary (`src/availability.js`) states this in the app and

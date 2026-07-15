@@ -29,7 +29,7 @@ export function summarizeAvailability({ quarterStart, quarterEnd, holidays = [],
   const impactingHolidays = companyHolidays.length - weekendHolidays;
 
   const poolLabel = (date) => {
-    const hit = restrictedHolidayPool.find((e) => e.date === date);
+    const hit = restrictedHolidayPool.find((e) => e && e.date === date);
     return hit ? hit.label : "";
   };
 

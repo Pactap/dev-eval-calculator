@@ -89,7 +89,8 @@ export function Framework() {
         <DefRow term="Restricted holidays &amp; availability">
           Admins declare a pool of restricted (optional) holidays per year. A developer may avail
           one per calendar year, chosen per sprint from that pool and tracked so a second cannot be
-          claimed. When availed it is excluded from that sprint's productive days, exactly like a
+          claimed — enforced server-side across machines when the shared backend is configured,
+          otherwise per browser. When availed it is excluded from that sprint's productive days, exactly like a
           company holiday: because scoring is pro-rata, the target shrinks with the time away, so
           approved leave dilutes the point pool proportionally and is never counted as
           underperformance. Holidays that land on a weekend are recorded but have no additional

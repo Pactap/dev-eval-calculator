@@ -24,5 +24,8 @@ days and to fix confirmed issues promptly.
   the bundle; the raw key is never bundled. The client gate is a deterrent — the authoritative check is
   performed **server-side** by an optional Cloudflare Worker (`worker/`) using a constant-time comparison
   before persisting the shared config. Treat the client gate alone as non-authoritative.
+- The **restricted-holiday quota** (one per developer per calendar year) is likewise enforced by the Worker
+  when configured: `/rh/claim` and `/rh/release` are passkey-gated writes; `/rh` read is public (it exposes
+  only holiday dates and the entered Employee ID / name, the same trust level as the shared config).
 - Because the code is client-side, a lack of client-side permission enforcement is not itself a
   vulnerability; report issues that bypass the **server** check, expose secrets, or execute untrusted input.

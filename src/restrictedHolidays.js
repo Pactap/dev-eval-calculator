@@ -20,7 +20,7 @@ function store() {
   };
 }
 
-function loadLedger() {
+export function loadLedger() {
   try {
     return JSON.parse(store().getItem(LEDGER_KEY)) || {};
   } catch {

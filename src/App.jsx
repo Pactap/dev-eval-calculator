@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { createSprint } from "./constants.js";
 import { countWorkingDays, countWorkingDaysInWindow, parseLocalDate, toISO, generateSprintPeriods, quarterEndFrom, effectiveCountStart, isWeekend, formatDate } from "./utils.js";
 import { computeSprintResult, computeQuarterlySummary } from "./scoring.js";
-import { devKeyOf, yearOf, rhUsage, recordRh, clearRh } from "./restrictedHolidays.js";
+import { devKeyOf, yearOf } from "./restrictedHolidays.js";
 import { useConfig } from "./configStore.jsx";
 import { QuarterConfig } from "./components/QuarterConfig.jsx";
 import { HolidayManager } from "./components/HolidayManager.jsx";
@@ -134,7 +134,7 @@ function isPristineSprint(s) {
 
 export default function DevEvaluationCalculator() {
   const theme = useTheme();
-  const { config, updateKey } = useConfig();
+  const { config, updateKey, rhUsage, claimRh, releaseRh, rhWritable } = useConfig();
   const holidays = config.holidays || [];
   const holidayNames = config.holidayNames || {};
   const restrictedHolidayPool = config.restrictedHolidayPool || [];
@@ -177,19 +177,24 @@ export default function DevEvaluationCalculator() {
   // cross-quarter per-developer ledger, and rejects invalid dates so the toast
   // explains exactly why. On rejection the sprint state is left unchanged, which
   // reverts the (uncontrolled) date input to its prior value.
-  const setSprintRestrictedHoliday = (i, date) => {
+  const setSprintRestrictedHoliday = async (i, date) => {
     const sprint = sprints[i];
     const devKey = devKeyOf(reportMeta);
     const prev = sprint.restrictedHoliday || "";
+    // With a server, recording an RH is an authenticated write.
+    if (!rhWritable) {
+      setToast({ type: "error", message: "Unlock in Scoring rules (passkey) to record restricted holidays." });
+      return;
+    }
     // Release the prior claim under the identity it was RECORDED with — which may
     // differ from the current reportMeta if the Employee ID was edited since — so
     // the ledger entry is never orphaned (which would wrongly block the next one).
-    const releasePrev = () => {
-      if (prev && sprint.restrictedHolidayKey) clearRh(sprint.restrictedHolidayKey, yearOf(prev));
-    };
+    const releasePrev = () => (prev && sprint.restrictedHolidayKey)
+      ? releaseRh(sprint.restrictedHolidayKey, yearOf(prev))
+      : Promise.resolve();
 
     if (!date) {                                  // clear
-      releasePrev();
+      await releasePrev();
       setSprints(p => p.map((s, j) => (j === i ? { ...s, restrictedHoliday: "", restrictedHolidayKey: "" } : s)));
       return;
     }
@@ -225,7 +230,7 @@ export default function DevEvaluationCalculator() {
     }
 
     const year = yearOf(date);
-    // Cross-quarter quota: the per-developer ledger (only when a dev is identified).
+    // Cross-quarter quota: the per-developer ledger (server-authoritative when configured).
     const ledgerHit = devKey ? rhUsage(devKey, year) : null;
     if (ledgerHit && ledgerHit.date !== prev && ledgerHit.date !== date) {
       setToast({
@@ -244,15 +249,22 @@ export default function DevEvaluationCalculator() {
       return;
     }
 
-    releasePrev();                                // drop the old entry (any dev/year) before writing the new one
-    if (devKey) {
-      recordRh(devKey, year, {
-        date,
-        sprintName: sprint.name || `Sprint ${i + 1}`,
-        quarterLabel: reportMeta.quarterLabel || "",
-        empId: reportMeta.empId || "",
-        devName: reportMeta.devName || "",
-      });
+    // The server claim is the final arbiter (it enforces the quota across machines);
+    // on rejection the sprint stays unchanged, reverting the dropdown.
+    try {
+      await releasePrev();                        // drop the old entry before writing the new one
+      if (devKey) {
+        await claimRh(devKey, year, {
+          date,
+          sprintName: sprint.name || `Sprint ${i + 1}`,
+          quarterLabel: reportMeta.quarterLabel || "",
+          empId: reportMeta.empId || "",
+          devName: reportMeta.devName || "",
+        });
+      }
+    } catch (err) {
+      setToast({ type: "error", message: err.message });
+      return;
     }
     setSprints(p => p.map((s, j) => (j === i ? { ...s, restrictedHoliday: date, restrictedHolidayKey: devKey } : s)));
     setToast({
@@ -525,6 +537,7 @@ export default function DevEvaluationCalculator() {
                 quarterEnd={quarterEnd}
                 dailyRate={dailyRate}
                 restrictedHolidayPool={restrictedHolidayPool}
+                rhWritable={rhWritable}
                 onUpdate={(f, v) => updateSprint(idx, f, v)}
                 onSetRestrictedHoliday={(date) => setSprintRestrictedHoliday(idx, date)}
                 onToggleLock={() => toggleLock(idx)}

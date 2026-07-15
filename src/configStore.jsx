@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { DEFAULT_CONFIG } from "./constants.js";
 import { validateConfig } from "./configValidation.js";
+import { loadLedger, recordRh, clearRh } from "./restrictedHolidays.js";
 
 const STORAGE_KEY = "devEvalConfig.v1";
 // Optional backend (Cloudflare Worker). Set VITE_CONFIG_API to enable the shared,
@@ -81,15 +82,99 @@ export function ConfigProvider({ children }) {
   }, [config]);
 
   // On load, the server holds the authoritative shared config; adopt it if reachable.
+  // Validate before adopting so a malformed remote config can't crash render (same
+  // gate the import path uses).
   useEffect(() => {
     if (!CONFIG_API) return;
     let cancelled = false;
     fetch(`${CONFIG_API}/config`)
       .then(r => (r.ok ? r.json() : null))
-      .then(remote => { if (!cancelled && remote) setConfig(reviveConfig(remote)); })
+      .then(remote => {
+        if (cancelled || !remote) return;
+        try { validateConfig(remote); setConfig(reviveConfig(remote)); } catch { /* keep local */ }
+      })
       .catch(() => {}); // offline -> keep local
     return () => { cancelled = true; };
   }, []);
+
+  // Restricted-holiday quota ledger. With a server, it is authoritative across
+  // machines (the Worker enforces one-per-dev-per-year); without one, it is the
+  // per-browser localStorage ledger. Held in memory so reads stay synchronous.
+  const [rhLedger, setRhLedger] = useState(() => (CONFIG_API ? {} : loadLedger()));
+
+  useEffect(() => {
+    if (!CONFIG_API) return;
+    let cancelled = false;
+    fetch(`${CONFIG_API}/rh`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (!cancelled && d && d.ledger) setRhLedger(d.ledger); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  const rhUsage = useCallback((devKey, year) => {
+    if (!devKey || !year) return null;
+    return (rhLedger[devKey] && rhLedger[devKey][year]) || null;
+  }, [rhLedger]);
+
+  // Claim throws on the server's 409 (already used) / 401 (bad passkey) so the
+  // caller can surface the reason and leave the sprint unchanged.
+  const claimRh = useCallback(async (devKey, year, entry) => {
+    if (!devKey || !year) return;
+    if (CONFIG_API) {
+      const res = await fetch(`${CONFIG_API}/rh/claim`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Passkey": keyRef.current || "" },
+        body: JSON.stringify({ devKey, year, entry }),
+      });
+      if (res.status === 404) {                    // Worker not yet redeployed with /rh — degrade to local
+        recordRh(devKey, year, entry);
+        setRhLedger(l => ({ ...l, [devKey]: { ...(l[devKey] || {}), [year]: entry } }));
+        return;
+      }
+      if (res.status === 409) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.message || `Restricted holiday already used in ${year}.`);
+      }
+      if (!res.ok) throw new Error(res.status === 401 ? "Server rejected the passkey." : `Could not record restricted holiday (${res.status}).`);
+      const j = await res.json().catch(() => ({}));
+      if (j.ledger) setRhLedger(j.ledger);
+      else setRhLedger(l => ({ ...l, [devKey]: { ...(l[devKey] || {}), [year]: entry } }));
+    } else {
+      recordRh(devKey, year, entry);
+      setRhLedger(l => ({ ...l, [devKey]: { ...(l[devKey] || {}), [year]: entry } }));
+    }
+  }, []);
+
+  const releaseRh = useCallback(async (devKey, year) => {
+    if (!devKey || !year) return;
+    const drop = (l) => {
+      const n = { ...l };
+      if (n[devKey]) {
+        const y = { ...n[devKey] };
+        delete y[year];
+        if (Object.keys(y).length) n[devKey] = y; else delete n[devKey];
+      }
+      return n;
+    };
+    if (CONFIG_API) {
+      try {
+        const res = await fetch(`${CONFIG_API}/rh/release`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Passkey": keyRef.current || "" },
+          body: JSON.stringify({ devKey, year }),
+        });
+        const j = await res.json().catch(() => ({}));
+        if (j.ledger) setRhLedger(j.ledger); else setRhLedger(drop);
+      } catch { setRhLedger(drop); }
+    } else {
+      clearRh(devKey, year);
+      setRhLedger(drop);
+    }
+  }, []);
+
+  // With a server, recording an RH is a write and needs the passkey; local-only stays open.
+  const rhWritable = CONFIG_API ? unlocked : true;
 
   // The real gate: persisting the shared config requires the passkey, verified server-side.
   const publishConfig = useCallback(async () => {
@@ -134,6 +219,7 @@ export function ConfigProvider({ children }) {
       exportJson, importJson,
       publishConfig, configApiEnabled: !!CONFIG_API,
       unlocked, unlock, lock,
+      rhUsage, claimRh, releaseRh, rhWritable,
     }}>
       {children}
     </ConfigContext.Provider>

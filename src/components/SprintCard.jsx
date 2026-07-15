@@ -7,11 +7,12 @@ import { ScoreTable } from "./ScoreTable.jsx";
 
 export function SprintCard({
   index, sprint, sprintWithWD, result, isLocked, exceedsQuarter,
-  quarterLocked, quarterStart, quarterEnd, dailyRate, restrictedHolidayPool = [],
+  quarterLocked, quarterStart, quarterEnd, dailyRate, restrictedHolidayPool = [], rhWritable = true,
   onUpdate, onSetRestrictedHoliday, onToggleLock, onRemove, canRemove,
 }) {
   const { config } = useConfig();
   const { weights, codeQualityOptions } = config;
+  const holidays = config.holidays || [];
 
   const METRIC_CONFIGS = [
     { key: "ph", icon: "PH", title: "Planned Hours", weightLabel: `${(weights.ph * 100).toFixed(0)}%`, tipText: "(Completed + Collaboration) / Allotted Hours. Rework excluded." },
@@ -26,12 +27,13 @@ export function SprintCard({
   const hasInput = r.wdTotal > 0;
 
   // Restricted-holiday options: admin-declared pool entries that fall on a working
-  // day this sprint actually owns (shared-boundary start day excluded).
+  // day this sprint actually owns (shared-boundary start day excluded, and never a
+  // company holiday — that day is already off, so it can't also be availed).
   const rhEffMin = sw.sharesStartBoundary ? addDaysISO(s.startDate, 1) : s.startDate;
   const rhOptions = (restrictedHolidayPool || [])
-    .filter(e => !isWeekend(e.date) && s.startDate && s.endDate && e.date >= rhEffMin && e.date <= s.endDate)
+    .filter(e => e && !isWeekend(e.date) && !holidays.includes(e.date) && s.startDate && s.endDate && e.date >= rhEffMin && e.date <= s.endDate)
     .sort((a, b) => a.date.localeCompare(b.date));
-  const availedRh = (restrictedHolidayPool || []).find(e => e.date === s.restrictedHoliday) || null;
+  const availedRh = (restrictedHolidayPool || []).find(e => e && e.date === s.restrictedHoliday) || null;
 
   const [localStartDate, setLocalStartDate] = useState(s.startDate);
   const [localEndDate, setLocalEndDate] = useState(s.endDate);
@@ -228,7 +230,7 @@ export function SprintCard({
           <div className="sprint-card__rh-field">
             <label className="label">Restricted holiday <span className="sprint-card__rh-opt">optional · 1 / year</span></label>
             <select className="input" value={s.restrictedHoliday || ""}
-              disabled={rhOptions.length === 0 && !s.restrictedHoliday}
+              disabled={!rhWritable || (rhOptions.length === 0 && !s.restrictedHoliday)}
               onChange={e => onSetRestrictedHoliday(e.target.value)}>
               <option value="">None</option>
               {rhOptions.map(e => (
@@ -240,11 +242,13 @@ export function SprintCard({
             </select>
           </div>
           <p className="sprint-card__rh-note">
-            {s.restrictedHoliday
-              ? `${availedRh ? availedRh.label + " — " : ""}excluded from this sprint's productive hours. Pro-rata, so it lowers the target proportionally, not the developer's score.`
-              : rhOptions.length
-                ? "If the developer availed an optional (restricted) holiday this sprint, pick it from the admin's pool. One per calendar year."
-                : "No pool restricted holidays fall in this sprint. Admins declare them in the Holiday calendar."}
+            {!rhWritable && !s.restrictedHoliday
+              ? "Unlock in Scoring rules (passkey) to record a restricted holiday."
+              : s.restrictedHoliday
+                ? `${availedRh ? availedRh.label + " — " : ""}excluded from this sprint's productive hours. Pro-rata, so it lowers the target proportionally, not the developer's score.`
+                : rhOptions.length
+                  ? "If the developer availed an optional (restricted) holiday this sprint, pick it from the admin's pool. One per calendar year."
+                  : "No pool restricted holidays fall in this sprint. Admins declare them in the Holiday calendar."}
           </p>
         </div>
       )}
