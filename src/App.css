@@ -419,12 +419,14 @@ button {
 
 .btn--primary {
   border-color: transparent;
-  background: var(--accent);
+  background: var(--gradient-brand);
   color: #ffffff;
+  box-shadow: 0 2px 8px -2px rgba(37, 99, 235, 0.4);
 }
 
 .btn--primary:hover {
-  background: var(--accent-hover);
+  filter: brightness(1.07) saturate(1.05);
+  box-shadow: 0 4px 14px -3px rgba(37, 99, 235, 0.5);
   color: #ffffff;
 }
 
