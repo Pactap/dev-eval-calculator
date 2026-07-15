@@ -33,7 +33,7 @@ function serializeConfig(cfg) {
   });
 }
 
-export function loadConfig() {
+function loadConfig() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_CONFIG;
@@ -58,16 +58,8 @@ export function ConfigProvider({ children }) {
     setConfig(c => ({ ...c, weights: { ...c.weights, ...weights } }));
   }, []);
 
-  const updateBands = useCallback((key, bands) => {
-    setConfig(c => ({ ...c, [key]: bands }));
-  }, []);
-
-  const updateOptions = useCallback((key, options) => {
-    setConfig(c => ({ ...c, [key]: options }));
-  }, []);
-
-  const setHolidays = useCallback((holidays) => {
-    setConfig(c => ({ ...c, holidays }));
+  const updateKey = useCallback((key, value) => {
+    setConfig(c => ({ ...c, [key]: value }));
   }, []);
 
   const exportJson = useCallback(() => serializeConfig(config), [config]);
@@ -85,8 +77,8 @@ export function ConfigProvider({ children }) {
 
   return (
     <ConfigContext.Provider value={{
-      config, setConfig, reset,
-      updateWeights, updateBands, updateOptions, setHolidays,
+      config, reset,
+      updateWeights, updateKey,
       exportJson, importJson,
     }}>
       {children}

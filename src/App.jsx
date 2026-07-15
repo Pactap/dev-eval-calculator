@@ -131,7 +131,7 @@ function isPristineSprint(s) {
 
 export default function DevEvaluationCalculator() {
   const theme = useTheme();
-  const { config, setHolidays } = useConfig();
+  const { config, updateKey } = useConfig();
   const holidays = config.holidays || [];
   const [quarterStart, setQuarterStart] = useState("");
   const [quarterEnd, setQuarterEnd] = useState("");
@@ -352,7 +352,7 @@ export default function DevEvaluationCalculator() {
             quarterLocked={quarterLocked}
             totalWorkingDays={totalWorkingDays} dailyRate={dailyRate}
             sprintCount={sprints.length}
-            holidays={holidays} onChangeHolidays={setHolidays}
+            holidays={holidays} onChangeHolidays={h => updateKey("holidays", h)}
             onChangeStart={handleQuarterStartChange} onChangeEnd={handleQuarterEndChange}
             onChangeBase={setQuarterBase} onChangeCapacity={setDailyCapacity}
             onToggleLock={handleQuarterLock}

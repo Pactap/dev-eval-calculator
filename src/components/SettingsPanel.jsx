@@ -9,10 +9,12 @@ const WEIGHT_KEYS = [
 ];
 
 const BAND_GROUPS = [
-  { key: "plannedHoursBands", label: "Planned Hours bands", hasRange: true, unit: "%" },
-  { key: "efficiencyBands", label: "Efficiency bands", hasRange: true, unit: "%" },
-  { key: "issuePersistBands", label: "Issue Persist bands", hasRange: true, unit: "%" },
+  { key: "plannedHoursBands", label: "Planned Hours bands" },
+  { key: "efficiencyBands", label: "Efficiency bands" },
+  { key: "issuePersistBands", label: "Issue Persist bands" },
 ];
+
+const num = (v) => (v === "" ? 0 : parseFloat(v));
 
 function fmtMax(v) {
   if (v === Infinity || v === null || v === undefined) return "";
@@ -25,8 +27,62 @@ function parseMax(str) {
   return isNaN(n) ? Infinity : n;
 }
 
+// One editable table for a list of {label, ...} rows — shared by the code-quality
+// grades and every band group (add/remove/reorder/inline-edit).
+function ListEditor({ title, addLabel, items, columns, newItem, onChange }) {
+  const patch = (i, key, val) => onChange(items.map((it, j) => (j === i ? { ...it, [key]: val } : it)));
+  const remove = (i) => onChange(items.filter((_, j) => j !== i));
+  const move = (i, dir) => {
+    const j = i + dir;
+    if (j < 0 || j >= items.length) return;
+    const next = [...items];
+    [next[i], next[j]] = [next[j], next[i]];
+    onChange(next);
+  };
+  return (
+    <div className="settings-panel__section">
+      <h3>{title}</h3>
+      <div className="settings-panel__table-wrap">
+        <table className="settings-panel__table">
+          <thead>
+            <tr>
+              {columns.map(c => <th key={c.key}>{c.head}</th>)}
+              <th>Order</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((it, i) => (
+              <tr key={i}>
+                {columns.map(c => (
+                  <td key={c.key}>
+                    <input
+                      className="input"
+                      type={c.type || "text"}
+                      step={c.type === "number" ? "0.01" : undefined}
+                      placeholder={c.placeholder}
+                      value={c.format ? c.format(it[c.key]) : it[c.key]}
+                      onChange={e => patch(i, c.key, c.parse ? c.parse(e.target.value) : e.target.value)}
+                    />
+                  </td>
+                ))}
+                <td className="settings-panel__order-cell">
+                  <button className="btn btn--xs" disabled={i === 0} onClick={() => move(i, -1)}>↑</button>
+                  <button className="btn btn--xs" disabled={i === items.length - 1} onClick={() => move(i, 1)}>↓</button>
+                </td>
+                <td><button className="btn btn--xs btn--danger" disabled={items.length <= 1} onClick={() => remove(i)}>×</button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <button className="btn btn--sm" onClick={() => onChange([...items, newItem()])}>{addLabel}</button>
+    </div>
+  );
+}
+
 export function SettingsPanel() {
-  const { config, updateWeights, updateBands, updateOptions, reset, exportJson, importJson } = useConfig();
+  const { config, updateWeights, updateKey, reset, exportJson, importJson } = useConfig();
   const [open, setOpen] = useState(false);
   const [importErr, setImportErr] = useState("");
   const fileInputRef = useRef(null);
@@ -38,63 +94,8 @@ export function SettingsPanel() {
   const weightsValid = Math.abs(weightSum - 1) < 0.001;
 
   const setWeight = (k, v) => {
-    const num = parseFloat(v);
-    updateWeights({ [k]: isNaN(num) ? 0 : num / 100 });
-  };
-
-  const updateBandField = (groupKey, idx, field, value) => {
-    const bands = [...config[groupKey]];
-    let parsed = value;
-    if (field === "min") parsed = value === "" ? 0 : parseFloat(value);
-    else if (field === "max") parsed = parseMax(value);
-    else if (field === "multiplier") parsed = value === "" ? 0 : parseFloat(value);
-    bands[idx] = { ...bands[idx], [field]: parsed };
-    updateBands(groupKey, bands);
-  };
-
-  const addBand = (groupKey) => {
-    const bands = [...config[groupKey]];
-    bands.push({ label: "New band", min: 0, max: 0, multiplier: 1.0 });
-    updateBands(groupKey, bands);
-  };
-
-  const removeBand = (groupKey, idx) => {
-    const bands = config[groupKey].filter((_, i) => i !== idx);
-    updateBands(groupKey, bands);
-  };
-
-  const moveBand = (groupKey, idx, dir) => {
-    const bands = [...config[groupKey]];
-    const target = idx + dir;
-    if (target < 0 || target >= bands.length) return;
-    [bands[idx], bands[target]] = [bands[target], bands[idx]];
-    updateBands(groupKey, bands);
-  };
-
-  const updateCqField = (idx, field, value) => {
-    const opts = [...config.codeQualityOptions];
-    let parsed = value;
-    if (field === "multiplier") parsed = value === "" ? 0 : parseFloat(value);
-    opts[idx] = { ...opts[idx], [field]: parsed };
-    updateOptions("codeQualityOptions", opts);
-  };
-
-  const addCq = () => {
-    const opts = [...config.codeQualityOptions, { label: "New grade", multiplier: 1.0 }];
-    updateOptions("codeQualityOptions", opts);
-  };
-
-  const removeCq = (idx) => {
-    const opts = config.codeQualityOptions.filter((_, i) => i !== idx);
-    updateOptions("codeQualityOptions", opts);
-  };
-
-  const moveCq = (idx, dir) => {
-    const opts = [...config.codeQualityOptions];
-    const target = idx + dir;
-    if (target < 0 || target >= opts.length) return;
-    [opts[idx], opts[target]] = [opts[target], opts[idx]];
-    updateOptions("codeQualityOptions", opts);
+    const n = parseFloat(v);
+    updateWeights({ [k]: isNaN(n) ? 0 : n / 100 });
   };
 
   const doExport = () => {
@@ -180,77 +181,31 @@ export function SettingsPanel() {
             </div>
           </div>
 
-          <div className="settings-panel__section">
-            <h3>Code Quality grades</h3>
-            <div className="settings-panel__table-wrap">
-              <table className="settings-panel__table">
-                <thead>
-                  <tr>
-                    <th>Label</th>
-                    <th>Multiplier</th>
-                    <th>Order</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {config.codeQualityOptions.map((opt, idx) => (
-                    <tr key={idx}>
-                      <td><input className="input" value={opt.label}
-                        onChange={e => updateCqField(idx, "label", e.target.value)} /></td>
-                      <td><input className="input" type="number" step="0.01" value={opt.multiplier}
-                        onChange={e => updateCqField(idx, "multiplier", e.target.value)} /></td>
-                      <td className="settings-panel__order-cell">
-                        <button className="btn btn--xs" disabled={idx === 0} onClick={() => moveCq(idx, -1)}>↑</button>
-                        <button className="btn btn--xs" disabled={idx === config.codeQualityOptions.length - 1} onClick={() => moveCq(idx, 1)}>↓</button>
-                      </td>
-                      <td><button className="btn btn--xs btn--danger" disabled={config.codeQualityOptions.length <= 1} onClick={() => removeCq(idx)}>×</button></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <button className="btn btn--sm" onClick={addCq}>+ Add grade</button>
-          </div>
+          <ListEditor
+            title="Code Quality grades" addLabel="+ Add grade"
+            items={config.codeQualityOptions}
+            onChange={items => updateKey("codeQualityOptions", items)}
+            newItem={() => ({ label: "New grade", multiplier: 1.0 })}
+            columns={[
+              { key: "label", head: "Label" },
+              { key: "multiplier", head: "Multiplier", type: "number", parse: num },
+            ]}
+          />
 
           {BAND_GROUPS.map(group => (
-            <div key={group.key} className="settings-panel__section">
-              <h3>{group.label}</h3>
-              <div className="settings-panel__table-wrap">
-                <table className="settings-panel__table">
-                  <thead>
-                    <tr>
-                      <th>Label</th>
-                      <th>Min {group.unit}</th>
-                      <th>Max {group.unit} <span className="settings-panel__hint">(blank = ∞)</span></th>
-                      <th>Multiplier</th>
-                      <th>Order</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {config[group.key].map((band, idx) => (
-                      <tr key={idx}>
-                        <td><input className="input" value={band.label}
-                          onChange={e => updateBandField(group.key, idx, "label", e.target.value)} /></td>
-                        <td><input className="input" type="number" step="0.01" value={band.min}
-                          onChange={e => updateBandField(group.key, idx, "min", e.target.value)} /></td>
-                        <td><input className="input" type="number" step="0.01"
-                          value={fmtMax(band.max)} placeholder="∞"
-                          onChange={e => updateBandField(group.key, idx, "max", e.target.value)} /></td>
-                        <td><input className="input" type="number" step="0.01" value={band.multiplier}
-                          onChange={e => updateBandField(group.key, idx, "multiplier", e.target.value)} /></td>
-                        <td className="settings-panel__order-cell">
-                          <button className="btn btn--xs" disabled={idx === 0} onClick={() => moveBand(group.key, idx, -1)}>↑</button>
-                          <button className="btn btn--xs" disabled={idx === config[group.key].length - 1} onClick={() => moveBand(group.key, idx, 1)}>↓</button>
-                        </td>
-                        <td><button className="btn btn--xs btn--danger" disabled={config[group.key].length <= 1} onClick={() => removeBand(group.key, idx)}>×</button></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <button className="btn btn--sm" onClick={() => addBand(group.key)}>+ Add band</button>
-            </div>
+            <ListEditor
+              key={group.key}
+              title={group.label} addLabel="+ Add band"
+              items={config[group.key]}
+              onChange={items => updateKey(group.key, items)}
+              newItem={() => ({ label: "New band", min: 0, max: 0, multiplier: 1.0 })}
+              columns={[
+                { key: "label", head: "Label" },
+                { key: "min", head: "Min %", type: "number", parse: num },
+                { key: "max", head: <>Max % <span className="settings-panel__hint">(blank = ∞)</span></>, type: "number", parse: parseMax, format: fmtMax, placeholder: "∞" },
+                { key: "multiplier", head: "Multiplier", type: "number", parse: num },
+              ]}
+            />
           ))}
         </div>
       )}
