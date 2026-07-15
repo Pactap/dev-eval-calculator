@@ -28,16 +28,25 @@ export function loadLedger() {
   }
 }
 
-function saveLedger(ledger) {
+export function saveLedger(ledger) {
   try {
     store().setItem(LEDGER_KEY, JSON.stringify(ledger));
   } catch { /* quota / private mode — non-fatal, tracking just won't persist */ }
 }
 
-/** Normalized per-developer key: Employee ID preferred, else name. "" if neither. */
+/**
+ * Normalize an Employee ID for use as a stable ledger key: trimmed, lower-cased,
+ * and stripped to alphanumeric only (case-agnostic, no special characters), so
+ * "PT-1042", "pt 1042" and "pt1042" all map to the same developer.
+ */
+export function normalizeEmpId(v) {
+  return String(v || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+/** Per-developer key: normalized Employee ID preferred, else a trimmed name. "" if neither. */
 export function devKeyOf(meta = {}) {
-  const id = String(meta.empId || "").trim().toLowerCase();
-  const name = String(meta.devName || "").trim().toLowerCase();
+  const id = normalizeEmpId(meta.empId);
+  const name = String(meta.devName || "").trim().toLowerCase().replace(/\s+/g, " ");
   return id || name || "";
 }
 

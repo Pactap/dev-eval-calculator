@@ -64,6 +64,14 @@ export default {
        Durable Object if real concurrency ever needs true atomicity. */
     if (url.pathname === "/rh") {
       if (request.method === "GET") return json({ ok: true, ledger: await readLedger(env) });
+      if (request.method === "PUT") {                // bulk replace (admin import) — passkey-gated
+        if (!authed()) return json({ error: "Invalid passkey" }, 401);
+        let body;
+        try { body = JSON.parse(await request.text()); } catch { return json({ error: "Invalid JSON" }, 400); }
+        if (!body || typeof body !== "object" || Array.isArray(body)) return json({ error: "Ledger must be an object" }, 400);
+        await env.CONFIG.put(RH_KEY, JSON.stringify(body));
+        return json({ ok: true, ledger: body });
+      }
       return json({ error: "Method not allowed" }, 405);
     }
 

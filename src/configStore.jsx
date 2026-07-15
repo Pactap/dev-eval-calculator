@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { DEFAULT_CONFIG } from "./constants.js";
 import { validateConfig } from "./configValidation.js";
-import { loadLedger, recordRh, clearRh } from "./restrictedHolidays.js";
+import { loadLedger, saveLedger, recordRh, clearRh } from "./restrictedHolidays.js";
 
 const STORAGE_KEY = "devEvalConfig.v1";
 // Optional backend (Cloudflare Worker). Set VITE_CONFIG_API to enable the shared,
@@ -173,6 +173,25 @@ export function ConfigProvider({ children }) {
     }
   }, []);
 
+  // Bulk replace the whole ledger (admin JSON import). Server-authoritative when
+  // configured (passkey-gated PUT /rh), else writes the local ledger.
+  const replaceRhLedger = useCallback(async (ledger) => {
+    if (CONFIG_API) {
+      const res = await fetch(`${CONFIG_API}/rh`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "X-Passkey": keyRef.current || "" },
+        body: JSON.stringify(ledger),
+      });
+      if (res.status === 404) { saveLedger(ledger); setRhLedger(ledger); return; } // worker without /rh — local
+      if (!res.ok) throw new Error(res.status === 401 ? "Server rejected the passkey." : `Import failed (${res.status}).`);
+      const j = await res.json().catch(() => ({}));
+      setRhLedger(j.ledger || ledger);
+    } else {
+      saveLedger(ledger);
+      setRhLedger(ledger);
+    }
+  }, []);
+
   // With a server, recording an RH is a write and needs the passkey; local-only stays open.
   const rhWritable = CONFIG_API ? unlocked : true;
 
@@ -219,7 +238,7 @@ export function ConfigProvider({ children }) {
       exportJson, importJson,
       publishConfig, configApiEnabled: !!CONFIG_API,
       unlocked, unlock, lock,
-      rhUsage, claimRh, releaseRh, rhWritable,
+      rhUsage, claimRh, releaseRh, rhWritable, rhLedger, replaceRhLedger,
     }}>
       {children}
     </ConfigContext.Provider>

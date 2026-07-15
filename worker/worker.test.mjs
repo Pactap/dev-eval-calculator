@@ -99,6 +99,18 @@ test("release frees the slot so a new date can be claimed", async () => {
   assert.equal(reclaim.status, 200);
 });
 
+test("PUT /rh bulk-replaces the whole ledger (admin import), passkey-gated", async () => {
+  const env = mkEnv();
+  const ledger = { pt1042: { "2026": { date: "2026-03-06", name: "Holi" } } };
+  const noKey = await worker.fetch(reqTo("/rh", "PUT", ledger), env);
+  assert.equal(noKey.status, 401);
+  assert.equal(env.CONFIG.store.rhLedger, undefined);
+  const ok = await worker.fetch(reqTo("/rh", "PUT", ledger, KEY), env);
+  assert.equal(ok.status, 200);
+  const get = await worker.fetch(reqTo("/rh", "GET"), env);
+  assert.deepEqual((await get.json()).ledger, ledger);
+});
+
 test("claim rejects a malformed year/date with 400", async () => {
   const env = mkEnv();
   const badYear = await worker.fetch(reqTo("/rh/claim", "POST", { devKey: "a1", year: "26", entry: { date: "2026-03-06" } }, KEY), env);

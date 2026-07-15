@@ -12,9 +12,14 @@ globalThis.localStorage = (() => {
   };
 })();
 
-import { countWorkingDays, isWeekend, effectiveCountStart } from "../src/utils.js";
+import { countWorkingDays, isWeekend, effectiveCountStart, dayName } from "../src/utils.js";
 import { summarizeAvailability } from "../src/availability.js";
-import { devKeyOf, yearOf, rhUsage, recordRh, clearRh } from "../src/restrictedHolidays.js";
+import { devKeyOf, normalizeEmpId, yearOf, rhUsage, recordRh, clearRh } from "../src/restrictedHolidays.js";
+import {
+  exportCompanyHolidays, importCompanyHolidays,
+  exportRestrictedPool, importRestrictedPool,
+  exportDeveloperUsage, importDeveloperUsage,
+} from "../src/bulkIO.js";
 
 /* ---------------- isWeekend ---------------- */
 
@@ -87,10 +92,23 @@ test("summarizeAvailability excludes holidays outside the quarter window", () =>
 
 /* ---------------- ledger: one restricted holiday per dev per year ---------------- */
 
-test("devKeyOf prefers Employee ID, falls back to name, else empty", () => {
-  assert.equal(devKeyOf({ empId: "PT-1042" }), "pt-1042");
+test("normalizeEmpId strips to alphanumeric, case-agnostic, trimmed", () => {
+  assert.equal(normalizeEmpId("PT-1042"), "pt1042");
+  assert.equal(normalizeEmpId("  pt 1042 "), "pt1042");
+  assert.equal(normalizeEmpId("PT_1042"), "pt1042");
+  assert.equal(normalizeEmpId(""), "");
+});
+
+test("devKeyOf prefers normalized Employee ID, falls back to name, else empty", () => {
+  assert.equal(devKeyOf({ empId: "PT-1042" }), "pt1042");     // special chars stripped
   assert.equal(devKeyOf({ empId: "  ", devName: "Jordan Rivera" }), "jordan rivera");
   assert.equal(devKeyOf({}), "");
+});
+
+test("dayName returns the weekday of an ISO date", () => {
+  assert.equal(dayName("2026-03-06"), "Friday");
+  assert.equal(dayName("2026-03-08"), "Sunday");
+  assert.equal(dayName(""), "");
 });
 
 test("yearOf extracts the calendar year", () => {
@@ -144,4 +162,43 @@ test("a restricted holiday on a shared-boundary day would exclude nothing (why i
   assert.equal(countWorkingDays(cs, end, [start]), countWorkingDays(cs, end));
   // A day the sprint actually owns does remove exactly one.
   assert.equal(countWorkingDays(cs, end, ["2026-03-18"]), countWorkingDays(cs, end) - 1);
+});
+
+/* ---------------- bulk JSON import / export ---------------- */
+
+test("company holidays round-trip: export carries day+name, import restores dates+names", () => {
+  const out = exportCompanyHolidays(["2026-03-10"], { "2026-03-10": "Company Day" });
+  assert.equal(out.type, "companyHolidays");
+  assert.deepEqual(out.holidays[0], { date: "2026-03-10", day: "Tuesday", name: "Company Day" });
+  const back = importCompanyHolidays(out);
+  assert.deepEqual(back.holidays, ["2026-03-10"]);
+  assert.deepEqual(back.holidayNames, { "2026-03-10": "Company Day" });
+});
+
+test("restricted pool round-trip maps name<->label and dedupes by date", () => {
+  const out = exportRestrictedPool([{ date: "2026-03-06", label: "Holi" }]);
+  assert.deepEqual(out.restrictedHolidays[0], { date: "2026-03-06", day: "Friday", name: "Holi" });
+  const back = importRestrictedPool({ restrictedHolidays: [{ date: "2026-03-06", name: "Holi" }, { date: "2026-03-06", name: "Dup" }] });
+  assert.deepEqual(back, [{ date: "2026-03-06", label: "Holi" }]);
+});
+
+test("importRestrictedPool requires a name and a valid date", () => {
+  assert.throws(() => importRestrictedPool({ restrictedHolidays: [{ date: "2026-03-06" }] }), /name is required/);
+  assert.throws(() => importRestrictedPool({ restrictedHolidays: [{ date: "nope", name: "X" }] }), /YYYY-MM-DD/);
+});
+
+test("developer usage round-trip normalizes employee id and rebuilds the ledger", () => {
+  const ledger = { pt1042: { "2026": { date: "2026-03-06", name: "Holi", empId: "PT-1042" } } };
+  const out = exportDeveloperUsage(ledger);
+  assert.deepEqual(out.usage[0], { employeeId: "PT-1042", date: "2026-03-06", day: "Friday", name: "Holi", year: "2026" });
+  const back = importDeveloperUsage({ usage: [{ employeeId: "PT-1042", date: "2026-03-06", name: "Holi" }] });
+  assert.equal(back.pt1042["2026"].date, "2026-03-06");
+  assert.equal(back.pt1042["2026"].empId, "PT-1042");
+});
+
+test("importDeveloperUsage enforces one restricted holiday per developer per year", () => {
+  assert.throws(() => importDeveloperUsage({ usage: [
+    { employeeId: "PT-1", date: "2026-03-06", name: "Holi" },
+    { employeeId: "pt-1", date: "2026-06-05", name: "Raksha Bandhan" }, // same dev (normalized), same year
+  ] }), /already has a 2026 restricted holiday/);
 });

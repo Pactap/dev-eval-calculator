@@ -169,3 +169,14 @@ export function formatDate(str) {
   const d = parseLocalDate(str) || new Date(str);
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
+
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+/**
+ * Weekday name of an ISO "YYYY-MM-DD" date ("2026-03-06" -> "Friday"), local time.
+ * Included in exported holiday JSON for readability; derived (not trusted) on import.
+ */
+export function dayName(str) {
+  const d = parseLocalDate(str);
+  return d ? DAY_NAMES[d.getDay()] : "";
+}
