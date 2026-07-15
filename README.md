@@ -54,7 +54,13 @@ npm run check    # test + build
 
 ## Deployment
 
-Pushing to `master` triggers `.github/workflows/deploy.yml`, which tests, builds, and deploys `dist/` to GitHub Pages. Vite uses a relative base (`./`) so the app runs from the project subpath.
+Live at **https://pactap.github.io/dev-eval-calculator/**, served from the `gh-pages` branch.
+
+```bash
+npm run deploy   # test + build, then publish dist/ to the gh-pages branch
+```
+
+Vite uses a relative base (`./`) so the app runs from the project subpath, and `public/.nojekyll` keeps GitHub Pages from processing the build. (GitHub Actions is not used because Actions runners are disabled for this repository at the organization level.)
 
 ## Repository structure
 
