@@ -1,50 +1,29 @@
 import { useState, useEffect } from "react";
-import { CODE_QUALITY_OPTIONS, WEIGHTS } from "../constants.js";
 import { formatDate } from "../utils.js";
+import { useConfig } from "../configStore.jsx";
 import { Pill } from "./Pill.jsx";
 import { MetricSection } from "./MetricSection.jsx";
 import { ScoreTable } from "./ScoreTable.jsx";
-
-const METRIC_CONFIGS = [
-  {
-    key: "ph",
-    icon: "PH",
-    title: "Planned Hours",
-    weightLabel: `${WEIGHTS.ph * 100}%`,
-    tipText: "(Completed + Collaboration) / Allotted Hours. Rework excluded.",
-  },
-  {
-    key: "cq",
-    icon: "CQ",
-    title: "Code Quality",
-    weightLabel: `${WEIGHTS.cq * 100}%`,
-    tipText: "Team lead grade, cross-checked against CQI.",
-  },
-  {
-    key: "eff",
-    icon: "EF",
-    title: "Efficiency",
-    weightLabel: `${WEIGHTS.eff * 100}% auto`,
-    tipText: null,
-  },
-  {
-    key: "ip",
-    icon: "IP",
-    title: "Issue Persists",
-    weightLabel: `${WEIGHTS.ip * 100}%`,
-    tipText: "Reopened / Done. Legacy reach-back, each reopen counted separately. Zero Done = worst band.",
-  },
-];
 
 export function SprintCard({
   index, sprint, sprintWithWD, result, isLocked, exceedsQuarter,
   quarterLocked, quarterStart, quarterEnd, dailyRate,
   onUpdate, onToggleLock, onRemove, canRemove,
 }) {
+  const { config } = useConfig();
+  const { weights, codeQualityOptions } = config;
+
+  const METRIC_CONFIGS = [
+    { key: "ph", icon: "PH", title: "Planned Hours", weightLabel: `${(weights.ph * 100).toFixed(0)}%`, tipText: "(Completed + Collaboration) / Allotted Hours. Rework excluded." },
+    { key: "cq", icon: "CQ", title: "Code Quality", weightLabel: `${(weights.cq * 100).toFixed(0)}%`, tipText: "Team lead grade, cross-checked against CQI." },
+    { key: "eff", icon: "EF", title: "Efficiency", weightLabel: `${(weights.eff * 100).toFixed(0)}%`, tipText: "Tickets Marked Closed / Tickets Assigned in sprint." },
+    { key: "ip", icon: "IP", title: "Issue Persists", weightLabel: `${(weights.ip * 100).toFixed(0)}%`, tipText: "Reopened / Done. Legacy reach-back, each reopen counted separately. Zero Done = worst band." },
+  ];
+
   const s = sprint;
   const sw = sprintWithWD;
   const r = result;
-  const hasInput = r.wd > 0;
+  const hasInput = r.wdTotal > 0;
 
   const [localStartDate, setLocalStartDate] = useState(s.startDate);
   const [localEndDate, setLocalEndDate] = useState(s.endDate);
@@ -64,27 +43,15 @@ export function SprintCard({
             <div className="metric__inputs">
               <div className="metric__input-field">
                 <label className="label">Completed</label>
-                <input
-                  type="number"
-                  min="0"
-                  placeholder="0"
-                  value={s.completedHours}
-                  disabled={isLocked}
+                <input type="number" min="0" placeholder="0" value={s.completedHours} disabled={isLocked}
                   className={`input${isLocked ? " input--disabled" : ""}`}
-                  onChange={e => onUpdate("completedHours", e.target.value)}
-                />
+                  onChange={e => onUpdate("completedHours", e.target.value)} />
               </div>
               <div className="metric__input-field">
                 <label className="label">Collab</label>
-                <input
-                  type="number"
-                  min="0"
-                  placeholder="0"
-                  value={s.collaborationHours}
-                  disabled={isLocked}
+                <input type="number" min="0" placeholder="0" value={s.collaborationHours} disabled={isLocked}
                   className={`input${isLocked ? " input--disabled" : ""}`}
-                  onChange={e => onUpdate("collaborationHours", e.target.value)}
-                />
+                  onChange={e => onUpdate("collaborationHours", e.target.value)} />
               </div>
             </div>
           ),
@@ -101,13 +68,10 @@ export function SprintCard({
         return {
           children: (
             <div className="metric__inputs metric__inputs--quality">
-              {CODE_QUALITY_OPTIONS.map(opt => (
-                <button
-                  key={opt.label}
-                  disabled={isLocked}
+              {codeQualityOptions.map(opt => (
+                <button key={opt.label} disabled={isLocked}
                   className={`cq-btn${s.codeQuality === opt.label ? " cq-btn--active" : ""}${isLocked ? " cq-btn--disabled" : ""}`}
-                  onClick={() => onUpdate("codeQuality", opt.label)}
-                >
+                  onClick={() => onUpdate("codeQuality", opt.label)}>
                   {opt.label}
                 </button>
               ))}
@@ -122,13 +86,27 @@ export function SprintCard({
         };
       case "eff":
         return {
-          children: !hasInput ? <div className="metric__auto-text">Auto-calculated from completed hours</div> : null,
+          children: (
+            <div className="metric__inputs">
+              <div className="metric__input-field">
+                <label className="label">Closed</label>
+                <input type="number" min="0" placeholder="0" value={s.closedTickets} disabled={isLocked}
+                  className={`input${isLocked ? " input--disabled" : ""}`}
+                  onChange={e => onUpdate("closedTickets", e.target.value)} />
+              </div>
+              <div className="metric__input-field">
+                <label className="label">Assigned</label>
+                <input type="number" min="0" placeholder="0" value={s.assignedTickets} disabled={isLocked}
+                  className={`input${isLocked ? " input--disabled" : ""}`}
+                  onChange={e => onUpdate("assignedTickets", e.target.value)} />
+              </div>
+            </div>
+          ),
           resultDisplay: hasInput ? (
-            <div className="metric__result">
-              <span>{r.effPct.toFixed(1)}%</span>
-              <span className="metric__arrow">{"->"}</span>
-              <span>{r.effB.label}</span>
-              <Pill value={r.effB.multiplier} />
+            <div className={`metric__result${r.noAssigned ? " metric__result--error" : ""}`}>
+              {r.noAssigned
+                ? <><span className="metric__emphasis">No tickets assigned</span><Pill value={r.effB.multiplier} /></>
+                : <><span>{r.closed}/{r.assigned} = {r.effPct.toFixed(1)}%</span><span className="metric__arrow">{"->"}</span><span>{r.effB.label}</span><Pill value={r.effB.multiplier} /></>}
             </div>
           ) : null,
         };
@@ -138,27 +116,15 @@ export function SprintCard({
             <div className="metric__inputs">
               <div className="metric__input-field">
                 <label className="label">Reopened</label>
-                <input
-                  type="number"
-                  min="0"
-                  placeholder="0"
-                  value={s.reopenedTickets}
-                  disabled={isLocked}
+                <input type="number" min="0" placeholder="0" value={s.reopenedTickets} disabled={isLocked}
                   className={`input${isLocked ? " input--disabled" : ""}`}
-                  onChange={e => onUpdate("reopenedTickets", e.target.value)}
-                />
+                  onChange={e => onUpdate("reopenedTickets", e.target.value)} />
               </div>
               <div className="metric__input-field">
                 <label className="label">Done tickets</label>
-                <input
-                  type="number"
-                  min="0"
-                  placeholder="0"
-                  value={s.doneTickets}
-                  disabled={isLocked}
+                <input type="number" min="0" placeholder="0" value={s.doneTickets} disabled={isLocked}
                   className={`input${isLocked ? " input--disabled" : ""}`}
-                  onChange={e => onUpdate("doneTickets", e.target.value)}
-                />
+                  onChange={e => onUpdate("doneTickets", e.target.value)} />
               </div>
             </div>
           ),
@@ -181,15 +147,13 @@ export function SprintCard({
         <div className="sprint-card__identity">
           <span className={`sprint-card__number${isLocked ? " sprint-card__number--locked" : ""}`}>{index + 1}</span>
           <div className="sprint-card__title-block">
-            <input
-              type="text"
-              value={s.name}
-              placeholder={`Sprint ${index + 1}`}
-              disabled={isLocked}
-              className={`sprint-card__name${isLocked ? " sprint-card__name--locked" : ""}`}
-              onChange={e => onUpdate("name", e.target.value)}
-            />
-            <span className="sprint-card__meta">{isLocked ? "Locked sprint" : "Open sprint"}</span>
+            <div className="sprint-card__name-row">
+              <input type="text" value={s.name} placeholder={`Sprint ${index + 1}`} disabled={isLocked}
+                className={`sprint-card__name${isLocked ? " sprint-card__name--locked" : ""}`}
+                onChange={e => onUpdate("name", e.target.value)} />
+              {s.draft && !isLocked && <span className="sprint-card__draft-badge">Draft</span>}
+            </div>
+            <span className="sprint-card__meta">{isLocked ? "Locked sprint" : s.draft ? "Auto-generated draft" : "Open sprint"}</span>
           </div>
         </div>
         <div className="sprint-card__actions">
@@ -207,38 +171,28 @@ export function SprintCard({
       <div className="sprint-card__dates">
         <div className="sprint-card__date-field">
           <label className="label">Start date</label>
-          <input
-            type="date"
-            value={localStartDate}
-            disabled={isLocked}
-            min={quarterLocked ? quarterStart : undefined}
-            max={quarterLocked ? quarterEnd : undefined}
+          <input type="date" value={localStartDate} disabled={isLocked}
+            min={quarterLocked ? quarterStart : undefined} max={quarterLocked ? quarterEnd : undefined}
             className={`input${isLocked ? " input--disabled" : ""}`}
-            onChange={e => {
-              setLocalStartDate(e.target.value);
-              onUpdate("startDate", e.target.value);
-            }}
-          />
+            onChange={e => { setLocalStartDate(e.target.value); onUpdate("startDate", e.target.value); }} />
         </div>
         <div className="sprint-card__date-field">
           <label className="label">End date</label>
-          <input
-            type="date"
-            value={localEndDate}
-            disabled={isLocked}
-            min={localStartDate || (quarterLocked ? quarterStart : undefined)}
-            max={quarterLocked ? quarterEnd : undefined}
+          <input type="date" value={localEndDate} disabled={isLocked}
+            min={localStartDate || (quarterLocked ? quarterStart : undefined)} max={quarterLocked ? quarterEnd : undefined}
             className={`input${isLocked ? " input--disabled" : ""}`}
-            onChange={e => {
-              setLocalEndDate(e.target.value);
-              onUpdate("endDate", e.target.value);
-            }}
-          />
+            onChange={e => { setLocalEndDate(e.target.value); onUpdate("endDate", e.target.value); }} />
         </div>
         <div className="sprint-card__stat-field">
-          <label className="label">Work days</label>
+          <label className="label">{r.leaks ? "Total days" : "Work days"}</label>
           <div className="input input--green">{sw.workingDays || "-"}</div>
         </div>
+        {r.leaks && (
+          <div className="sprint-card__stat-field">
+            <label className="label">In-quarter</label>
+            <div className="input input--green">{r.wdInQuarter}</div>
+          </div>
+        )}
         <div className="sprint-card__stat-field">
           <label className="label">Base pts</label>
           <div className="input input--display">{r.bp.toFixed(2)}</div>
@@ -249,18 +203,25 @@ export function SprintCard({
         </div>
       </div>
 
+      {r.leaks && (
+        <div className="sprint-card__leak-note">
+          Sprint spans quarter boundary — {r.wdInQuarter} of {r.wdTotal} productive days counted toward this quarter's base points. Metrics use the full sprint.
+        </div>
+      )}
+
+      {sw.sharesStartBoundary && !isLocked && (
+        <div className="sprint-card__leak-note">
+          Shares its start date ({formatDate(s.startDate)}) with the previous sprint — that day is counted in the previous sprint, so it's excluded from this sprint's productive days.
+        </div>
+      )}
+
       <div className="metric-grid">
         {METRIC_CONFIGS.map(cfg => {
           const { children, resultDisplay } = renderMetricContent(cfg.key);
           return (
-            <MetricSection
-              key={cfg.key}
-              icon={cfg.icon}
-              title={cfg.title}
-              weightLabel={cfg.weightLabel}
-              tipText={cfg.tipText}
-              hasInputs={cfg.key !== "eff"}
-            >
+            <MetricSection key={cfg.key} icon={cfg.icon} title={cfg.title}
+              weightLabel={cfg.weightLabel} tipText={cfg.tipText}
+              hasInputs={true}>
               {children}
               {resultDisplay}
             </MetricSection>

@@ -1,11 +1,15 @@
 import { useState, useMemo, useEffect } from "react";
 import { createSprint } from "./constants.js";
-import { countWorkingDays } from "./utils.js";
+import { countWorkingDays, countWorkingDaysInWindow, parseLocalDate, toISO, generateSprintPeriods, quarterEndFrom, addDaysISO } from "./utils.js";
 import { computeSprintResult, computeQuarterlySummary } from "./scoring.js";
+import { useConfig } from "./configStore.jsx";
 import { QuarterConfig } from "./components/QuarterConfig.jsx";
 import { SprintCard } from "./components/SprintCard.jsx";
 import { CorrelationChart } from "./components/CorrelationChart.jsx";
 import { QuarterlySummary } from "./components/QuarterlySummary.jsx";
+import { SettingsPanel } from "./components/SettingsPanel.jsx";
+import { Framework } from "./components/Framework.jsx";
+import { APP_VERSION } from "./version.js";
 import "./App.css";
 
 const THEME_OPTIONS = [
@@ -73,56 +77,162 @@ function KpiCard({ label, value, detail, tone = "default" }) {
   );
 }
 
+const REPORT_FIELDS = [
+  { key: "devName", label: "Developer full name", type: "text", placeholder: "e.g. Jordan Rivera" },
+  { key: "empId", label: "Employee ID", type: "text", placeholder: "e.g. PT-1042" },
+  { key: "quarterLabel", label: "Quarter", type: "text", placeholder: "e.g. Q2 FY2026-27" },
+  { key: "doj", label: "Date of joining", type: "date", placeholder: "" },
+];
+
+function ReportDetails({ meta, onChange }) {
+  return (
+    <section className="card report-details" aria-label="Report details">
+      <div className="report-details__head">
+        <div>
+          <div className="eyebrow">Report Details</div>
+          <h2>Developer &amp; quarter (optional)</h2>
+        </div>
+        <span className="report-details__hint">Included in the PDF report header</span>
+      </div>
+      <div className="report-details__grid">
+        {REPORT_FIELDS.map(f => (
+          <div key={f.key} className="report-details__field">
+            <label className="label" htmlFor={`rd-${f.key}`}>{f.label}</label>
+            <input
+              id={`rd-${f.key}`}
+              type={f.type}
+              value={meta[f.key]}
+              placeholder={f.placeholder}
+              className="input"
+              onChange={e => onChange({ ...meta, [f.key]: e.target.value })}
+            />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+const SPRINT_LENGTH_DAYS = 14;
+
+// A sprint the user hasn't touched — safe to replace with auto-generated drafts.
+// Also treats a renamed sprint or a changed code-quality grade as "touched" so
+// auto-generation never silently discards those (the initial sprint ships as
+// name "Sprint 1" / grade "Satisfactory", which still count as untouched).
+function isPristineSprint(s) {
+  return !s.locked
+    && (!s.name || s.name === "Sprint 1")
+    && s.codeQuality === "Satisfactory"
+    && !s.startDate && !s.endDate
+    && !s.completedHours && !s.collaborationHours
+    && !s.assignedTickets && !s.closedTickets
+    && !s.reopenedTickets && !s.doneTickets;
+}
+
 export default function DevEvaluationCalculator() {
   const theme = useTheme();
+  const { config, setHolidays } = useConfig();
+  const holidays = config.holidays || [];
   const [quarterStart, setQuarterStart] = useState("");
   const [quarterEnd, setQuarterEnd] = useState("");
+  const [endEdited, setEndEdited] = useState(false); // true once the user manually sets the end date
   const [quarterLocked, setQuarterLocked] = useState(false);
   const [quarterBase, setQuarterBase] = useState(90);
   const [dailyCapacity, setDailyCapacity] = useState(7);
   const [sprints, setSprints] = useState([createSprint({ name: "Sprint 1" })]);
+  const [reportMeta, setReportMeta] = useState({ devName: "", empId: "", quarterLabel: "", doj: "" });
+  const [view, setView] = useState("workspace"); // "workspace" | "framework"
+  const [toast, setToast] = useState(null); // { type: "success" | "error", message }
 
-  const totalWorkingDays = useMemo(() => countWorkingDays(quarterStart, quarterEnd), [quarterStart, quarterEnd]);
+  const totalWorkingDays = useMemo(() => countWorkingDays(quarterStart, quarterEnd, holidays), [quarterStart, quarterEnd, holidays]);
   const dailyRate = totalWorkingDays > 0 ? quarterBase / totalWorkingDays : 0;
+
+  // Entering the period start auto-suggests the end (a quarter later) until the
+  // user edits the end themselves; always editable before the period is locked.
+  const handleQuarterStartChange = (v) => {
+    setQuarterStart(v);
+    if (!endEdited && v) setQuarterEnd(quarterEndFrom(v));
+  };
+  const handleQuarterEndChange = (v) => {
+    setQuarterEnd(v);
+    setEndEdited(Boolean(v)); // clearing the end re-enables auto-fill from start
+  };
 
   const updateSprint = (i, f, v) => setSprints(p => p.map((s, j) => j === i ? { ...s, [f]: v } : s));
   const addSprint = () => {
+    // New sprint begins on the previous sprint's end date (shared boundary).
     const lastSprint = sprints[sprints.length - 1];
-    let nextStart = "";
-    if (lastSprint.endDate) {
-      const d = new Date(lastSprint.endDate);
-      d.setDate(d.getDate() + 1);
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, "0");
-      const dd = String(d.getDate()).padStart(2, "0");
-      nextStart = `${yyyy}-${mm}-${dd}`;
-    }
+    const nextStart = lastSprint.endDate || "";
     setSprints(p => [...p, createSprint({ name: `Sprint ${p.length + 1}`, startDate: nextStart })]);
   };
   const removeSprint = (i) => setSprints(p => p.filter((_, j) => j !== i));
 
   const sprintsWithWD = useMemo(() => {
-    return sprints.map(s => {
-      if (s.locked && s.workingDays) return s;
-      const autoWD = countWorkingDays(s.startDate, s.endDate);
-      return { ...s, workingDays: autoWD > 0 ? autoWD.toString() : s.workingDays };
+    return sprints.map((s, i) => {
+      if (s.locked) return s;
+      // Unlocked sprints derive day counts purely from their dates + holidays —
+      // never fall back to stale frozen values left over from a prior lock.
+      // Shared boundary: when a sprint starts on the previous sprint's end date,
+      // that shared day is counted in the EARLIER sprint only, so per-sprint
+      // counts tile the quarter exactly (summed base stays within the quarter base).
+      const prevEnd = i > 0 ? sprints[i - 1].endDate : "";
+      const sharesStartBoundary = Boolean(s.startDate && prevEnd && s.startDate === prevEnd);
+      const countStart = sharesStartBoundary ? addDaysISO(s.startDate, 1) : s.startDate;
+
+      const wdTotal = countWorkingDays(countStart, s.endDate, holidays);
+      const wdInQuarter = countWorkingDaysInWindow(countStart, s.endDate, quarterStart, quarterEnd, holidays);
+      return {
+        ...s,
+        sharesStartBoundary,
+        workingDays: wdTotal > 0 ? wdTotal.toString() : "",
+        workingDaysTotal: wdTotal > 0 ? wdTotal.toString() : "",
+        workingDaysInQuarter: wdInQuarter.toString(),
+      };
     });
-  }, [sprints]);
+  }, [sprints, quarterStart, quarterEnd, holidays]);
 
   const toggleLock = (i) => {
     const sprintForResult = sprintsWithWD[i];
     setSprints(p => p.map((s, j) => {
       if (j !== i) return s;
-      if (s.locked) return { ...s, locked: false, lockedResult: null };
+      if (s.locked) return { ...s, locked: false, lockedResult: null, workingDays: "", workingDaysTotal: "", workingDaysInQuarter: "" };
 
-      const lockedResult = computeSprintResult(sprintForResult, dailyRate, dailyCapacity);
+      const lockedResult = computeSprintResult(sprintForResult, dailyRate, dailyCapacity, config);
       return {
         ...s,
         workingDays: sprintForResult.workingDays,
+        workingDaysTotal: sprintForResult.workingDaysTotal,
+        workingDaysInQuarter: sprintForResult.workingDaysInQuarter,
         locked: true,
+        draft: false,
         lockedResult,
       };
     }));
+  };
+
+  const handleQuarterLock = () => {
+    if (quarterLocked) {          // unlock — leave sprints untouched
+      setQuarterLocked(false);
+      return;
+    }
+    if (!quarterStart || !quarterEnd) return;
+    if (parseLocalDate(quarterStart) > parseLocalDate(quarterEnd)) {
+      setToast({ type: "error", message: "Quarter start date is after the end date." });
+      return;
+    }
+    // On first lock, scaffold the period into 14-day draft sprints — but only when
+    // the sprint list is untouched, so we never clobber work the user already entered.
+    if (sprints.every(isPristineSprint)) {
+      const periods = generateSprintPeriods(quarterStart, quarterEnd, SPRINT_LENGTH_DAYS);
+      if (periods.length > 0) {
+        setSprints(periods.map(p => createSprint({ ...p, draft: true })));
+        setToast({
+          type: "success",
+          message: `Locked. Generated ${periods.length} draft sprint${periods.length > 1 ? "s" : ""} (${SPRINT_LENGTH_DAYS}-day) — edit or remove any before locking each.`,
+        });
+      }
+    }
+    setQuarterLocked(true);
   };
 
   const lastSprintExceedsQuarter = useMemo(() => {
@@ -136,15 +246,49 @@ export default function DevEvaluationCalculator() {
     return sprintsWithWD.map((s, index) => (
       sprints[index]?.locked && sprints[index].lockedResult
         ? sprints[index].lockedResult
-        : computeSprintResult(s, dailyRate, dailyCapacity)
+        : computeSprintResult(s, dailyRate, dailyCapacity, config)
     ));
-  }, [sprints, sprintsWithWD, dailyRate, dailyCapacity]);
+  }, [sprints, sprintsWithWD, dailyRate, dailyCapacity, config]);
 
   const qSummary = useMemo(() => {
     return computeQuarterlySummary(sprintResults, totalWorkingDays, dailyRate);
   }, [sprintResults, totalWorkingDays, dailyRate]);
 
   const lockedCount = useMemo(() => sprints.filter(s => s.locked).length, [sprints]);
+
+  const canExport = Boolean(quarterStart && quarterEnd && totalWorkingDays > 0
+    && sprintResults.some(r => r.wdTotal > 0));
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 4500);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportPdf = async () => {
+    if (!canExport) {
+      setToast({ type: "error", message: "Add quarter dates and at least one sprint with productive days before exporting." });
+      return;
+    }
+    setExporting(true);
+    try {
+      // Lazy-loaded so the ~500 KB PDF stack stays out of the initial bundle.
+      const { generateQuarterlyReportPDF } = await import("./pdfReport.js");
+      generateQuarterlyReportPDF({
+        quarterStart, quarterEnd, quarterBase, dailyCapacity, holidays,
+        totalWorkingDays, dailyRate, config, sprints, sprintResults, summary: qSummary,
+        reportMeta,
+      });
+      setToast({ type: "success", message: "PDF report generated." });
+    } catch (err) {
+      console.error("PDF export failed:", err);
+      setToast({ type: "error", message: `Could not generate PDF: ${err.message}` });
+    } finally {
+      setExporting(false);
+    }
+  };
   const baseUsedPct = quarterBase > 0 ? Math.min(100, (qSummary.tb / quarterBase) * 100) : 0;
   const daysUsedPct = totalWorkingDays > 0 ? Math.min(100, (qSummary.tw / totalWorkingDays) * 100) : 0;
   const achievedDelta = qSummary.ta - qSummary.tb;
@@ -158,19 +302,49 @@ export default function DevEvaluationCalculator() {
             <div className="brand__mark" aria-hidden="true">DE</div>
             <div>
               <div className="eyebrow">Developer Sprint Evaluation</div>
-              <h1 className="topbar__title">Performance Control Center</h1>
+              <h1 className="topbar__title">Performance Evaluation Centre</h1>
               <p className="topbar__subtitle">Pro-rata scoring, sprint accountability, and quarterly rollup in one workspace.</p>
             </div>
           </div>
           <div className="topbar__actions">
-            <div className={`status-chip${quarterLocked ? " status-chip--locked" : ""}`}>
-              <span className="status-chip__dot" />
-              {quarterLocked ? "Quarter locked" : "Quarter open"}
+            <div className="view-tabs" role="tablist" aria-label="View">
+              <button
+                role="tab" aria-selected={view === "workspace"}
+                className={`view-tabs__btn${view === "workspace" ? " view-tabs__btn--active" : ""}`}
+                onClick={() => setView("workspace")}
+              >
+                Workspace
+              </button>
+              <button
+                role="tab" aria-selected={view === "framework"}
+                className={`view-tabs__btn${view === "framework" ? " view-tabs__btn--active" : ""}`}
+                onClick={() => setView("framework")}
+              >
+                Framework
+              </button>
             </div>
+            {view === "workspace" && (
+              <>
+                <div className={`status-chip${quarterLocked ? " status-chip--locked" : ""}`}>
+                  <span className="status-chip__dot" />
+                  {quarterLocked ? "Quarter locked" : "Quarter open"}
+                </div>
+                <button
+                  className="btn btn--primary btn--export"
+                  onClick={handleExportPdf}
+                  disabled={!canExport || exporting}
+                  title={canExport ? "Export a formatted PDF report" : "Add quarter dates and sprint data first"}
+                >
+                  {exporting ? "Generating…" : "Export PDF"}
+                </button>
+              </>
+            )}
             <ThemeToggle theme={theme} />
           </div>
         </header>
 
+        {view === "workspace" && (
+        <>
         <section className="overview-grid" aria-label="Quarter overview">
           <QuarterConfig
             quarterStart={quarterStart} quarterEnd={quarterEnd}
@@ -178,12 +352,10 @@ export default function DevEvaluationCalculator() {
             quarterLocked={quarterLocked}
             totalWorkingDays={totalWorkingDays} dailyRate={dailyRate}
             sprintCount={sprints.length}
-            onChangeStart={setQuarterStart} onChangeEnd={setQuarterEnd}
+            holidays={holidays} onChangeHolidays={setHolidays}
+            onChangeStart={handleQuarterStartChange} onChangeEnd={handleQuarterEndChange}
             onChangeBase={setQuarterBase} onChangeCapacity={setDailyCapacity}
-            onToggleLock={() => {
-              if (!quarterLocked && (!quarterStart || !quarterEnd)) return;
-              setQuarterLocked(!quarterLocked);
-            }}
+            onToggleLock={handleQuarterLock}
           />
 
           <div className="card portfolio-panel">
@@ -222,6 +394,10 @@ export default function DevEvaluationCalculator() {
             </div>
           </div>
         </section>
+
+        <ReportDetails meta={reportMeta} onChange={setReportMeta} />
+
+        <SettingsPanel />
 
         <section className="workspace" aria-label="Sprint ledger">
           <div className="section-heading">
@@ -266,7 +442,23 @@ export default function DevEvaluationCalculator() {
             quarterBase={quarterBase}
           />
         </section>
+        </>
+        )}
+
+        {view === "framework" && <Framework />}
+
+        <footer className="app__footer">
+          Performance Evaluation Centre · v{APP_VERSION} · Runs entirely in your browser · No data leaves this device
+        </footer>
       </div>
+
+      {toast && (
+        <div className={`toast toast--${toast.type}`} role="status" aria-live="polite">
+          <span className="toast__dot" />
+          <span>{toast.message}</span>
+          <button className="toast__close" aria-label="Dismiss" onClick={() => setToast(null)}>×</button>
+        </div>
+      )}
     </div>
   );
 }

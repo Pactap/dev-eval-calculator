@@ -39,7 +39,7 @@ export function QuarterlySummary({ sprints, sprintResults, summary, totalWorking
             {sprintResults.map((r, i) => (
               <tr key={i}>
                 <td className="q-summary__name">{r.name || `Sprint ${i + 1}`}</td>
-                <td className="mono">{r.wd}</td>
+                <td className="mono">{r.leaks ? `${r.wdInQuarter}/${r.wdTotal}` : r.wd}</td>
                 <td className="mono">{r.bp.toFixed(2)}</td>
                 <td className={r.total >= r.bp ? "q-summary__achieved--positive" : "q-summary__achieved--negative"}>
                   {r.wd > 0 ? r.total.toFixed(2) : "-"}

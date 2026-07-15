@@ -1,10 +1,15 @@
 export function ScoreTable({ result, dailyRate }) {
   const r = result;
+  // Derive the shown rate from the (possibly frozen) result so a locked card's
+  // "days x rate" always reconciles with its frozen base, even after dailyRate changes.
+  const shownRate = r.wdInQuarter > 0 ? r.bp / r.wdInQuarter : dailyRate;
+  // Use effective multipliers (already zeroed when there's no activity) so
+  // Alloc x Mult = Achieved stays consistent in every row.
   const rows = [
-    { n: "Planned Hrs", a: r.phA, b: r.phB.label, m: r.phB.multiplier, v: r.phAch },
-    { n: "Code Quality", a: r.cqA, b: r.cqO.label, m: r.cqO.multiplier, v: r.cqAch },
-    { n: "Efficiency", a: r.effA, b: r.effB.label, m: r.effB.multiplier, v: r.effAch },
-    { n: "Issue Persist", a: r.ipA, b: r.zeroDone ? "40%+ default" : r.ipB.label, m: r.ipB.multiplier, v: r.ipAch },
+    { n: "Planned Hrs", a: r.phA, b: r.phB.label, m: r.phM, v: r.phAch },
+    { n: "Code Quality", a: r.cqA, b: r.cqO.label, m: r.cqM, v: r.cqAch },
+    { n: "Efficiency", a: r.effA, b: r.noAssigned ? "no tickets" : r.effB.label, m: r.effM, v: r.effAch },
+    { n: "Issue Persist", a: r.ipA, b: r.zeroDone ? "40%+ default" : r.ipB.label, m: r.ipM, v: r.ipAch },
   ];
 
   return (
@@ -13,6 +18,9 @@ export function ScoreTable({ result, dailyRate }) {
         <span>Score breakdown</span>
         <strong>{r.total.toFixed(2)}</strong>
       </div>
+      {r.noActivity && (
+        <div className="score-table__notice">No hours or tickets recorded — sprint not scored.</div>
+      )}
       <div className="score-table__wrap">
         <table>
           <thead>
@@ -39,7 +47,7 @@ export function ScoreTable({ result, dailyRate }) {
       </div>
       <div className="score-table__footer">
         <span className="score-table__base">
-          Base: {r.bp.toFixed(2)} ({r.wd}d x {dailyRate.toFixed(4)})
+          Base: {r.bp.toFixed(2)} ({r.wdInQuarter}{r.leaks ? " in-qtr" : ""}d x {shownRate.toFixed(4)})
         </span>
         {r.reop > 0 && <span className="score-table__dual-penalty">Dual penalty active</span>}
       </div>

@@ -12,41 +12,68 @@ ChartJS.register(
   PointElement, Title, Tooltip, Legend,
 );
 
+// Semantic palette per parameter (light / dark).
+const PARAMS = [
+  { key: "phAch", label: "Planned Hours", light: "#2563eb", dark: "#60a5fa" },
+  { key: "cqAch", label: "Code Quality", light: "#7c3aed", dark: "#a78bfa" },
+  { key: "effAch", label: "Efficiency", light: "#0d9488", dark: "#2dd4bf" },
+  { key: "ipAch", label: "Issue Persist", light: "#d97706", dark: "#fbbf24" },
+];
+
 export function CorrelationChart({ sprintResults, theme }) {
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
   const isDark = theme === "dark";
 
-  useEffect(() => {
-    if (!chartRef.current || typeof window === "undefined") return;
-    const validSprints = sprintResults.filter(r => r.wd > 0);
-    if (validSprints.length < 1) return;
+  const valid = sprintResults.filter(r => r.wdTotal > 0);
+  const hasData = valid.length > 0;
 
+  useEffect(() => {
+    if (!chartRef.current || typeof window === "undefined" || !hasData) return;
     if (chartInstance.current) chartInstance.current.destroy();
 
-    const labels = validSprints.map(r => r.name || "Sprint");
-    const ipData = validSprints.map(r => parseFloat(r.ipPct.toFixed(1)));
-    const cqData = validSprints.map(r => r.cqO.multiplier * 100);
-    const ipAchData = validSprints.map(r => parseFloat(r.ipAch.toFixed(2)));
-    const cqAchData = validSprints.map(r => parseFloat(r.cqAch.toFixed(2)));
+    const labels = valid.map((r, i) => r.name || `Sprint ${i + 1}`);
+    const tickColor = isDark ? "#94a3b8" : "#64748b";
+    const gridColor = isDark ? "rgba(148, 163, 184, 0.12)" : "rgba(15, 23, 42, 0.07)";
+    const baseColor = isDark ? "#94a3b8" : "#475569";
 
-    const tickColor = isDark ? "#9ca3af" : "#64748b";
-    const gridColor = isDark ? "rgba(148, 163, 184, 0.12)" : "rgba(15, 23, 42, 0.08)";
+    // Only include a parameter series if it contributes anywhere (skips zero-weight noise).
+    const barSets = PARAMS
+      .filter(p => valid.some(r => Math.abs(r[p.key]) > 0.005))
+      .map(p => ({
+        label: p.label,
+        data: valid.map(r => parseFloat(r[p.key].toFixed(2))),
+        backgroundColor: isDark ? p.dark : p.light,
+        borderRadius: 4,
+        borderSkipped: false,
+        stack: "score",
+        maxBarThickness: 64,
+        order: 2,
+      }));
+
+    const baseLine = {
+      label: "Base (target)",
+      type: "line",
+      data: valid.map(r => parseFloat(r.bp.toFixed(2))),
+      borderColor: baseColor,
+      backgroundColor: baseColor,
+      borderWidth: 2,
+      borderDash: [5, 4],
+      pointRadius: 3,
+      pointHoverRadius: 5,
+      pointBackgroundColor: baseColor,
+      tension: 0,
+      stack: "target",
+      order: 0,
+    };
 
     chartInstance.current = new ChartJS(chartRef.current, {
       type: "bar",
-      data: {
-        labels,
-        datasets: [
-          { label: "Issue Persist %", data: ipData, backgroundColor: isDark ? "#f87171" : "#dc2626", borderRadius: 6, yAxisID: "y", order: 2 },
-          { label: "Code Quality Mult %", data: cqData, backgroundColor: isDark ? "#38bdf8" : "#2563eb", borderRadius: 6, yAxisID: "y", order: 3 },
-          { label: "IP Achieved Pts", data: ipAchData, type: "line", borderColor: isDark ? "#fbbf24" : "#d97706", backgroundColor: "rgba(217,119,6,0.1)", fill: false, tension: 0.32, pointRadius: 4, pointBackgroundColor: isDark ? "#fbbf24" : "#d97706", yAxisID: "y1", order: 1 },
-          { label: "CQ Achieved Pts", data: cqAchData, type: "line", borderColor: isDark ? "#a78bfa" : "#7c3aed", backgroundColor: "rgba(124,58,237,0.1)", fill: false, tension: 0.32, pointRadius: 4, pointBackgroundColor: isDark ? "#a78bfa" : "#7c3aed", yAxisID: "y1", order: 0 },
-        ],
-      },
+      data: { labels, datasets: [...barSets, baseLine] },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
         plugins: {
           legend: { display: false },
           title: { display: false },
@@ -56,45 +83,67 @@ export function CorrelationChart({ sprintResults, theme }) {
             bodyColor: isDark ? "#d1d5db" : "#e2e8f0",
             borderColor: isDark ? "rgba(148,163,184,0.24)" : "rgba(255,255,255,0.16)",
             borderWidth: 1,
-            callbacks: { label: ctx => ctx.dataset.label + ": " + ctx.raw },
+            padding: 10,
+            callbacks: {
+              label: ctx => `${ctx.dataset.label}: ${Number(ctx.raw).toFixed(2)} pts`,
+              footer: items => {
+                const achieved = items
+                  .filter(it => it.dataset.stack === "score")
+                  .reduce((s, it) => s + Number(it.raw), 0);
+                return `Achieved total: ${achieved.toFixed(2)} pts`;
+              },
+            },
           },
         },
         scales: {
-          x: { ticks: { color: tickColor, font: { size: 11 }, maxRotation: 0 }, grid: { display: false } },
-          y: { position: "left", title: { display: true, text: "Percentage (%)", color: tickColor, font: { size: 11 } }, ticks: { color: tickColor, font: { size: 11 } }, grid: { color: gridColor } },
-          y1: { position: "right", title: { display: true, text: "Achieved Points", color: tickColor, font: { size: 11 } }, ticks: { color: tickColor, font: { size: 11 } }, grid: { display: false } },
+          x: { stacked: true, ticks: { color: tickColor, font: { size: 11 }, maxRotation: 0 }, grid: { display: false } },
+          y: {
+            stacked: true,
+            beginAtZero: true,
+            title: { display: true, text: "Achieved points", color: tickColor, font: { size: 11 } },
+            ticks: { color: tickColor, font: { size: 11 } },
+            grid: { color: gridColor },
+          },
         },
       },
     });
 
     return () => { if (chartInstance.current) chartInstance.current.destroy(); };
-  }, [sprintResults, isDark]);
+  }, [sprintResults, isDark, hasData]);
 
-  const hasData = sprintResults.some(r => r.wd > 0);
-  if (!hasData) return null;
-
-  const barRed = isDark ? "#f87171" : "#dc2626";
-  const barBlue = isDark ? "#38bdf8" : "#2563eb";
-  const lineAmber = isDark ? "#fbbf24" : "#d97706";
-  const lineViolet = isDark ? "#a78bfa" : "#7c3aed";
+  const shownParams = PARAMS.filter(p => valid.some(r => Math.abs(r[p.key]) > 0.005));
 
   return (
     <div className="card chart-card">
       <div className="panel-heading">
         <div>
-          <div className="eyebrow">Signal Correlation</div>
-          <h2>Issue persists vs code quality</h2>
+          <div className="eyebrow">Performance Analytics</div>
+          <h2>Score composition by sprint</h2>
         </div>
       </div>
-      <div className="chart-card__canvas-wrap">
-        <canvas ref={chartRef}></canvas>
-      </div>
-      <div className="chart-card__legend">
-        <span className="chart-card__legend-item"><span className="chart-card__legend-dot" style={{ background: barRed }}></span>Issue Persist %</span>
-        <span className="chart-card__legend-item"><span className="chart-card__legend-dot" style={{ background: barBlue }}></span>Code Quality Mult %</span>
-        <span className="chart-card__legend-item"><span className="chart-card__legend-line" style={{ background: lineAmber }}></span>IP Achieved Pts</span>
-        <span className="chart-card__legend-item"><span className="chart-card__legend-line" style={{ background: lineViolet }}></span>CQ Achieved Pts</span>
-      </div>
+      {hasData ? (
+        <>
+          <div className="chart-card__canvas-wrap">
+            <canvas ref={chartRef} role="img" aria-label="Stacked bar chart of achieved points per parameter for each sprint, with a dashed line for the pro-rata base target."></canvas>
+          </div>
+          <div className="chart-card__legend">
+            {shownParams.map(p => (
+              <span key={p.key} className="chart-card__legend-item">
+                <span className="chart-card__legend-dot" style={{ background: isDark ? p.dark : p.light }}></span>
+                {p.label}
+              </span>
+            ))}
+            <span className="chart-card__legend-item">
+              <span className="chart-card__legend-line chart-card__legend-line--dashed" style={{ background: isDark ? "#94a3b8" : "#475569" }}></span>
+              Base (target)
+            </span>
+          </div>
+        </>
+      ) : (
+        <div className="chart-card__empty">
+          Enter sprint dates or lock the quarter to generate sprints — score composition appears here.
+        </div>
+      )}
     </div>
   );
 }

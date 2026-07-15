@@ -1,125 +1,89 @@
-# Developer Sprint Evaluation Calculator
+# Performance Evaluation Centre
 
-Enterprise-style React application for evaluating developer sprint performance with pro-rata point allocation, weighted scoring bands, quarter-level summaries, and theme-aware analytics.
+A client-side React application that turns a developer's sprint activity into a transparent, pro-rata quarterly performance score. Weights, reward bands, and grades are configurable; every calculation runs in the browser and is fully auditable.
 
-The app is intentionally frontend-only. It has no backend, no database, and no external service dependency at runtime beyond browser-loaded fonts. All scoring happens in deterministic JavaScript modules that can be tested directly.
+**Live app:** https://pactap.github.io/dev-eval-calculator/
 
-## What This Project Does
+The app is intentionally frontend-only — no backend, no database, no data leaves the device. All scoring lives in deterministic JavaScript modules that are covered by tests.
 
-Developer Sprint Evaluation Calculator turns a quarter into a base point pool, allocates points across sprint working days, and adjusts each sprint score through four weighted parameters:
+## What it does
+
+A quarter becomes a base point pool (default 90). Points are allocated across each sprint's productive working days (weekdays minus holidays), then each sprint score is adjusted through four weighted parameters:
 
 | Parameter | Weight | Formula | Intent |
 | --- | ---: | --- | --- |
-| Planned Hours | 50% | `(completed + collaboration) / allotted` | Measures planned utilization without counting rework as credit. |
-| Code Quality | 20% | Lead grade multiplier | Captures quality judgment cross-checked against CQI. |
-| Efficiency | 10% | `completed / allotted` | Measures delivery efficiency without collaboration credit. |
-| Issue Persists | 20% | `reopened / done tickets` | Penalizes recurring defects and legacy reach-back. |
+| Planned Hours | 40% | `(completed + collaboration) / allotted` | Planned utilization; rework excluded. Capped at 100%. |
+| Code Quality | 20% | Lead grade multiplier | Quality judgment, cross-checked against CQI. |
+| Efficiency | 40% | `tickets closed / tickets assigned` | Delivery of assigned work. Zero assigned earns no credit. |
+| Issue Persistence | 0% | `reopened / done tickets` | Legacy reach-back signal; retained, zero-weighted. |
 
-The redesigned interface presents this as a professional dashboard: quarter controls, executive KPI snapshot, sprint ledger, score breakdowns, correlation chart, and quarterly rollup.
+Weights, bands, and grades are editable in-app (Settings panel) and persist locally.
 
-## Current Capabilities
+## Key capabilities
 
-- Pro-rata point allocation across variable-length sprints.
-- Configurable quarter base score and daily capacity.
-- Lockable quarters and immutable locked sprint snapshots.
-- Four metric scoring model with configurable bands and multipliers.
-- Dual penalty for reopened tickets by design.
-- Zero-done ticket protection with worst-band assignment.
-- Light, dark, and system theme modes.
-- Chart.js correlation view for issue persistence and code quality.
-- Responsive Fortune 500-style dashboard UI.
-- Node-based tests for scoring and utility logic.
+- Pro-rata allocation across variable-length sprints; configurable base score and daily capacity.
+- Cross-quarter sprints scored proportionally; shared-boundary sprints count the boundary day once.
+- Configurable holidays excluded from productive days.
+- Auto-generated 14-day draft sprints on quarter lock; auto-suggested period end date.
+- Lockable quarters and immutable locked-sprint snapshots.
+- Integrity rules: empty sprints score zero; zero-ticket efficiency awards nothing.
+- Per-sprint score-composition chart; quarterly executive rollup.
+- Formatted PDF report with optional developer/quarter metadata.
+- In-app **Framework** tab: workflows, definitions, constraints, enablers, and version history.
+- Light / system / dark themes; error boundary; 53 automated tests.
 
-## Tech Stack
+## Tech stack
 
 | Area | Technology |
 | --- | --- |
-| UI | React 18 |
-| Build tool | Vite 5 |
+| UI | React 18 + Vite 5 |
 | Charts | Chart.js 4 |
+| PDF | jsPDF + jspdf-autotable |
 | Testing | Node.js built-in test runner |
 | Styling | CSS custom properties in `src/App.css` |
 
-## Quick Start
+## Quick start
 
 ```bash
 npm install
-npm run dev
+npm run dev      # start dev server
+npm run test     # run scoring / utility / edge-case tests (53)
+npm run build    # production build to dist/
+npm run check    # test + build
 ```
 
-Open the URL printed by Vite. The default configured dev port is `3000`, but Vite may choose another port if `3000` is already occupied.
+## Deployment
 
-## Quality Commands
+Pushing to `master` triggers `.github/workflows/deploy.yml`, which tests, builds, and deploys `dist/` to GitHub Pages. Vite uses a relative base (`./`) so the app runs from the project subpath.
 
-```bash
-npm run test     # Run pure scoring and utility tests
-npm run build    # Create production build in dist/
-npm run check    # Run tests and production build
-npm run preview  # Preview the production build
-```
-
-## Repository Structure
+## Repository structure
 
 ```text
 src/
-  App.jsx                    Root state, derived values, theme, layout
-  App.css                    Complete design system and responsive styles
-  constants.js               Scoring bands, weights, defaults, sprint factory
-  scoring.js                 Pure scoring and quarterly aggregation logic
-  utils.js                   Band lookup, working-day count, date formatting
+  App.jsx                Root state, theme, layout, view tabs
+  App.css                Design system and responsive styles
+  version.js             App version + changelog (single source of truth)
+  constants.js           Default scoring config, sprint factory
+  configStore.jsx        Config context + localStorage persistence
+  configValidation.js    Structural validation for imported config
+  scoring.js             Pure scoring and quarterly aggregation
+  utils.js               Working-day counts, dates, sprint generation, PDF sanitizer
+  pdfReport.js           Formatted PDF report generator
+  ErrorBoundary.jsx      Top-level error boundary
   components/
-    QuarterConfig.jsx        Quarter period and capacity controls
-    SprintCard.jsx           Sprint inputs, metric panels, lock controls
-    ScoreTable.jsx           Per-sprint scoring breakdown
-    CorrelationChart.jsx     Chart.js mixed bar/line insight panel
-    QuarterlySummary.jsx     Quarter rollup and status table
-    MetricSection.jsx        Reusable metric shell
-    Pill.jsx                 Multiplier badge
-    Tip.jsx                  Accessible tooltip
-
+    QuarterConfig.jsx    Quarter period, capacity, holidays
+    SprintCard.jsx       Sprint inputs, metrics, lock controls
+    SettingsPanel.jsx    Editable weights / bands / grades
+    ReportDetails ...    (in App.jsx) optional report metadata
+    ScoreTable.jsx       Per-sprint score breakdown
+    CorrelationChart.jsx Score-composition chart
+    QuarterlySummary.jsx Quarter rollup
+    Framework.jsx        In-app documentation + version history
 tests/
-  scoring.test.mjs           Node tests for scoring and utility behavior
-
-docs/
-  ARCHITECTURE.md            Data flow, module ownership, state model
-  SCORING.md                 Business formulas, bands, edge cases
-  FRONTEND.md                Dashboard design system and UX notes
-  GIT_WORKFLOW.md            Branching, commits, PR and review practices
+  scoring.test.mjs       Core scoring / utility tests
+  edge-cases.test.mjs    Boundary, timezone, validation, PDF sanitizer tests
 ```
-
-## Documentation
-
-- [Architecture](docs/ARCHITECTURE.md)
-- [Scoring Framework](docs/SCORING.md)
-- [Frontend System](docs/FRONTEND.md)
-- [Git Workflow](docs/GIT_WORKFLOW.md)
-- [Contributing](CONTRIBUTING.md)
-- [Changelog](CHANGELOG.md)
-
-## Core Implementation Notes
-
-`App.jsx` owns the state and passes data down through props. Derived values are memoized:
-
-1. Quarter dates produce total working days.
-2. Quarter base and working days produce the daily rate.
-3. Sprint dates produce sprint working days.
-4. Each sprint is scored by `computeSprintResult`.
-5. Sprint scores are aggregated by `computeQuarterlySummary`.
-
-The scoring engine is deliberately pure. Keep business logic in `src/scoring.js`, configuration in `src/constants.js`, and rendering concerns in component files.
-
-## Sprint Locking
-
-When a sprint is locked, the app snapshots its computed score and working-day allocation. Locked sprint inputs are disabled and the sprint cannot be removed until it is unlocked. This prevents quarter-level configuration changes from silently rewriting completed sprint outcomes.
-
-## Development Principles
-
-- Preserve deterministic scoring logic.
-- Keep the UI dense, clear, and operational rather than marketing-heavy.
-- Keep scoring changes covered by tests.
-- Prefer configuration changes in `constants.js` before changing calculation code.
-- Avoid adding runtime dependencies unless they remove real complexity.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE). Changelog: [CHANGELOG.md](CHANGELOG.md).

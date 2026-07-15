@@ -2,18 +2,36 @@
 
 All notable changes to this project are documented here.
 
-The format is inspired by Keep a Changelog, and this project follows practical semantic versioning while it remains private.
+The format is inspired by Keep a Changelog, and this project follows semantic versioning.
 
-## Unreleased
+## 4.0.0 - 2026-07-15
 
-### Removed
+Renamed to **Performance Evaluation Centre** and published as a public web app via GitHub Pages.
 
-- GitHub Pages deployment workflow, `docs/DEPLOYMENT.md`, and Vite production base-path override. Pages is not supported on this repository under the organization's current plan; the project ships as code-only.
+### Added
+
+- In-app **Framework** tab documenting workflows, definitions, constraints, enablers, thought process, and the version history (single source of truth in `src/version.js`).
+- **Config-driven scoring**: weights, reward bands, and code-quality grades are editable in-app (`SettingsPanel`), persisted to localStorage, with JSON export/import and structural validation (`configValidation.js`).
+- **Configurable holidays** excluded from productive days, alongside weekends.
+- **Auto-generated 14-day draft sprints** on quarter lock; evaluation-period end auto-suggested from the start date.
+- **Report metadata** (developer name, employee ID, quarter, date of joining) feeding a systematic PDF report (`pdfReport.js`).
+- **Error boundary**, inline validation notices, and graceful config fallbacks.
+- Comprehensive edge-case test suite (`tests/edge-cases.test.mjs`); 53 tests total.
+- GitHub Pages deployment via GitHub Actions; Vite relative base for project-site hosting.
 
 ### Changed
 
-- Branch naming convention updated from `codex/<task>` to `task/<task>` in `docs/GIT_WORKFLOW.md`.
-- Repository history cleaned: third-party assistant attributions removed from commit metadata; merged feature branch flattened into linear master history.
+- **Efficiency** redefined as tickets closed / tickets assigned (was hours-based).
+- **Weights** updated to Planned Hours 40%, Code Quality 20%, Efficiency 40%, Issue Persistence 0%.
+- **Cross-quarter** sprints score proportionally: whole-sprint days drive metrics, in-quarter days drive base points; shared-boundary sprints count the boundary day once.
+- **Analytics chart** rebuilt as a per-sprint score-composition view with a base-target line.
+- UI redesigned toward a minimalist, Fortune-50 aesthetic; PDF report upgraded to a systematic, restrained layout.
+
+### Fixed
+
+- Sprints with no hours and no tickets now score zero (the default grade no longer awards free points); zero assigned tickets earn no efficiency credit.
+- Local-time date parsing (no timezone day-shift); PDF text sanitized for the built-in Latin-1 font.
+- Locked-snapshot leaks, negative remaining days, empty-band crashes, and NaN-on-import all resolved.
 
 ## 3.1.0 - 2026-05-12
 
