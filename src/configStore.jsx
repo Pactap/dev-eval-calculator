@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { DEFAULT_CONFIG } from "./constants.js";
 import { validateConfig } from "./configValidation.js";
 
@@ -7,6 +7,15 @@ const STORAGE_KEY = "devEvalConfig.v1";
 // server-enforced config; unset -> the app runs local-only, per browser.
 const CONFIG_API = (import.meta.env.VITE_CONFIG_API || "").replace(/\/$/, "");
 const ConfigContext = createContext(null);
+
+// Passkey gate for editing every evaluation parameter (weights, bands, grades,
+// AND holidays). Only the SHA-256 hash of the key ships; the raw key is held in
+// memory (this page load) to authorize a server publish.
+const PASS_HASH = "49efb886446cb7b6b3018bff28018333edf402f4cdf2b4074deda5cbe82a54f4";
+async function sha256(str) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
 
 function reviveConfig(raw) {
   const cfg = { ...DEFAULT_CONFIG, ...raw };
@@ -48,6 +57,22 @@ function loadConfig() {
 
 export function ConfigProvider({ children }) {
   const [config, setConfig] = useState(loadConfig);
+  const [unlocked, setUnlocked] = useState(false); // editing gate; re-auth each page load
+  const keyRef = useRef("");
+
+  const unlock = useCallback(async (key) => {
+    if (await sha256(key) === PASS_HASH) {
+      keyRef.current = key;
+      setUnlocked(true);
+      return true;
+    }
+    return false;
+  }, []);
+
+  const lock = useCallback(() => {
+    keyRef.current = "";
+    setUnlocked(false);
+  }, []);
 
   useEffect(() => {
     try {
@@ -67,11 +92,11 @@ export function ConfigProvider({ children }) {
   }, []);
 
   // The real gate: persisting the shared config requires the passkey, verified server-side.
-  const publishConfig = useCallback(async (passkey) => {
+  const publishConfig = useCallback(async () => {
     if (!CONFIG_API) throw new Error("No server configured.");
     const res = await fetch(`${CONFIG_API}/config`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json", "X-Passkey": passkey || "" },
+      headers: { "Content-Type": "application/json", "X-Passkey": keyRef.current || "" },
       body: serializeConfig(config),
     });
     if (!res.ok) {
@@ -108,6 +133,7 @@ export function ConfigProvider({ children }) {
       updateWeights, updateKey,
       exportJson, importJson,
       publishConfig, configApiEnabled: !!CONFIG_API,
+      unlocked, unlock, lock,
     }}>
       {children}
     </ConfigContext.Provider>

@@ -16,19 +16,6 @@ const BAND_GROUPS = [
 
 const num = (v) => (v === "" ? 0 : parseFloat(v));
 
-// Editing the scoring rules is gated by a passkey. Only the SHA-256 hash ships,
-// so the plaintext key isn't in the bundle. NOTE: this is a client-side gate on a
-// static site — it hides the key and deters casual edits, it is NOT real access
-// control (a determined user can bypass it via devtools/localStorage). Real
-// enforcement needs a backend.
-const PASS_HASH = "49efb886446cb7b6b3018bff28018333edf402f4cdf2b4074deda5cbe82a54f4";
-const UNLOCK_KEY = "pec.settingsUnlocked";
-
-async function sha256(str) {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
-  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
-}
-
 function fmtMax(v) {
   if (v === Infinity || v === null || v === undefined) return "";
   return v;
@@ -95,27 +82,19 @@ function ListEditor({ title, addLabel, items, columns, newItem, onChange }) {
 }
 
 export function SettingsPanel() {
-  const { config, updateWeights, updateKey, reset, exportJson, importJson, publishConfig, configApiEnabled } = useConfig();
+  const { config, updateWeights, updateKey, reset, exportJson, importJson, publishConfig, configApiEnabled, unlocked, unlock, lock } = useConfig();
   const [open, setOpen] = useState(false);
   const [importErr, setImportErr] = useState("");
   const fileInputRef = useRef(null);
 
-  // Passkey gate for editing (persists for the browser session once unlocked).
-  const [unlocked, setUnlocked] = useState(() => {
-    try { return sessionStorage.getItem(UNLOCK_KEY) === "1"; } catch { return false; }
-  });
   const [prompting, setPrompting] = useState(false);
   const [keyInput, setKeyInput] = useState("");
   const [keyError, setKeyError] = useState("");
-  const keyRef = useRef("");           // raw key held in memory for server publish
   const [publishState, setPublishState] = useState(null); // { type, msg }
 
   const submitKey = async (e) => {
     e.preventDefault();
-    if (await sha256(keyInput) === PASS_HASH) {
-      keyRef.current = keyInput;
-      setUnlocked(true);
-      try { sessionStorage.setItem(UNLOCK_KEY, "1"); } catch {}
+    if (await unlock(keyInput)) {
       setOpen(true);
       setPrompting(false);
       setKeyInput("");
@@ -125,18 +104,16 @@ export function SettingsPanel() {
     }
   };
 
-  const lock = () => {
-    keyRef.current = "";
-    setUnlocked(false);
+  const handleLock = () => {
+    lock();
     setOpen(false);
     setPublishState(null);
-    try { sessionStorage.removeItem(UNLOCK_KEY); } catch {}
   };
 
   const doPublish = async () => {
     setPublishState({ type: "info", msg: "Publishing…" });
     try {
-      await publishConfig(keyRef.current);
+      await publishConfig();
       setPublishState({ type: "ok", msg: "Published to server." });
     } catch (err) {
       setPublishState({ type: "err", msg: err.message });
@@ -207,7 +184,7 @@ export function SettingsPanel() {
               <button className="btn btn--sm" onClick={() => setOpen(o => !o)}>
                 {open ? "Collapse" : "Configure"}
               </button>
-              <button className="btn btn--sm" onClick={lock} title="Lock editing">Lock</button>
+              <button className="btn btn--sm" onClick={handleLock} title="Lock editing">Lock</button>
             </>
           ) : (
             <button className="btn btn--sm" onClick={() => { setPrompting(p => !p); setKeyError(""); }}>

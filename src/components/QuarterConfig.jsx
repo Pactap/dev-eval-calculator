@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { formatDate, parseLocalDate } from "../utils.js";
+import { useConfig } from "../configStore.jsx";
 
 export function QuarterConfig({
   quarterStart, quarterEnd, quarterBase, dailyCapacity,
@@ -7,6 +8,8 @@ export function QuarterConfig({
   holidays = [], onChangeHolidays,
   onChangeStart, onChangeEnd, onChangeBase, onChangeCapacity, onToggleLock,
 }) {
+  const { unlocked } = useConfig();          // holidays are an evaluation parameter -> passkey-gated
+  const holidaysEditable = unlocked && !quarterLocked;
   const canLock = quarterStart && quarterEnd;
   const [newHoliday, setNewHoliday] = useState("");
   const [holidayError, setHolidayError] = useState("");
@@ -114,7 +117,7 @@ export function QuarterConfig({
           <label className="label">Holidays (excluded from productive days)</label>
           <span className="quarter-config__holidays-count">{holidays.length}</span>
         </div>
-        {!quarterLocked && (
+        {holidaysEditable && (
           <div className="quarter-config__holidays-add">
             <input
               type="date"
@@ -126,13 +129,18 @@ export function QuarterConfig({
             <button className="btn btn--sm" onClick={addHoliday} disabled={!newHoliday}>Add holiday</button>
           </div>
         )}
+        {!unlocked && !quarterLocked && (
+          <div className="config-notice config-notice--warn">
+            Unlock in Scoring rules (passkey) to edit holidays, then publish.
+          </div>
+        )}
         {holidayError && <div className="config-notice config-notice--warn" role="alert">{holidayError}</div>}
         {sortedHolidays.length > 0 && (
           <div className="quarter-config__holidays-list">
             {sortedHolidays.map(date => (
               <span key={date} className="holiday-chip">
                 {formatDate(date)}
-                {!quarterLocked && (
+                {holidaysEditable && (
                   <button className="holiday-chip__x" aria-label={`Remove ${date}`} onClick={() => removeHoliday(date)}>×</button>
                 )}
               </span>
