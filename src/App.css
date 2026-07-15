@@ -218,6 +218,7 @@ button {
 .topbar__actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   flex: 0 0 auto;
 }
@@ -234,6 +235,7 @@ button {
   color: var(--text-secondary);
   font-size: 12px;
   font-weight: 700;
+  white-space: nowrap;
   box-shadow: var(--shadow-sm);
 }
 
@@ -1337,9 +1339,26 @@ button {
     flex-direction: column;
   }
 
-  .topbar__actions,
   .sprint-card__actions {
     justify-content: space-between;
+  }
+
+  /* Topbar controls: tabs on their own full-width row, then chip + export + theme. */
+  .topbar__actions {
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .view-tabs {
+    flex: 1 1 100%;
+  }
+
+  .view-tabs__btn {
+    flex: 1;
+  }
+
+  .btn--export {
+    flex: 1 1 auto;
   }
 
   .overview-grid {

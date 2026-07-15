@@ -1,4 +1,5 @@
 import { APP_VERSION, CHANGELOG } from "../version.js";
+import { useConfig } from "../configStore.jsx";
 
 /* Small presentational helpers ------------------------------------------- */
 function DocSection({ eyebrow, title, children }) {
@@ -24,6 +25,16 @@ function DefRow({ term, children }) {
 
 /* ------------------------------------------------------------------------ */
 export function Framework() {
+  // Documentation reflects the live scoring config, so weights/grades/bands
+  // stay accurate when they are changed in the Settings panel.
+  const { config } = useConfig();
+  const w = config.weights;
+  const wpct = (x) => `${Math.round((Number(x) || 0) * 100)}%`;
+  const weightSum = Math.round(["ph", "cq", "eff", "ip"].reduce((s, k) => s + (Number(w[k]) || 0), 0) * 100);
+  const grades = (config.codeQualityOptions || []).map(o => o.label);
+  const gradeRange = grades.length > 1 ? `${grades[0]} → ${grades[grades.length - 1]}` : (grades[0] || "the configured grades");
+  const topBand = (config.plannedHoursBands || [])[0];
+
   const WORKFLOW = [
     ["Set the evaluation period", "Enter a start date — the end date is auto-suggested one quarter later. Both stay editable until the period is locked."],
     ["Configure capacity & holidays", "Set the base score, daily capacity (hrs/day) and mark any company holidays. Weekends and holidays are excluded from productive days."],
@@ -34,10 +45,10 @@ export function Framework() {
   ];
 
   const PARAMS = [
-    ["Planned Hours", "40%", "(Completed + Collaboration hours) / Allotted hours. Rework is excluded. Capped at 100%."],
-    ["Code Quality", "20%", "Team-lead grade (Outstanding → Poor), each mapped to a multiplier and cross-checked against the CQI."],
-    ["Efficiency", "40%", "Tickets marked Closed / Tickets assigned in the sprint. Zero tickets assigned earns no efficiency credit."],
-    ["Issue Persistence", "0%", "Reopened / Done tickets — a legacy reach-back signal, retained but currently zero-weighted."],
+    ["Planned Hours", wpct(w.ph), "(Completed + Collaboration hours) / Allotted hours. Rework is excluded. Capped at 100%."],
+    ["Code Quality", wpct(w.cq), `Team-lead grade (${gradeRange}), each mapped to a multiplier and cross-checked against the CQI.`],
+    ["Efficiency", wpct(w.eff), "Tickets marked Closed / Tickets assigned in the sprint. Zero tickets assigned earns no efficiency credit."],
+    ["Issue Persistence", wpct(w.ip), `Reopened / Done tickets — a legacy reach-back signal${(Number(w.ip) || 0) === 0 ? ", retained but currently zero-weighted" : ""}.`],
   ];
 
   return (
@@ -88,8 +99,9 @@ export function Framework() {
           multiplier for the recorded performance.
         </DefRow>
         <DefRow term="Reward bands">
-          Performance percentages map to multipliers via configurable bands (e.g. Planned Hours
-          90–100% → 1.75×). Bands are inclusive of their lower bound and exclusive of their upper.
+          Performance percentages map to multipliers via configurable bands
+          {topBand ? ` (e.g. Planned Hours ${topBand.label}% → ${Number(topBand.multiplier).toFixed(2)}×)` : ""}.
+          Bands are inclusive of their lower bound and exclusive of their upper.
         </DefRow>
         <DefRow term="Cross-quarter sprints">
           A sprint that spans the quarter boundary uses its full length for hours and percentages,
@@ -104,7 +116,7 @@ export function Framework() {
 
       <DocSection eyebrow="Guardrails" title="Constraints">
         <ul className="doc-list">
-          <li>Parameter weights should sum to 100%; the Settings panel flags any deviation.</li>
+          <li>Parameter weights should sum to 100% (currently {weightSum}%); the Settings panel flags any deviation.</li>
           <li>A sprint with no hours and no tickets scores zero — the default grade never awards free points.</li>
           <li>Zero assigned tickets earns no efficiency credit (0×), distinct from closing 0 of N assigned.</li>
           <li>Locked sprints are immutable snapshots and are unaffected by later config, holiday or rate changes.</li>
