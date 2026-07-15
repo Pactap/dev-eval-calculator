@@ -81,6 +81,62 @@ function ListEditor({ title, addLabel, items, columns, newItem, onChange }) {
   );
 }
 
+const mult = (v) => `${Number(v).toFixed(2)}×`;
+const fmtRange = (b) => (b.max === Infinity || b.max == null ? `${b.min}%+` : `${b.min}–${b.max}%`);
+
+// Read-only display of the scoring rules — visible to everyone, no passkey.
+function RulesView({ config, weightSumPct, weightsValid }) {
+  return (
+    <div className="rules-view">
+      <div className="rules-view__block">
+        <h3>Weights</h3>
+        <div className="rules-view__weights">
+          {WEIGHT_KEYS.map(w => (
+            <div key={w.key} className="rules-view__weight">
+              <span className="rules-view__weight-label">{w.label}</span>
+              <span className="rules-view__weight-val">{(config.weights[w.key] * 100).toFixed(0)}%</span>
+            </div>
+          ))}
+          <div className={`rules-view__weight rules-view__weight--total${weightsValid ? "" : " rules-view__weight--bad"}`}>
+            <span className="rules-view__weight-label">Total</span>
+            <span className="rules-view__weight-val">{weightSumPct.toFixed(0)}%</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="rules-view__block">
+        <h3>Code Quality grades</h3>
+        <div className="rules-view__grades">
+          {config.codeQualityOptions.map((o, i) => (
+            <div key={i} className="rules-view__grade">
+              <span>{o.label}</span>
+              <span className="mono">{mult(o.multiplier)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="rules-view__bands">
+        {BAND_GROUPS.map(group => (
+          <div key={group.key} className="rules-view__block">
+            <h3>{group.label}</h3>
+            <table className="rules-view__table">
+              <tbody>
+                {config[group.key].map((b, i) => (
+                  <tr key={i}>
+                    <td className="mono">{fmtRange(b)}</td>
+                    <td className="mono rules-view__mult">{mult(b.multiplier)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function SettingsPanel() {
   const { config, updateWeights, updateKey, reset, exportJson, importJson, publishConfig, configApiEnabled, unlocked, unlock, lock } = useConfig();
   const [open, setOpen] = useState(false);
@@ -179,51 +235,44 @@ export function SettingsPanel() {
           </p>
         </div>
         <div className="settings-panel__actions">
-          {unlocked ? (
-            <>
-              <button className="btn btn--sm" onClick={() => setOpen(o => !o)}>
-                {open ? "Collapse" : "Configure"}
-              </button>
-              <button className="btn btn--sm" onClick={handleLock} title="Lock editing">Lock</button>
-            </>
-          ) : (
-            <button className="btn btn--sm" onClick={() => { setPrompting(p => !p); setKeyError(""); }}>
-              Configure
-            </button>
-          )}
+          <button className="btn btn--sm" onClick={() => setOpen(o => !o)}>
+            {open ? "Hide" : "View rules"}
+          </button>
         </div>
       </div>
 
-      {!unlocked && prompting && (
-        <form className="settings-panel__unlock" onSubmit={submitKey}>
-          <span className="settings-panel__unlock-label">Passkey required to edit evaluation parameters</span>
-          <div className="settings-panel__unlock-row">
-            <input
-              type="password"
-              className="input"
-              value={keyInput}
-              autoFocus
-              autoComplete="off"
-              placeholder="Enter passkey"
-              onChange={e => { setKeyInput(e.target.value); setKeyError(""); }}
-            />
-            <button className="btn btn--sm btn--primary" type="submit">Unlock</button>
-          </div>
-          {keyError && <span className="settings-panel__warn">{keyError}</span>}
-        </form>
-      )}
-
-      {open && unlocked && (
+      {open && (
         <div className="settings-panel__body">
           <div className="settings-panel__toolbar">
-            <button className="btn btn--sm" onClick={doExport}>Export JSON</button>
-            <button className="btn btn--sm" onClick={() => fileInputRef.current?.click()}>Import JSON</button>
-            <input ref={fileInputRef} type="file" accept="application/json" style={{ display: "none" }} onChange={doImport} />
-            <button className="btn btn--sm btn--danger" onClick={doReset}>Reset defaults</button>
-            {configApiEnabled && (
-              <button className="btn btn--sm btn--primary" onClick={doPublish}>Publish to server</button>
+            {unlocked ? (
+              <>
+                <button className="btn btn--sm" onClick={doExport}>Export JSON</button>
+                <button className="btn btn--sm" onClick={() => fileInputRef.current?.click()}>Import JSON</button>
+                <input ref={fileInputRef} type="file" accept="application/json" style={{ display: "none" }} onChange={doImport} />
+                <button className="btn btn--sm btn--danger" onClick={doReset}>Reset defaults</button>
+                {configApiEnabled && (
+                  <button className="btn btn--sm btn--primary" onClick={doPublish}>Publish to server</button>
+                )}
+                <button className="btn btn--sm" onClick={handleLock} title="Lock editing">Lock</button>
+              </>
+            ) : (
+              <button className="btn btn--sm btn--primary" onClick={() => { setPrompting(p => !p); setKeyError(""); }}>
+                Unlock to edit
+              </button>
             )}
           </div>
+
+          {!unlocked && prompting && (
+            <form className="settings-panel__unlock" onSubmit={submitKey}>
+              <span className="settings-panel__unlock-label">Passkey required to edit evaluation parameters</span>
+              <div className="settings-panel__unlock-row">
+                <input type="password" className="input" value={keyInput} autoFocus autoComplete="off" placeholder="Enter passkey"
+                  onChange={e => { setKeyInput(e.target.value); setKeyError(""); }} />
+                <button className="btn btn--sm btn--primary" type="submit">Unlock</button>
+              </div>
+              {keyError && <span className="settings-panel__warn">{keyError}</span>}
+            </form>
+          )}
           {configApiEnabled && (
             <p className="settings-panel__desc" style={{ margin: 0 }}>
               Edits are local until published. Publishing updates the shared config for everyone and is verified against the passkey on the server.
@@ -236,51 +285,57 @@ export function SettingsPanel() {
           )}
           {importErr && <div className="settings-panel__error">{importErr}</div>}
 
-          <div className="settings-panel__section">
-            <h3>Weights (must sum to 100%)</h3>
-            <div className="settings-panel__weights">
-              {WEIGHT_KEYS.map(w => (
-                <label key={w.key} className="settings-panel__weight-field">
-                  <span className="label">{w.label}</span>
-                  <input type="number" min="0" max="100" step="1"
-                    value={(config.weights[w.key] * 100).toFixed(0)}
-                    onChange={e => setWeight(w.key, e.target.value)}
-                    className="input" />
-                  <span className="settings-panel__unit">%</span>
-                </label>
-              ))}
-              <div className={`settings-panel__sum${weightsValid ? " settings-panel__sum--ok" : " settings-panel__sum--bad"}`}>
-                Sum: {weightSumPct.toFixed(0)}%
+          {unlocked ? (
+            <>
+              <div className="settings-panel__section">
+                <h3>Weights (must sum to 100%)</h3>
+                <div className="settings-panel__weights">
+                  {WEIGHT_KEYS.map(w => (
+                    <label key={w.key} className="settings-panel__weight-field">
+                      <span className="label">{w.label}</span>
+                      <input type="number" min="0" max="100" step="1"
+                        value={(config.weights[w.key] * 100).toFixed(0)}
+                        onChange={e => setWeight(w.key, e.target.value)}
+                        className="input" />
+                      <span className="settings-panel__unit">%</span>
+                    </label>
+                  ))}
+                  <div className={`settings-panel__sum${weightsValid ? " settings-panel__sum--ok" : " settings-panel__sum--bad"}`}>
+                    Sum: {weightSumPct.toFixed(0)}%
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          <ListEditor
-            title="Code Quality grades" addLabel="+ Add grade"
-            items={config.codeQualityOptions}
-            onChange={items => updateKey("codeQualityOptions", items)}
-            newItem={() => ({ label: "New grade", multiplier: 1.0 })}
-            columns={[
-              { key: "label", head: "Label" },
-              { key: "multiplier", head: "Multiplier", type: "number", parse: num },
-            ]}
-          />
+              <ListEditor
+                title="Code Quality grades" addLabel="+ Add grade"
+                items={config.codeQualityOptions}
+                onChange={items => updateKey("codeQualityOptions", items)}
+                newItem={() => ({ label: "New grade", multiplier: 1.0 })}
+                columns={[
+                  { key: "label", head: "Label" },
+                  { key: "multiplier", head: "Multiplier", type: "number", parse: num },
+                ]}
+              />
 
-          {BAND_GROUPS.map(group => (
-            <ListEditor
-              key={group.key}
-              title={group.label} addLabel="+ Add band"
-              items={config[group.key]}
-              onChange={items => updateKey(group.key, items)}
-              newItem={() => ({ label: "New band", min: 0, max: 0, multiplier: 1.0 })}
-              columns={[
-                { key: "label", head: "Label" },
-                { key: "min", head: "Min %", type: "number", parse: num },
-                { key: "max", head: <>Max % <span className="settings-panel__hint">(blank = ∞)</span></>, type: "number", parse: parseMax, format: fmtMax, placeholder: "∞" },
-                { key: "multiplier", head: "Multiplier", type: "number", parse: num },
-              ]}
-            />
-          ))}
+              {BAND_GROUPS.map(group => (
+                <ListEditor
+                  key={group.key}
+                  title={group.label} addLabel="+ Add band"
+                  items={config[group.key]}
+                  onChange={items => updateKey(group.key, items)}
+                  newItem={() => ({ label: "New band", min: 0, max: 0, multiplier: 1.0 })}
+                  columns={[
+                    { key: "label", head: "Label" },
+                    { key: "min", head: "Min %", type: "number", parse: num },
+                    { key: "max", head: <>Max % <span className="settings-panel__hint">(blank = ∞)</span></>, type: "number", parse: parseMax, format: fmtMax, placeholder: "∞" },
+                    { key: "multiplier", head: "Multiplier", type: "number", parse: num },
+                  ]}
+                />
+              ))}
+            </>
+          ) : (
+            <RulesView config={config} weightSumPct={weightSumPct} weightsValid={weightsValid} />
+          )}
         </div>
       )}
     </section>

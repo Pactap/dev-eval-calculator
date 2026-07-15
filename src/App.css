@@ -1558,6 +1558,116 @@ button {
   min-width: 0;
 }
 
+/* Read-only rules view (visible without the passkey) */
+.rules-view {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 22px;
+}
+
+.rules-view__block h3 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  font-weight: 700;
+}
+
+.rules-view__weights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.rules-view__weight {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+}
+
+.rules-view__weight-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: var(--track-caps);
+}
+
+.rules-view__weight-val {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.rules-view__weight--total {
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
+}
+
+.rules-view__weight--total .rules-view__weight-val { color: var(--accent); }
+
+.rules-view__weight--bad {
+  background: var(--negative-bg);
+  border-color: var(--negative-border);
+}
+
+.rules-view__weight--bad .rules-view__weight-val { color: var(--negative); }
+
+.rules-view__grades {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 6px;
+}
+
+.rules-view__grade {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  font-size: 12.5px;
+  color: var(--text-secondary);
+}
+
+.rules-view__grade .mono { color: var(--text-primary); font-weight: 700; }
+
+.rules-view__bands {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 22px;
+}
+
+.rules-view__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.rules-view__table td {
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.rules-view__table tr:last-child td { border-bottom: 0; }
+
+.rules-view__mult {
+  text-align: right;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
 .settings-panel__section h3 {
   margin: 0 0 12px;
   font-size: 13px;
@@ -1734,13 +1844,14 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 6px 3px 10px;
+  padding: 4px 8px 4px 11px;
   border-radius: 999px;
-  background: var(--warning-bg);
-  border: 1px solid var(--warning-border);
-  color: var(--warning);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
   font-size: 11px;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .holiday-chip__x {
@@ -1752,14 +1863,22 @@ button {
   border: none;
   border-radius: 50%;
   background: transparent;
-  color: var(--warning);
+  color: var(--text-tertiary);
   font-size: 14px;
   line-height: 1;
   cursor: pointer;
 }
 
 .holiday-chip__x:hover {
-  background: var(--warning-border);
+  background: var(--negative-bg);
+  color: var(--negative);
+}
+
+.quarter-config__holidays-hint {
+  margin-bottom: 10px;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-weight: 600;
 }
 
 /* Draft sprint badge (auto-generated on quarter lock) */

@@ -130,8 +130,8 @@ export function QuarterConfig({
           </div>
         )}
         {!unlocked && !quarterLocked && (
-          <div className="config-notice config-notice--warn">
-            Unlock in Scoring rules (passkey) to edit holidays, then publish.
+          <div className="quarter-config__holidays-hint">
+            Read-only · unlock in Scoring rules to edit
           </div>
         )}
         {holidayError && <div className="config-notice config-notice--warn" role="alert">{holidayError}</div>}
