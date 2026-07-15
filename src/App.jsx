@@ -10,7 +10,10 @@ import { SprintCard } from "./components/SprintCard.jsx";
 import { CorrelationChart } from "./components/CorrelationChart.jsx";
 import { QuarterlySummary } from "./components/QuarterlySummary.jsx";
 import { AvailabilityPanel } from "./components/AvailabilityPanel.jsx";
+import { ConfigGlance } from "./components/ConfigGlance.jsx";
 import { SettingsPanel } from "./components/SettingsPanel.jsx";
+import { BulkIOPanel } from "./components/BulkIOPanel.jsx";
+import { DevUsagePanel } from "./components/DevUsagePanel.jsx";
 import { Framework } from "./components/Framework.jsx";
 import { APP_VERSION } from "./version.js";
 import "./App.css";
@@ -427,6 +430,13 @@ export default function DevEvaluationCalculator() {
                 Workspace
               </button>
               <button
+                role="tab" aria-selected={view === "admin"}
+                className={`view-tabs__btn${view === "admin" ? " view-tabs__btn--active" : ""}`}
+                onClick={() => setView("admin")}
+              >
+                Admin
+              </button>
+              <button
                 role="tab" aria-selected={view === "framework"}
                 className={`view-tabs__btn${view === "framework" ? " view-tabs__btn--active" : ""}`}
                 onClick={() => setView("framework")}
@@ -508,9 +518,7 @@ export default function DevEvaluationCalculator() {
 
         <ReportDetails meta={reportMeta} onChange={setReportMeta} />
 
-        <HolidayManager defaultYear={quarterStart ? quarterStart.slice(0, 4) : undefined} />
-
-        <SettingsPanel />
+        <ConfigGlance />
 
         <section className="workspace" aria-label="Sprint ledger">
           <div className="section-heading">
@@ -567,6 +575,21 @@ export default function DevEvaluationCalculator() {
           />
         </section>
         </>
+        )}
+
+        {view === "admin" && (
+          <section className="admin" aria-label="Administration">
+            <div className="section-heading">
+              <div>
+                <div className="eyebrow">Administration</div>
+                <h2>Evaluation parameters &amp; calendar</h2>
+              </div>
+            </div>
+            <SettingsPanel />
+            <HolidayManager defaultYear={quarterStart ? quarterStart.slice(0, 4) : undefined} />
+            <BulkIOPanel />
+            <DevUsagePanel />
+          </section>
         )}
 
         {view === "framework" && <Framework />}

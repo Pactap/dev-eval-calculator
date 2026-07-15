@@ -2214,6 +2214,170 @@ button {
   padding: 8px 0;
 }
 
+/* Admin tab layout */
+.admin {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Workspace "active rules" glance (read-only, live) */
+.config-glance {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 14px 20px;
+}
+
+.config-glance__label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--track-caps);
+  color: var(--text-tertiary);
+}
+
+.config-glance__items {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.config-glance__item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.config-glance__k {
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.config-glance__v {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.config-glance__hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+/* Bulk import / export */
+.bulk-io__note {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.bulk-io__note code {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+}
+
+.bulk-io__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bulk-io__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+}
+
+.bulk-io__row-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.bulk-io__row-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  margin-left: 4px;
+  border-radius: 999px;
+  background: var(--accent-subtle);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.bulk-io__row-desc {
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+}
+
+.bulk-io__row-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Developer usage table */
+.dev-usage__table-wrap {
+  overflow-x: auto;
+}
+
+.dev-usage__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.dev-usage__table th {
+  text-align: left;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: var(--track-caps);
+  color: var(--text-tertiary);
+  font-weight: 700;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.dev-usage__table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.dev-usage__table td.mono { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.dev-usage__table tr:last-child td { border-bottom: 0; }
+.dev-usage__table em { color: var(--text-tertiary); }
+
+.dev-usage__actions { text-align: right; }
+
+.dev-usage__empty {
+  font-size: 12.5px;
+  color: var(--text-tertiary);
+  padding: 8px 0;
+}
+
 /* Draft sprint badge (auto-generated on quarter lock) */
 .sprint-card__name-row {
   display: flex;
