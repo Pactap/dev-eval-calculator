@@ -138,7 +138,7 @@ export default function DevEvaluationCalculator() {
   const [endEdited, setEndEdited] = useState(false); // true once the user manually sets the end date
   const [quarterLocked, setQuarterLocked] = useState(false);
   const [quarterBase, setQuarterBase] = useState(90);
-  const [dailyCapacity, setDailyCapacity] = useState(7);
+  const [dailyCapacity, setDailyCapacity] = useState(6);
   const [sprints, setSprints] = useState([createSprint({ name: "Sprint 1" })]);
   const [reportMeta, setReportMeta] = useState({ devName: "", empId: "", quarterLabel: "", doj: "" });
   const [view, setView] = useState("workspace"); // "workspace" | "framework"

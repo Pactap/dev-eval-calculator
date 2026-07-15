@@ -333,6 +333,7 @@ button {
 
 .input {
   width: 100%;
+  min-width: 0;
   min-height: 38px;
   padding: 9px 11px;
   border: 1px solid var(--border-default);
@@ -474,9 +475,18 @@ button {
 
 .quarter-config__inputs {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) repeat(2, minmax(104px, 0.55fr));
-  gap: 12px;
+  /* Fluid columns wrap at any width instead of depending on a hard breakpoint,
+     so fields never overlap between the 780px and 1180px breakpoints. */
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  align-items: end;
+  gap: 12px 14px;
   margin-top: 18px;
+}
+
+/* Reserve two lines for labels so a wrapped label (e.g. "Capacity (hrs/day)")
+   doesn't push its input out of alignment with the rest of the row. */
+.quarter-config__inputs .label {
+  min-height: 27px;
 }
 
 .quarter-config__stats {
@@ -709,8 +719,9 @@ button {
 
 .sprint-card__dates {
   display: grid;
-  grid-template-columns: repeat(2, minmax(138px, 1fr)) repeat(3, minmax(90px, 0.65fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  align-items: end;
+  gap: 10px 12px;
   margin-top: 18px;
 }
 
