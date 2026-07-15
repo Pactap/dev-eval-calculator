@@ -82,7 +82,8 @@ function ListEditor({ title, addLabel, items, columns, newItem, onChange }) {
 }
 
 const mult = (v) => `${Number(v).toFixed(2)}×`;
-const fmtRange = (b) => (b.max === Infinity || b.max == null ? `${b.min}%+` : `${b.min}–${b.max}%`);
+// Prefer the authored label (what the editor shows); fall back to a derived range.
+const fmtRange = (b) => b.label || (b.max === Infinity || b.max == null ? `${b.min}%+` : `${b.min}–${b.max}%`);
 
 // Read-only display of the scoring rules — visible to everyone, no passkey.
 function RulesView({ config, weightSumPct, weightsValid }) {
@@ -161,8 +162,7 @@ export function SettingsPanel() {
   };
 
   const handleLock = () => {
-    lock();
-    setOpen(false);
+    lock();               // panel stays open -> falls back to the read-only rules view
     setPublishState(null);
   };
 
