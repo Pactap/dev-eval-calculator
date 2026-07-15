@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { createSprint } from "./constants.js";
-import { countWorkingDays, countWorkingDaysInWindow, parseLocalDate, toISO, generateSprintPeriods, quarterEndFrom, addDaysISO, isWeekend, formatDate } from "./utils.js";
+import { countWorkingDays, countWorkingDaysInWindow, parseLocalDate, toISO, generateSprintPeriods, quarterEndFrom, effectiveCountStart, isWeekend, formatDate } from "./utils.js";
 import { computeSprintResult, computeQuarterlySummary } from "./scoring.js";
 import { devKeyOf, yearOf, rhUsage, recordRh, clearRh } from "./restrictedHolidays.js";
 import { useConfig } from "./configStore.jsx";
@@ -178,16 +178,32 @@ export default function DevEvaluationCalculator() {
     const sprint = sprints[i];
     const devKey = devKeyOf(reportMeta);
     const prev = sprint.restrictedHoliday || "";
+    // Release the prior claim under the identity it was RECORDED with — which may
+    // differ from the current reportMeta if the Employee ID was edited since — so
+    // the ledger entry is never orphaned (which would wrongly block the next one).
+    const releasePrev = () => {
+      if (prev && sprint.restrictedHolidayKey) clearRh(sprint.restrictedHolidayKey, yearOf(prev));
+    };
 
     if (!date) {                                  // clear
-      if (prev && devKey) clearRh(devKey, yearOf(prev));
-      setSprints(p => p.map((s, j) => (j === i ? { ...s, restrictedHoliday: "" } : s)));
+      releasePrev();
+      setSprints(p => p.map((s, j) => (j === i ? { ...s, restrictedHoliday: "", restrictedHolidayKey: "" } : s)));
       return;
     }
     if (date === prev) return;                    // no change
 
-    if ((sprint.startDate && date < sprint.startDate) || (sprint.endDate && date > sprint.endDate)) {
-      setToast({ type: "error", message: "Restricted holiday must fall within the sprint's dates." });
+    // A shared start-boundary day already counts in the previous sprint, so an RH
+    // there would spend the yearly quota while excluding no day. Validate against
+    // the effective counted window, not the raw start date.
+    const prevEnd = i > 0 ? sprints[i - 1].endDate : "";
+    const countStart = effectiveCountStart(sprint.startDate, prevEnd);
+    if ((countStart && date < countStart) || (sprint.endDate && date > sprint.endDate)) {
+      setToast({
+        type: "error",
+        message: date === sprint.startDate && countStart !== sprint.startDate
+          ? "That day is shared with the previous sprint and already counts there — pick a later day for the restricted holiday."
+          : "Restricted holiday must fall within the sprint's dates.",
+      });
       return;
     }
     if (isWeekend(date)) {
@@ -219,7 +235,7 @@ export default function DevEvaluationCalculator() {
       return;
     }
 
-    if (prev && devKey && yearOf(prev) !== year) clearRh(devKey, yearOf(prev)); // moved to a new year
+    releasePrev();                                // drop the old entry (any dev/year) before writing the new one
     if (devKey) {
       recordRh(devKey, year, {
         date,
@@ -229,7 +245,7 @@ export default function DevEvaluationCalculator() {
         devName: reportMeta.devName || "",
       });
     }
-    setSprints(p => p.map((s, j) => (j === i ? { ...s, restrictedHoliday: date } : s)));
+    setSprints(p => p.map((s, j) => (j === i ? { ...s, restrictedHoliday: date, restrictedHolidayKey: devKey } : s)));
     setToast({
       type: "success",
       message: `Restricted holiday recorded for ${formatDate(date)}${devKey ? "" : " (add an Employee ID to track it across quarters)"}.`,
@@ -246,7 +262,7 @@ export default function DevEvaluationCalculator() {
       // counts tile the quarter exactly (summed base stays within the quarter base).
       const prevEnd = i > 0 ? sprints[i - 1].endDate : "";
       const sharesStartBoundary = Boolean(s.startDate && prevEnd && s.startDate === prevEnd);
-      const countStart = sharesStartBoundary ? addDaysISO(s.startDate, 1) : s.startDate;
+      const countStart = effectiveCountStart(s.startDate, prevEnd);
 
       // A restricted holiday is a legitimate day off for THIS developer in THIS
       // sprint: exclude it like a holiday so the sprint's productive days (and thus

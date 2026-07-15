@@ -120,6 +120,18 @@ export function addDaysISO(str, n) {
 }
 
 /**
+ * The first day actually counted for a sprint. When a sprint starts on the
+ * previous sprint's end date (shared boundary), that shared day is counted in
+ * the EARLIER sprint only, so this sprint's window begins the next day. Used for
+ * both day-counting and validating that a restricted holiday lands on a day this
+ * sprint actually owns.
+ */
+export function effectiveCountStart(startDate, prevEndDate) {
+  const shares = Boolean(startDate && prevEndDate && startDate === prevEndDate);
+  return shares ? addDaysISO(startDate, 1) : startDate;
+}
+
+/**
  * Given an evaluation-period start date, return the auto-suggested end date:
  * `months` calendar months later, minus one day (e.g. 2026-04-01 → 2026-06-30).
  * Empty string for invalid input. Always editable before the period is locked.

@@ -48,7 +48,8 @@ export function createSprint(overrides = {}) {
     closedTickets: "",
     reopenedTickets: "",
     doneTickets: "",
-    restrictedHoliday: "",   // ISO date of a developer's restricted (optional) holiday in this sprint, if any
+    restrictedHoliday: "",     // ISO date of a developer's restricted (optional) holiday in this sprint, if any
+    restrictedHolidayKey: "",  // devKey the restricted holiday was recorded under, so it releases correctly even if the Employee ID is later edited
     locked: false,
     lockedResult: null,
     draft: false,

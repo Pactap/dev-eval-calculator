@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { formatDate } from "../utils.js";
+import { formatDate, addDaysISO } from "../utils.js";
 import { useConfig } from "../configStore.jsx";
 import { Pill } from "./Pill.jsx";
 import { MetricSection } from "./MetricSection.jsx";
@@ -220,7 +220,7 @@ export function SprintCard({
           <div className="sprint-card__rh-field">
             <label className="label">Restricted holiday <span className="sprint-card__rh-opt">optional · 1 / year</span></label>
             <input type="date" value={s.restrictedHoliday || ""}
-              min={s.startDate} max={s.endDate}
+              min={sw.sharesStartBoundary ? addDaysISO(s.startDate, 1) : s.startDate} max={s.endDate}
               className="input"
               onChange={e => onSetRestrictedHoliday(e.target.value)} />
           </div>

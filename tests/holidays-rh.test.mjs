@@ -12,7 +12,7 @@ globalThis.localStorage = (() => {
   };
 })();
 
-import { countWorkingDays, isWeekend } from "../src/utils.js";
+import { countWorkingDays, isWeekend, effectiveCountStart } from "../src/utils.js";
 import { summarizeAvailability } from "../src/availability.js";
 import { devKeyOf, yearOf, rhUsage, recordRh, clearRh } from "../src/restrictedHolidays.js";
 
@@ -103,4 +103,31 @@ test("recordRh overwrites the same dev+year rather than stacking", () => {
   recordRh("pt-9", "2026", { date: "2026-03-13" });
   recordRh("pt-9", "2026", { date: "2026-06-05" }); // moved within the same year
   assert.equal(rhUsage("pt-9", "2026").date, "2026-06-05");
+});
+
+test("ledger releases only under the recorded key (guards the orphan/wrong-block bug)", () => {
+  localStorage.clear();
+  recordRh("a1", "2026", { date: "2026-03-16" });
+  clearRh("a2", "2026");                            // wrong key (e.g. Employee ID edited) must NOT release a1
+  assert.equal(rhUsage("a1", "2026").date, "2026-03-16");
+  clearRh("a1", "2026");                            // the recorded key releases correctly
+  assert.equal(rhUsage("a1", "2026"), null);
+});
+
+/* ---------------- effective count start (shared-boundary day) ---------------- */
+
+test("effectiveCountStart skips a shared start-boundary day, else keeps the start", () => {
+  assert.equal(effectiveCountStart("2026-03-16", "2026-03-16"), "2026-03-17"); // shared -> next day
+  assert.equal(effectiveCountStart("2026-03-16", "2026-03-13"), "2026-03-16"); // not shared
+  assert.equal(effectiveCountStart("2026-03-16", ""), "2026-03-16");           // first sprint
+  assert.equal(effectiveCountStart("", "2026-03-13"), "");
+});
+
+test("a restricted holiday on a shared-boundary day would exclude nothing (why it is rejected)", () => {
+  const start = "2026-03-16", prevEnd = "2026-03-16", end = "2026-03-27";
+  const cs = effectiveCountStart(start, prevEnd);                 // 2026-03-17
+  // The boundary day belongs to the previous sprint: marking it here removes no day.
+  assert.equal(countWorkingDays(cs, end, [start]), countWorkingDays(cs, end));
+  // A day the sprint actually owns does remove exactly one.
+  assert.equal(countWorkingDays(cs, end, ["2026-03-18"]), countWorkingDays(cs, end) - 1);
 });
