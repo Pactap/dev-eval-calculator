@@ -61,7 +61,6 @@ export function ConfigProvider({ children }) {
   const [unlocked, setUnlocked] = useState(false); // editing gate; re-auth each page load
   const keyRef = useRef("");
   const dirtyRef = useRef(false);                   // true once the admin edits (vs. server hydration)
-  const serverEmptyRef = useRef(false);             // server had no config yet -> seed it from local
   const [configSync, setConfigSync] = useState("idle"); // idle | saving | saved | error (server mode)
 
   const unlock = useCallback(async (key) => {
@@ -100,7 +99,6 @@ export function ConfigProvider({ children }) {
         } else if (localStorage.getItem(STORAGE_KEY)) {
           // Server has no config yet but this browser has one -> it's the real data.
           // Mark dirty so the auto-save effect seeds the server once the admin unlocks.
-          serverEmptyRef.current = true;
           dirtyRef.current = true;
         }
       })
@@ -123,7 +121,6 @@ export function ConfigProvider({ children }) {
           body: serializeConfig(config),
         });
         if (!res.ok) throw new Error(String(res.status));
-        serverEmptyRef.current = false;
         if (!cancelled) setConfigSync("saved");
       } catch {
         if (!cancelled) setConfigSync("error");
