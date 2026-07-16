@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useConfig } from "../configStore.jsx";
 import { formatDate } from "../utils.js";
-import { normalizeEmpId, rhConflicts } from "../restrictedHolidays.js";
+import { normalizeEmpId, canonicalEmpId, rhConflicts } from "../restrictedHolidays.js";
 
 /**
  * Manage each developer's restricted holiday (one per calendar year) directly in
@@ -24,7 +24,7 @@ export function DevUsagePanel() {
     const byYear = rhLedger[devKey] || {};
     Object.keys(byYear).forEach((year) => {
       const e = byYear[year] || {};
-      rows.push({ devKey, year, empId: e.empId || devKey, date: e.date || "", name: e.name || e.label || "" });
+      rows.push({ devKey, year, empId: canonicalEmpId(e.empId || devKey), date: e.date || "", name: e.name || e.label || "" });
     });
   });
   rows.sort((a, b) => (a.empId + a.year).localeCompare(b.empId + b.year));
@@ -33,6 +33,7 @@ export function DevUsagePanel() {
 
   const add = async () => {
     const devKey = normalizeEmpId(empId);
+    const canonId = canonicalEmpId(empId);
     if (!devKey) { setStatus({ type: "err", msg: "Employee ID is required (alphanumeric)." }); return; }
     const entry = pool.find((e) => e.date === selDate);
     if (!entry) { setStatus({ type: "err", msg: "Pick a declared restricted holiday." }); return; }
@@ -41,14 +42,14 @@ export function DevUsagePanel() {
     // consistently (the server also enforces this with a 409).
     const existing = rhUsage(devKey, year);
     if (rhConflicts(existing, entry.date)) {
-      setStatus({ type: "err", msg: `${empId.trim()} already has a ${year} restricted holiday (${existing.name || formatDate(existing.date)}). Edit or remove the existing row.` });
+      setStatus({ type: "err", msg: `${canonId} already has a ${year} restricted holiday (${existing.name || formatDate(existing.date)}). Edit or remove the existing row.` });
       return;
     }
     setBusy(true);
     try {
-      await claimRh(devKey, year, { date: entry.date, name: entry.label, empId: empId.trim() });
+      await claimRh(devKey, year, { date: entry.date, name: entry.label, empId: canonId });
       setEmpId(""); setSelDate("");
-      setStatus({ type: "ok", msg: `Recorded ${entry.label} for ${empId.trim()}.` });
+      setStatus({ type: "ok", msg: `Recorded ${entry.label} for ${canonId}.` });
     } catch (e) {
       setStatus({ type: "err", msg: e.message });
     } finally { setBusy(false); }

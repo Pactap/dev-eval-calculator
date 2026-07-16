@@ -138,24 +138,69 @@ function RulesView({ config, weightSumPct, weightsValid }) {
   );
 }
 
+// Auto-save status for the shared (server) config. Replaces the old manual publish.
+const SYNC_LABELS = {
+  idle: "Auto-saves to server",
+  saving: "Saving…",
+  saved: "Saved to server",
+  error: "Offline — will retry",
+};
+function SyncIndicator({ state }) {
+  return (
+    <span className={`sync-indicator sync-indicator--${state}`} role="status" aria-live="polite">
+      {SYNC_LABELS[state] || SYNC_LABELS.idle}
+    </span>
+  );
+}
+
+// How a score is computed: pro-rata point allocation + the four parameter inputs
+// that each map to a band multiplier. Symbolic (weights/base/capacity are shown as
+// terms) so it stays correct as the configurable values change.
+const FORMULA_GROUPS = [
+  { caption: "Point allocation", rows: [
+    ["Daily rate", "base score ÷ productive days in quarter"],
+    ["Sprint base points", "daily rate × sprint productive days"],
+    ["Allotted hours", "daily capacity × sprint productive days"],
+  ] },
+  { caption: "Score", rows: [
+    ["Achieved (per parameter)", "sprint base points × weight × band multiplier"],
+    ["Sprint total", "Σ achieved over the four parameters"],
+  ] },
+  { caption: "Parameter inputs → band multiplier", rows: [
+    ["Planned Hours", "(completed + collaboration) ÷ allotted × 100, capped at 100"],
+    ["Code Quality", "lead grade → multiplier"],
+    ["Efficiency", "tickets closed ÷ tickets assigned × 100"],
+    ["Issue Persistence", "reopened ÷ done tickets × 100"],
+  ] },
+];
+function FormulaView() {
+  return (
+    <div className="formula-view">
+      <h3>Evaluation Formula</h3>
+      {FORMULA_GROUPS.map(g => (
+        <div key={g.caption} className="formula-view__group">
+          <div className="formula-view__caption">{g.caption}</div>
+          <dl className="formula-view__list">
+            {g.rows.map(([term, def]) => (
+              <div key={term} className="formula-view__row">
+                <dt>{term}</dt>
+                <dd className="mono">{def}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function SettingsPanel() {
   // Editing is gated by the central Unlock control in the Administration header;
   // this panel just reflects `unlocked` (read-only rules vs. editors).
-  const { config, updateWeights, updateKey, reset, exportJson, importJson, publishConfig, configApiEnabled, unlocked } = useConfig();
+  const { config, updateWeights, updateKey, reset, exportJson, importJson, configApiEnabled, configSync, unlocked } = useConfig();
   const [open, setOpen] = useState(false);
   const [importErr, setImportErr] = useState("");
   const fileInputRef = useRef(null);
-  const [publishState, setPublishState] = useState(null); // { type, msg }
-
-  const doPublish = async () => {
-    setPublishState({ type: "info", msg: "Publishing…" });
-    try {
-      await publishConfig();
-      setPublishState({ type: "ok", msg: "Published to server." });
-    } catch (err) {
-      setPublishState({ type: "err", msg: err.message });
-    }
-  };
 
   // Sum over the canonical keys (not Object.values) so a missing key is caught
   // rather than silently excluded from the total.
@@ -230,9 +275,7 @@ export function SettingsPanel() {
               <button className="btn btn--sm" onClick={() => fileInputRef.current?.click()}>Import JSON</button>
               <input ref={fileInputRef} type="file" accept="application/json" style={{ display: "none" }} onChange={doImport} />
               <button className="btn btn--sm btn--danger" onClick={doReset}>Reset defaults</button>
-              {configApiEnabled && (
-                <button className="btn btn--sm btn--primary" onClick={doPublish}>Publish to server</button>
-              )}
+              {configApiEnabled && <SyncIndicator state={configSync} />}
             </div>
           ) : (
             <p className="settings-panel__desc" style={{ margin: 0 }}>Read-only · unlock in the Administration header to edit.</p>
@@ -240,15 +283,12 @@ export function SettingsPanel() {
 
           {unlocked && configApiEnabled && (
             <p className="settings-panel__desc" style={{ margin: 0 }}>
-              Edits are local until published. Publishing updates the shared config for everyone and is verified against the passkey on the server.
+              Edits save to the shared server automatically, verified against the passkey. Everyone sees them on next load.
             </p>
           )}
-          {publishState && (
-            <div className={publishState.type === "err" ? "settings-panel__error" : "settings-panel__desc"} role="status">
-              {publishState.msg}
-            </div>
-          )}
           {importErr && <div className="settings-panel__error">{importErr}</div>}
+
+          <FormulaView />
 
           {unlocked ? (
             <>

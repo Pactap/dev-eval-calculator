@@ -60,6 +60,9 @@ export function ConfigProvider({ children }) {
   const [config, setConfig] = useState(loadConfig);
   const [unlocked, setUnlocked] = useState(false); // editing gate; re-auth each page load
   const keyRef = useRef("");
+  const dirtyRef = useRef(false);                   // true once the admin edits (vs. server hydration)
+  const serverEmptyRef = useRef(false);             // server had no config yet -> seed it from local
+  const [configSync, setConfigSync] = useState("idle"); // idle | saving | saved | error (server mode)
 
   const unlock = useCallback(async (key) => {
     if (await sha256(key) === PASS_HASH) {
@@ -83,19 +86,51 @@ export function ConfigProvider({ children }) {
 
   // On load, the server holds the authoritative shared config; adopt it if reachable.
   // Validate before adopting so a malformed remote config can't crash render (same
-  // gate the import path uses).
+  // gate the import path uses). If the admin has already started editing (dirtyRef),
+  // never clobber those edits with the server copy.
   useEffect(() => {
     if (!CONFIG_API) return;
     let cancelled = false;
     fetch(`${CONFIG_API}/config`)
       .then(r => (r.ok ? r.json() : null))
       .then(remote => {
-        if (cancelled || !remote) return;
-        try { validateConfig(remote); setConfig(reviveConfig(remote)); } catch { /* keep local */ }
+        if (cancelled || dirtyRef.current) return;
+        if (remote) {
+          try { validateConfig(remote); setConfig(reviveConfig(remote)); } catch { /* keep local */ }
+        } else if (localStorage.getItem(STORAGE_KEY)) {
+          // Server has no config yet but this browser has one -> it's the real data.
+          // Mark dirty so the auto-save effect seeds the server once the admin unlocks.
+          serverEmptyRef.current = true;
+          dirtyRef.current = true;
+        }
       })
       .catch(() => {}); // offline -> keep local
     return () => { cancelled = true; };
   }, []);
+
+  // Auto-save: after any admin edit (dirtyRef), debounce ~1s then persist to the
+  // server. Passkey-gated, so it only fires while unlocked. On failure it keeps the
+  // local copy and surfaces "offline"; the next edit (or unlock) retries.
+  useEffect(() => {
+    if (!CONFIG_API || !unlocked || !dirtyRef.current) return;
+    setConfigSync("saving");
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`${CONFIG_API}/config`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", "X-Passkey": keyRef.current || "" },
+          body: serializeConfig(config),
+        });
+        if (!res.ok) throw new Error(String(res.status));
+        serverEmptyRef.current = false;
+        if (!cancelled) setConfigSync("saved");
+      } catch {
+        if (!cancelled) setConfigSync("error");
+      }
+    }, 1000);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [config, unlocked]);
 
   // Restricted-holiday quota ledger. With a server, it is authoritative across
   // machines (the Worker enforces one-per-dev-per-year); without one, it is the
@@ -104,14 +139,36 @@ export function ConfigProvider({ children }) {
 
   // The server ledger holds employee IDs + usage, so its GET is passkey-gated:
   // load it once unlocked (with the key), and drop it from memory on lock.
+  // Stranded-data recovery: if the server ledger is empty but this browser has a
+  // local ledger (e.g. recorded before the Worker had /rh), push the local copy up
+  // once so it isn't lost.
   useEffect(() => {
     if (!CONFIG_API) return;
     if (!unlocked) { setRhLedger({}); return; }
     let cancelled = false;
-    fetch(`${CONFIG_API}/rh`, { headers: { "X-Passkey": keyRef.current || "" } })
-      .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (!cancelled && d && d.ledger) setRhLedger(d.ledger); })
-      .catch(() => {});
+    (async () => {
+      let server = null;
+      try {
+        const res = await fetch(`${CONFIG_API}/rh`, { headers: { "X-Passkey": keyRef.current || "" } });
+        if (res.ok) server = (await res.json()).ledger || null;
+      } catch { /* offline */ }
+      if (cancelled) return;
+      const local = loadLedger();
+      if (server && Object.keys(server).length) {
+        setRhLedger(server);
+      } else if (Object.keys(local).length) {
+        try {
+          await fetch(`${CONFIG_API}/rh`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json", "X-Passkey": keyRef.current || "" },
+            body: JSON.stringify(local),
+          });
+        } catch { /* keep local; retries next unlock */ }
+        if (!cancelled) setRhLedger(local);
+      } else {
+        setRhLedger(server || {});
+      }
+    })();
     return () => { cancelled = true; };
   }, [unlocked]);
 
@@ -198,26 +255,16 @@ export function ConfigProvider({ children }) {
   // With a server, recording an RH is a write and needs the passkey; local-only stays open.
   const rhWritable = CONFIG_API ? unlocked : true;
 
-  // The real gate: persisting the shared config requires the passkey, verified server-side.
-  const publishConfig = useCallback(async () => {
-    if (!CONFIG_API) throw new Error("No server configured.");
-    const res = await fetch(`${CONFIG_API}/config`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", "X-Passkey": keyRef.current || "" },
-      body: serializeConfig(config),
-    });
-    if (!res.ok) {
-      throw new Error(res.status === 401 ? "Server rejected the passkey." : `Publish failed (${res.status}).`);
-    }
-  }, [config]);
-
-  const reset = useCallback(() => setConfig(DEFAULT_CONFIG), []);
+  // Every admin edit marks the config dirty so the auto-save effect persists it.
+  const reset = useCallback(() => { dirtyRef.current = true; setConfig(DEFAULT_CONFIG); }, []);
 
   const updateWeights = useCallback((weights) => {
+    dirtyRef.current = true;
     setConfig(c => ({ ...c, weights: { ...c.weights, ...weights } }));
   }, []);
 
   const updateKey = useCallback((key, value) => {
+    dirtyRef.current = true;
     setConfig(c => ({ ...c, [key]: value }));
   }, []);
 
@@ -231,6 +278,7 @@ export function ConfigProvider({ children }) {
       throw new Error("File is not valid JSON.");
     }
     validateConfig(parsed);
+    dirtyRef.current = true;
     setConfig(reviveConfig(parsed));
   }, []);
 
@@ -239,7 +287,7 @@ export function ConfigProvider({ children }) {
       config, reset,
       updateWeights, updateKey,
       exportJson, importJson,
-      publishConfig, configApiEnabled: !!CONFIG_API,
+      configApiEnabled: !!CONFIG_API, configSync,
       unlocked, unlock, lock,
       rhUsage, claimRh, releaseRh, rhWritable, rhLedger, replaceRhLedger,
     }}>

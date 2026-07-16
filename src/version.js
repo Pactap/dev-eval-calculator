@@ -1,9 +1,22 @@
 // Single source of truth for the app version and its history.
 // Bump APP_VERSION and prepend a CHANGELOG entry on every release
 // (semantic versioning: MAJOR.MINOR.PATCH).
-export const APP_VERSION = "4.4.0";
+export const APP_VERSION = "4.5.0";
 
 export const CHANGELOG = [
+  {
+    version: "4.5.0",
+    date: "2026-07-16",
+    title: "Durable admin data: auto-save & recovery",
+    type: "minor",
+    changes: [
+      "Admin edits (evaluation parameters, company holidays, restricted-holiday list) now auto-save to the shared server the moment they change — the manual \"Publish\" step is gone, and edits survive reloads and new deploys instead of being overwritten by the older server copy.",
+      "A sync indicator (Saving… / Saved / Offline — will retry) shows the save state; the on-load fetch never clobbers an edit already in progress.",
+      "Stranded-data recovery: on unlock, a local ledger or config that never reached the server (e.g. recorded before the backend existed) is pushed up once so it is no longer lost.",
+      "Employee IDs display in a single canonical uppercase form (ABS100) regardless of how they were entered (abs 100, Abs100, aBs-100…); matching was already case- and separator-insensitive.",
+      "The Evaluation Parameters panel now shows the full scoring formula — point allocation, per-parameter achievement and the four parameter inputs — alongside the configured weights, bands and grades.",
+    ],
+  },
   {
     version: "4.4.0",
     date: "2026-07-16",

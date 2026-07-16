@@ -14,7 +14,7 @@ globalThis.localStorage = (() => {
 
 import { countWorkingDays, isWeekend, effectiveCountStart, dayName, countWeekends } from "../src/utils.js";
 import { summarizeAvailability } from "../src/availability.js";
-import { devKeyOf, normalizeEmpId, yearOf, rhUsage, recordRh, clearRh, rhConflicts } from "../src/restrictedHolidays.js";
+import { devKeyOf, normalizeEmpId, canonicalEmpId, yearOf, rhUsage, recordRh, clearRh, rhConflicts } from "../src/restrictedHolidays.js";
 import {
   exportCompanyHolidays, importCompanyHolidays,
   exportRestrictedPool, importRestrictedPool,
@@ -97,6 +97,13 @@ test("normalizeEmpId strips to alphanumeric, case-agnostic, trimmed", () => {
   assert.equal(normalizeEmpId("  pt 1042 "), "pt1042");
   assert.equal(normalizeEmpId("PT_1042"), "pt1042");
   assert.equal(normalizeEmpId(""), "");
+});
+
+test("canonicalEmpId upper-cases the normalized key so every variant displays alike", () => {
+  for (const v of ["abs 100", "Abs100", "aBS_100", "aBs-100", "abs-100", "  ABS100 "]) {
+    assert.equal(canonicalEmpId(v), "ABS100");
+  }
+  assert.equal(canonicalEmpId(""), "");
 });
 
 test("devKeyOf prefers normalized Employee ID, falls back to name, else empty", () => {
@@ -201,13 +208,13 @@ test("importRestrictedPool requires a name and a valid date", () => {
   assert.throws(() => importRestrictedPool({ restrictedHolidays: [{ date: "nope", name: "X" }] }), /YYYY-MM-DD/);
 });
 
-test("developer usage round-trip normalizes employee id and rebuilds the ledger", () => {
+test("developer usage round-trip canonicalizes employee id (uppercase) and rebuilds the ledger", () => {
   const ledger = { pt1042: { "2026": { date: "2026-03-06", name: "Holi", empId: "PT-1042" } } };
   const out = exportDeveloperUsage(ledger);
-  assert.deepEqual(out.usage[0], { employeeId: "PT-1042", date: "2026-03-06", day: "Friday", name: "Holi", year: "2026" });
-  const back = importDeveloperUsage({ usage: [{ employeeId: "PT-1042", date: "2026-03-06", name: "Holi" }] });
+  assert.deepEqual(out.usage[0], { employeeId: "PT1042", date: "2026-03-06", day: "Friday", name: "Holi", year: "2026" });
+  const back = importDeveloperUsage({ usage: [{ employeeId: "pt 1042", date: "2026-03-06", name: "Holi" }] });
   assert.equal(back.pt1042["2026"].date, "2026-03-06");
-  assert.equal(back.pt1042["2026"].empId, "PT-1042");
+  assert.equal(back.pt1042["2026"].empId, "PT1042"); // stored canonical regardless of entered form
 });
 
 test("importDeveloperUsage enforces one restricted holiday per developer per year", () => {

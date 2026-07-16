@@ -1605,6 +1605,79 @@ button {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Auto-save status chip (server mode). Colour tracks the sync state. */
+.sync-indicator {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.sync-indicator::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.sync-indicator--saving { color: var(--text-secondary); }
+.sync-indicator--saved { color: var(--positive); }
+.sync-indicator--error { color: var(--negative); }
+
+/* Evaluation formula: how the score is computed, alongside the parameters. */
+.formula-view {
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 16px 18px;
+  background: var(--bg-subtle, var(--bg-overlay));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.formula-view > h3 {
+  margin: 0;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  font-weight: 700;
+}
+.formula-view__caption {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.formula-view__list {
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+.formula-view__row {
+  display: grid;
+  grid-template-columns: minmax(120px, 200px) 1fr;
+  gap: 12px;
+  align-items: baseline;
+}
+.formula-view__row dt {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.formula-view__row dd {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+@media (max-width: 560px) {
+  .formula-view__row { grid-template-columns: 1fr; gap: 2px; }
 }
 
 .settings-panel__error {

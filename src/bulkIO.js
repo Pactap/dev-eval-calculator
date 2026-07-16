@@ -4,7 +4,7 @@
 // derived from the date on export and re-derived (not trusted) on import.
 
 import { dayName, parseLocalDate } from "./utils.js";
-import { normalizeEmpId } from "./restrictedHolidays.js";
+import { normalizeEmpId, canonicalEmpId } from "./restrictedHolidays.js";
 
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
 const isISO = (d) => typeof d === "string" && ISO.test(d) && !!parseLocalDate(d);
@@ -81,7 +81,7 @@ export function exportDeveloperUsage(ledger = {}) {
     Object.keys(byYear).forEach((year) => {
       const e = byYear[year] || {};
       usage.push({
-        employeeId: e.empId || devKey,
+        employeeId: canonicalEmpId(e.empId || devKey),
         date: e.date || "",
         day: e.date ? dayName(e.date) : "",
         name: e.name || e.label || "",
@@ -136,7 +136,7 @@ export function importDeveloperUsage(json) {
     if (ledger[devKey][year] && ledger[devKey][year].date !== date) {
       throw new Error(`Row ${i + 1}: ${rawId} already has a ${year} restricted holiday (${ledger[devKey][year].date}). Only one per calendar year.`);
     }
-    ledger[devKey][year] = { date, name, empId: String(rawId).trim() };
+    ledger[devKey][year] = { date, name, empId: canonicalEmpId(rawId) };
   });
   return ledger;
 }

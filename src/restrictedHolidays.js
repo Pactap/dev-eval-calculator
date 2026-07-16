@@ -43,6 +43,15 @@ export function normalizeEmpId(v) {
   return String(v || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
+/**
+ * Canonical display form of an Employee ID: the normalized key, upper-cased, so
+ * every entered variant ("abs 100", "aBs-100", "Abs100") shows as "ABS100". "" if
+ * the input has no alphanumerics (fall back to the developer name elsewhere).
+ */
+export function canonicalEmpId(v) {
+  return normalizeEmpId(v).toUpperCase();
+}
+
 /** Per-developer key: normalized Employee ID preferred, else a trimmed name. "" if neither. */
 export function devKeyOf(meta = {}) {
   const id = normalizeEmpId(meta.empId);

@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { createSprint } from "./constants.js";
 import { countWorkingDays, countWorkingDaysInWindow, parseLocalDate, toISO, generateSprintPeriods, quarterEndFrom, effectiveCountStart, isWeekend, formatDate } from "./utils.js";
 import { computeSprintResult, computeQuarterlySummary } from "./scoring.js";
-import { devKeyOf, yearOf } from "./restrictedHolidays.js";
+import { devKeyOf, yearOf, canonicalEmpId } from "./restrictedHolidays.js";
 import { useConfig } from "./configStore.jsx";
 import { QuarterConfig } from "./components/QuarterConfig.jsx";
 import { HolidayManager } from "./components/HolidayManager.jsx";
@@ -283,7 +283,7 @@ export default function DevEvaluationCalculator() {
           date,
           sprintName: sprint.name || `Sprint ${i + 1}`,
           quarterLabel: reportMeta.quarterLabel || "",
-          empId: reportMeta.empId || "",
+          empId: canonicalEmpId(reportMeta.empId),
         });
       }
     } catch (err) {

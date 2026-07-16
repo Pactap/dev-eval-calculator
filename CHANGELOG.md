@@ -4,6 +4,21 @@ All notable changes to this project are documented here.
 
 The format is inspired by Keep a Changelog, and this project follows semantic versioning.
 
+## 4.5.0 - 2026-07-16
+
+Durable admin data: auto-save, stranded-data recovery, and the scoring formula in-app.
+
+### Changed
+
+- **Config auto-saves** (`src/configStore.jsx`): every admin edit (parameters, company holidays, restricted-holiday list) persists to the shared server automatically, debounced ~1s. The manual "Publish to server" button is removed. A `dirtyRef` guard stops the on-load `GET /config` from overwriting an in-progress edit — the class of bug where saved data vanished after a reload or new deploy.
+- **Employee IDs display canonically** (`canonicalEmpId` in `src/restrictedHolidays.js`): stored and shown as uppercase `ABS100` regardless of entered form (`abs 100`, `Abs100`, `aBs-100`…). Matching was already normalization-based; this makes the display consistent too. Applied in `DevUsagePanel`, `App.jsx` and `bulkIO.js` (import + export).
+
+### Added
+
+- **Sync indicator** in the Evaluation Parameters panel: Saving… / Saved / Offline — will retry.
+- **Stranded-data recovery**: on unlock, a local ledger or config that never reached the server is pushed up once (server-empty + local-present) so it is not lost.
+- **Evaluation formula** display (`SettingsPanel.jsx`): point allocation, per-parameter achievement, and the four parameter inputs, shown alongside the configured weights, bands and grades.
+
 ## 4.4.0 - 2026-07-16
 
 Admin centre, bulk data management, and a Fortune-50 presentation pass.
