@@ -166,11 +166,11 @@ const FORMULA_GROUPS = [
     ["Achieved (per parameter)", "sprint base points × weight × band multiplier"],
     ["Sprint total", "Σ achieved over the four parameters"],
   ] },
-  { caption: "Parameter inputs → band multiplier", rows: [
-    ["Planned Hours", "(completed + collaboration) ÷ allotted × 100, capped at 100"],
-    ["Code Quality", "lead grade → multiplier"],
-    ["Efficiency", "tickets closed ÷ tickets assigned × 100"],
-    ["Issue Persistence", "reopened ÷ closed tickets × 100"],
+  { caption: "Parameter inputs → band multiplier (in this Sprint)", rows: [
+    ["Planned Hours", "(Completed + Collaboration hours) ÷ Allotted hours × 100, capped at 100"],
+    ["Code Quality", "team-lead grade → multiplier"],
+    ["Efficiency", "Tickets Marked Closed (by Developer) ÷ Tickets Assigned × 100"],
+    ["Issue Persistence", "Tickets Reopened (by QA/PM) ÷ Tickets Marked Closed × 100"],
   ] },
 ];
 function FormulaView() {

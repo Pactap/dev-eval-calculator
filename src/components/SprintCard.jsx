@@ -16,10 +16,10 @@ export function SprintCard({
   const holidayNames = config.holidayNames || {};
 
   const METRIC_CONFIGS = [
-    { key: "ph", icon: "PH", title: "Planned Hours", weightLabel: `${(weights.ph * 100).toFixed(0)}%`, tipText: "(Completed + Collaboration) / Allotted Hours. Rework excluded." },
-    { key: "cq", icon: "CQ", title: "Code Quality", weightLabel: `${(weights.cq * 100).toFixed(0)}%`, tipText: "Team lead grade, cross-checked against CQI." },
-    { key: "eff", icon: "EF", title: "Efficiency", weightLabel: `${(weights.eff * 100).toFixed(0)}%`, tipText: "Tickets Marked Closed / Tickets Assigned in sprint." },
-    { key: "ip", icon: "IP", title: "Issue Persists", weightLabel: `${(weights.ip * 100).toFixed(0)}%`, tipText: "Tickets Reopened / Tickets Closed in this sprint. Each reopen counted separately. Zero Closed = worst band. (Done tickets are recorded for the throughput chart only.)" },
+    { key: "ph", icon: "PH", title: "Planned Hours", weightLabel: `${(weights.ph * 100).toFixed(0)}%`, tipText: "(Completed hours + Collaboration hours) / Allotted hours, in this Sprint. Rework excluded; capped at 100%." },
+    { key: "cq", icon: "CQ", title: "Code Quality", weightLabel: `${(weights.cq * 100).toFixed(0)}%`, tipText: "Team-lead grade for this Sprint, cross-checked against the CQI." },
+    { key: "eff", icon: "EF", title: "Efficiency", weightLabel: `${(weights.eff * 100).toFixed(0)}%`, tipText: "Tickets Marked Closed (by Developer) / Tickets Assigned, in this Sprint. Zero Assigned = no credit." },
+    { key: "ip", icon: "IP", title: "Issue Persists", weightLabel: `${(weights.ip * 100).toFixed(0)}%`, tipText: "Tickets Reopened (by QA/PM) / Tickets Marked Closed (by Developer), in this Sprint. Each reopen counted separately. Zero Marked Closed = worst band. (Done tickets are recorded for the throughput chart only.)" },
   ];
 
   const s = sprint;
@@ -108,7 +108,7 @@ export function SprintCard({
           children: (
             <div className="metric__inputs">
               <div className="metric__input-field">
-                <label className="label">Closed</label>
+                <label className="label">Marked Closed</label>
                 <input type="number" min="0" placeholder="0" value={s.closedTickets} disabled={isLocked}
                   className={`input${isLocked ? " input--disabled" : ""}`}
                   onChange={e => onUpdate("closedTickets", e.target.value)} />

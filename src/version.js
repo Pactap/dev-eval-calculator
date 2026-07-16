@@ -1,9 +1,20 @@
 // Single source of truth for the app version and its history.
 // Bump APP_VERSION and prepend a CHANGELOG entry on every release
 // (semantic versioning: MAJOR.MINOR.PATCH).
-export const APP_VERSION = "4.9.0";
+export const APP_VERSION = "4.9.1";
 
 export const CHANGELOG = [
+  {
+    version: "4.9.1",
+    date: "2026-07-16",
+    title: "Uniform ticket terminology & clearer report charts",
+    type: "patch",
+    changes: [
+      "Standardised ticket terminology everywhere: \"Tickets Marked Closed\" (by the Developer) and \"Tickets Reopened\" (by Quality Assurance / Product Management), with every parameter measured \"in this Sprint\". Efficiency and Issue Persistence now explicitly share the same Marked-Closed value.",
+      "Clarified the definitions of all four parameters (Planned Hours, Code Quality, Efficiency, Issue Persistence) in the in-app Framework, the Settings formula view, sprint tooltips, and the repo documentation (README, SCORING.md, CLAUDE.md).",
+      "PDF report: each analytics chart now sits in its own bordered card with a caption band, separator, and even padding/gutters — clear demarcation and easier reading.",
+    ],
+  },
   {
     version: "4.9.0",
     date: "2026-07-16",

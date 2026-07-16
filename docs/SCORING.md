@@ -27,17 +27,20 @@ allottedHours    = dailyCapacity * sprintWorkingDays
 
 ## Weighted Parameters
 
-Each sprint base allocation is split across four parameters. The **percentage formulas are fixed**;
-the **weights and the band/grade multipliers are configurable** and edited in-app (Admin → Evaluation
-Parameters). Weights should sum to 100%. The default weights below are the shipped starting point, not
-a fixed rule.
+Each sprint base allocation is split across four parameters, **all measured in the current Sprint**.
+The **percentage formulas are fixed**; the **weights and the band/grade multipliers are configurable**
+and edited in-app (Admin → Evaluation Parameters). Weights should sum to 100%. The default weights
+below are the shipped starting point, not a fixed rule.
 
-| Parameter | Default weight | What it measures | Calculation |
+Two ticket terms are shared and always mean the same recorded value: **Tickets Marked Closed** (by the
+Developer) and **Tickets Reopened** (by Quality Assurance / Product Management).
+
+| Parameter | Default weight | What it measures (in this Sprint) | Calculation |
 | --- | ---: | --- | --- |
-| Planned Hours | 40% | Planned utilization of available time (rework excluded) | `(completedHours + collaborationHours) / allottedHours * 100`, capped at 100% |
+| Planned Hours | 40% | Planned utilization of the developer's available time (rework excluded) | `(Completed hours + Collaboration hours) / Allotted hours * 100`, capped at 100% |
 | Code Quality | 20% | Team-lead quality judgment, cross-checked against the CQI | grade label → multiplier |
-| Efficiency | 40% | Delivery of assigned work | `closedTickets / assignedTickets * 100` |
-| Issue Persistence | 0% | Defect recurrence (reopens vs tickets closed, zero-weighted by default) | `reopenedTickets / closedTickets * 100` |
+| Efficiency | 40% | Delivery of assigned work | `Tickets Marked Closed / Tickets Assigned * 100` |
+| Issue Persistence | 0% | Defect recurrence — QA/PM reopens against tickets the developer Marked Closed (zero-weighted by default) | `Tickets Reopened / Tickets Marked Closed * 100` |
 
 ```text
 allocated   = sprintBasePoints * weight

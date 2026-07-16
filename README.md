@@ -87,15 +87,19 @@ below are the *shipped defaults* from `src/constants.js`.
 
 ---
 
+All four parameters are measured **in this Sprint**. Two ticket terms are shared across parameters and
+always mean the same recorded value: **Tickets Marked Closed** (closed by the *Developer*) and
+**Tickets Reopened** (reopened by *Quality Assurance / Product Management*).
+
 #### 1. Planned Hours — *default weight 40%*
 
-**What it measures:** planned utilization of available time. Rework is excluded (see
-[Dual penalty](#dual-penalty)).
+**What it measures:** planned utilization of the developer's available time in this Sprint. Rework is
+excluded (see [Dual penalty](#dual-penalty)).
 
 **Formula:**
 
 ```text
-plannedHours% = (completedHours + collaborationHours) / allottedHours * 100    (capped at 100%)
+plannedHours% = (Completed hours + Collaboration hours) / Allotted hours * 100   in this Sprint (capped at 100%)
 ```
 
 **Example.** Sprint has `10` productive days → `allottedHours = 6 × 10 = 60`. The developer logs
@@ -105,7 +109,7 @@ band covering 80% (`80–90`) supplies a **1.50×** multiplier. With `sprintBase
 
 #### 2. Code Quality — *default weight 20%*
 
-**What it measures:** the team lead's quality judgment for the sprint, cross-checked against the CQI.
+**What it measures:** the team lead's quality judgment for this Sprint, cross-checked against the CQI.
 
 **Formula:** the chosen grade label maps directly to a multiplier — no percentage.
 
@@ -122,37 +126,37 @@ Default grade ladder: `Outstanding 1.50×`, `Good 1.30×`, `Satisfactory 1.00×`
 
 #### 3. Efficiency — *default weight 40%*
 
-**What it measures:** delivery of assigned work — tickets actually closed against tickets assigned.
-Collaboration hours do not count here.
+**What it measures:** delivery of assigned work — **Tickets Marked Closed** (by the Developer) against
+**Tickets Assigned**, in this Sprint. Collaboration hours do not count here.
 
 **Formula:**
 
 ```text
-efficiency% = closedTickets / assignedTickets * 100
+efficiency% = Tickets Marked Closed / Tickets Assigned * 100   in this Sprint
 ```
 
 **Zero assigned tickets earns no credit (0×)** — distinct from closing 0 of N assigned.
 
-**Example.** `16` closed of `20` assigned → `efficiency% = 16 / 20 × 100 = 80%`. The default band
+**Example.** `16` Marked Closed of `20` Assigned → `efficiency% = 16 / 20 × 100 = 80%`. The default band
 covering 80% (`71–80%`) supplies **0.40×**. With `sprintBasePoints = 15` and weight `0.40`:
 `allocated = 15 × 0.40 = 6.0`, `achieved = 6.0 × 0.40 = 2.4` points.
 
 #### 4. Issue Persistence — *default weight 0%*
 
-**What it measures:** defect recurrence — how often completed work is reopened. A legacy reach-back
-signal, retained but zero-weighted by default (so it contributes nothing unless a team re-weights
-it).
+**What it measures:** defect recurrence — how often the developer's **Tickets Marked Closed** are
+**Reopened by QA/PM**, in this Sprint. A legacy reach-back signal, retained but zero-weighted by
+default (so it contributes nothing unless a team re-weights it).
 
 **Formula:**
 
 ```text
-issuePersistence% = reopenedTickets / closedTickets * 100
+issuePersistence% = Tickets Reopened / Tickets Marked Closed * 100   in this Sprint
 ```
 
-**Zero closed tickets forces the worst band** — a sprint cannot dodge reopen penalties by closing no
-tickets.
+**Zero Tickets Marked Closed forces the worst band** — a sprint cannot dodge reopen penalties by
+closing no tickets. (This is the *same* Tickets Marked Closed value used by Efficiency.)
 
-**Example.** `2` reopened of `40` closed → `issuePersistence% = 2 / 40 × 100 = 5%`. The default band
+**Example.** `2` Reopened of `40` Marked Closed → `issuePersistence% = 2 / 40 × 100 = 5%`. The default band
 covering 5% (`0–10%`) supplies **1.50×** (best). But at the default weight `0.00`:
 `allocated = 15 × 0.00 = 0`, so `achieved = 0` regardless of the multiplier. Give it a non-zero
 weight and it starts contributing.
@@ -190,8 +194,8 @@ multiplier, or grade in the Admin panel and every number here moves with it.
 ## Integrity rules
 
 - A sprint with **no hours and no tickets** scores zero — the default grade never awards free points.
-- **Zero assigned tickets** earns no efficiency credit (`0×`).
-- **Zero closed tickets** forces Issue Persistence to its worst band.
+- **Zero Tickets Assigned** earns no efficiency credit (`0×`).
+- **Zero Tickets Marked Closed** forces Issue Persistence to its worst band.
 - Numeric inputs are clamped with `Math.max(0, …)`, so negative input cannot produce invalid scores.
 - **Cross-quarter sprints** use their full length for hours and percentages, but only in-quarter
   productive days claim base points for this quarter.

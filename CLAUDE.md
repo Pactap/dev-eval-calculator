@@ -40,11 +40,12 @@ src/
 - Allotted hours = capacity (default 7 hrs/day) × working days
 - Locked sprints are immutable; daily rate recalculates only for future sprints
 
-### Four parameters (weights must sum to 1.0)
-- **Planned Hours (50%)**: (completed + collaboration) ÷ allotted. Rework excluded.
-- **Code Quality (20%)**: Team lead grade (Outstanding/Good/Satisfactory/Needs Improvement/Unsatisfactory/Poor), cross-checked against CQI.
-- **Efficiency (10%)**: completed ÷ allotted. Auto-calculated, no collab hours.
-- **Issue Persists (20%)**: reopened ÷ closed tickets (this sprint). Each reopen counted separately. Zero closed = worst band.
+### Four parameters (weights configurable, should sum to 1.0; defaults in `src/constants.js`)
+All measured **in the current Sprint**. Shared ticket terms: **Tickets Marked Closed** (by Developer), **Tickets Reopened** (by QA/PM).
+- **Planned Hours**: (Completed hours + Collaboration hours) ÷ Allotted hours. Rework excluded; capped at 100%.
+- **Code Quality**: Team-lead grade (Outstanding/Good/Satisfactory/Needs Improvement/Unsatisfactory/Poor), cross-checked against CQI.
+- **Efficiency**: Tickets Marked Closed ÷ Tickets Assigned. Zero Assigned = no credit.
+- **Issue Persists**: Tickets Reopened ÷ Tickets Marked Closed. Each reopen counted separately. Zero Marked Closed = worst band. (Same Marked-Closed value as Efficiency.)
 
 ### Dual penalty
 Reopened tickets penalize both Planned Hours (rework time excluded) and Issue Persists (reopen ratio). Intentional by design.

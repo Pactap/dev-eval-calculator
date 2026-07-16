@@ -157,10 +157,10 @@ export function generateQuarterlyReportPDF(data) {
     margin: MARGIN,
     head: [["Parameter", "Weight"]],
     body: rows([
-      ["Planned Hours", `${(w.ph * 100).toFixed(0)}%`],
-      ["Code Quality", `${(w.cq * 100).toFixed(0)}%`],
-      ["Efficiency (closed / assigned tickets)", `${(w.eff * 100).toFixed(0)}%`],
-      ["Issue Persistence", `${(w.ip * 100).toFixed(0)}%`],
+      ["Planned Hours ((Completed + Collaboration) / Allotted hrs)", `${(w.ph * 100).toFixed(0)}%`],
+      ["Code Quality (team-lead grade)", `${(w.cq * 100).toFixed(0)}%`],
+      ["Efficiency (Tickets Marked Closed / Tickets Assigned)", `${(w.eff * 100).toFixed(0)}%`],
+      ["Issue Persistence (Tickets Reopened / Tickets Marked Closed)", `${(w.ip * 100).toFixed(0)}%`],
     ]),
     foot: [["Total", `${(Object.values(w).reduce((a, b) => a + (Number(b) || 0), 0) * 100).toFixed(0)}%`]],
     ...tableTheme(),
@@ -243,7 +243,7 @@ export function generateQuarterlyReportPDF(data) {
     // inputs line (wraps if long so it never runs past the right margin)
     const inputs = [
       `Completed ${num(s.completedHours)}h`, `Collab ${num(s.collaborationHours)}h`,
-      `Closed ${num(s.closedTickets)}`, `Assigned ${num(s.assignedTickets)}`,
+      `Marked Closed ${num(s.closedTickets)}`, `Assigned ${num(s.assignedTickets)}`,
       `Reopened ${num(s.reopenedTickets)}`, `Done ${num(s.doneTickets)}`,
       `Grade ${dash(s.codeQuality)}`,
     ].join("   |   ");
@@ -432,18 +432,37 @@ function addAnalyticsPage(doc, contentW, sprintResults) {
     ["Strengths - avg multiplier by parameter", strengthsConfig(vr, false, opts)],
     ["Score Contribution", contributionConfig(vr, false, opts)],
   ];
-  const gutter = 18;
-  const cw = (contentW - gutter) / 2;
-  const chH = Math.round(cw * 0.66);
+  // Each chart sits in its own bordered card: caption band, a rule, then the plot,
+  // with even padding and gutters so the four read as cleanly separated panels.
+  const gutter = 20;          // space between the two columns
+  const rowGap = 22;          // space between the two rows
+  const pad = 12;             // inner padding of each card
+  const capH = 22;            // caption band height
+  const cardW = (contentW - gutter) / 2;
+  const imgW = cardW - pad * 2;
+  const imgH = Math.round(imgW * 0.62);
+  const cardH = capH + imgH + pad;
+
   charts.forEach(([title, cfg], i) => {
-    const colX = MARGIN.left + (i % 2) * (cw + gutter);
-    const rowY = y0 + Math.floor(i / 2) * (chH + 32);
+    const cx = MARGIN.left + (i % 2) * (cardW + gutter);
+    const cy = y0 + Math.floor(i / 2) * (cardH + rowGap);
+
+    // card outline
+    doc.setDrawColor(...RULE);
+    doc.setLineWidth(0.75);
+    doc.roundedRect(cx, cy, cardW, cardH, 5, 5, "S");
+
+    // caption + separator rule under it
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
+    doc.setFontSize(8.5);
     doc.setTextColor(...INK);
-    doc.text(clip(doc, A(title), cw), colX, rowY);
-    const img = chartPng(cfg, Math.round(cw * CHART_RENDER), Math.round(chH * CHART_RENDER));
-    doc.addImage(img, "PNG", colX, rowY + 7, cw, chH);
+    doc.text(clip(doc, A(title), imgW), cx + pad, cy + 14, { charSpace: 0.2 });
+    doc.setDrawColor(...RULE);
+    doc.line(cx + pad, cy + capH, cx + cardW - pad, cy + capH);
+
+    // plot, padded inside the card
+    const img = chartPng(cfg, Math.round(imgW * CHART_RENDER), Math.round(imgH * CHART_RENDER));
+    doc.addImage(img, "PNG", cx + pad, cy + capH + 5, imgW, imgH);
   });
 }
 

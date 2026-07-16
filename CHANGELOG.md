@@ -4,6 +4,16 @@ All notable changes to this project are documented here.
 
 The format is inspired by Keep a Changelog, and this project follows semantic versioning.
 
+## 4.9.1 - 2026-07-16
+
+Uniform ticket terminology, clearer parameter definitions, bordered report charts.
+
+### Changed
+
+- **Terminology** standardised across the app, PDF and docs: **Tickets Marked Closed** (by the Developer) and **Tickets Reopened** (by Quality Assurance / Product Management); every parameter is stated as measured **in this Sprint**. Efficiency and Issue Persistence explicitly share the same Marked-Closed value.
+- **Parameter definitions** clarified for all four parameters in the Framework tab, the Settings formula view, sprint tooltips, README, `docs/SCORING.md`, and `CLAUDE.md` (also corrected CLAUDE.md's stale Efficiency definition and weights).
+- **PDF report** analytics page: each chart is now enclosed in a bordered card with a caption band, separator rule, and even padding/gutters for clear demarcation and readability.
+
 ## 4.9.0 - 2026-07-16
 
 Issue Persistence formula change + capacity label.

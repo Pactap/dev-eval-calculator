@@ -62,27 +62,27 @@ export function Framework() {
   const PARAMS = [
     {
       n: "Planned Hours", w: wpct(w.ph),
-      formula: "(Completed + Collaboration hours) / Allotted hours × 100, capped at 100%.",
-      d: "Planned utilization of available time. Rework is excluded.",
+      formula: "(Completed hours + Collaboration hours) ÷ Allotted hours × 100, in this Sprint. Capped at 100%; rework excluded.",
+      d: "Planned utilization of the developer's available time in the Sprint.",
       ex: `48 hrs logged of 60 allotted → 80%. The band covering 80% gives ${mx(phMult)}; for a ${B}-point sprint base, achieved = ${B} × ${wpct(w.ph)} × ${mx(phMult)} = ${ach(w.ph, phMult)} pts.`,
     },
     {
       n: "Code Quality", w: wpct(w.cq),
-      formula: "Team-lead grade → multiplier, cross-checked against the CQI.",
+      formula: "Team-lead grade for this Sprint → multiplier, cross-checked against the CQI.",
       d: `Grades ${gradeRange}, each mapped to a multiplier.`,
       ex: `A "${midGrade.label}" grade → ${mx(cqMult)}; achieved = ${B} × ${wpct(w.cq)} × ${mx(cqMult)} = ${ach(w.cq, cqMult)} pts.`,
     },
     {
       n: "Efficiency", w: wpct(w.eff),
-      formula: "Tickets closed / Tickets assigned × 100. Zero assigned earns no credit.",
-      d: "Delivery of assigned work in the sprint.",
-      ex: `16 closed of 20 assigned → 80%. The band covering 80% gives ${mx(effMult)}; achieved = ${B} × ${wpct(w.eff)} × ${mx(effMult)} = ${ach(w.eff, effMult)} pts.`,
+      formula: "Tickets Marked Closed (by Developer) ÷ Tickets Assigned, in this Sprint × 100. Zero assigned earns no credit.",
+      d: "Delivery of assigned work in the Sprint.",
+      ex: `16 Marked Closed of 20 Assigned → 80%. The band covering 80% gives ${mx(effMult)}; achieved = ${B} × ${wpct(w.eff)} × ${mx(effMult)} = ${ach(w.eff, effMult)} pts.`,
     },
     {
       n: "Issue Persistence", w: wpct(w.ip),
-      formula: "Reopened / Closed tickets × 100. Zero closed → worst band.",
-      d: `Defect recurrence — reopens against tickets closed in the sprint${zeroIp ? "; retained but currently zero-weighted" : ""}.`,
-      ex: `2 reopened of 40 closed → 5%. The band covering 5% gives ${mx(ipMult)}; achieved = ${B} × ${wpct(w.ip)} × ${mx(ipMult)} = ${ach(w.ip, ipMult)} pts${zeroIp ? " (zero at the current 0% weight — give it weight and it contributes)" : ""}.`,
+      formula: "Tickets Reopened (by QA/PM) ÷ Tickets Marked Closed (by Developer), in this Sprint × 100. Zero Marked Closed → worst band.",
+      d: `Defect recurrence — QA/PM reopens against the developer's tickets Marked Closed in the Sprint${zeroIp ? "; retained but currently zero-weighted" : ""}.`,
+      ex: `2 Reopened of 40 Marked Closed → 5%. The band covering 5% gives ${mx(ipMult)}; achieved = ${B} × ${wpct(w.ip)} × ${mx(ipMult)} = ${ach(w.ip, ipMult)} pts${zeroIp ? " (zero at the current 0% weight — give it weight and it contributes)" : ""}.`,
     },
   ];
 
