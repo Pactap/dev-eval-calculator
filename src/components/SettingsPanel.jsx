@@ -139,32 +139,13 @@ function RulesView({ config, weightSumPct, weightsValid }) {
 }
 
 export function SettingsPanel() {
-  const { config, updateWeights, updateKey, reset, exportJson, importJson, publishConfig, configApiEnabled, unlocked, unlock, lock } = useConfig();
+  // Editing is gated by the central Unlock control in the Administration header;
+  // this panel just reflects `unlocked` (read-only rules vs. editors).
+  const { config, updateWeights, updateKey, reset, exportJson, importJson, publishConfig, configApiEnabled, unlocked } = useConfig();
   const [open, setOpen] = useState(false);
   const [importErr, setImportErr] = useState("");
   const fileInputRef = useRef(null);
-
-  const [prompting, setPrompting] = useState(false);
-  const [keyInput, setKeyInput] = useState("");
-  const [keyError, setKeyError] = useState("");
   const [publishState, setPublishState] = useState(null); // { type, msg }
-
-  const submitKey = async (e) => {
-    e.preventDefault();
-    if (await unlock(keyInput)) {
-      setOpen(true);
-      setPrompting(false);
-      setKeyInput("");
-      setKeyError("");
-    } else {
-      setKeyError("Incorrect passkey.");
-    }
-  };
-
-  const handleLock = () => {
-    lock();               // panel stays open -> falls back to the read-only rules view
-    setPublishState(null);
-  };
 
   const doPublish = async () => {
     setPublishState({ type: "info", msg: "Publishing…" });
@@ -243,37 +224,21 @@ export function SettingsPanel() {
 
       {open && (
         <div className="settings-panel__body">
-          <div className="settings-panel__toolbar">
-            {unlocked ? (
-              <>
-                <button className="btn btn--sm" onClick={doExport}>Export JSON</button>
-                <button className="btn btn--sm" onClick={() => fileInputRef.current?.click()}>Import JSON</button>
-                <input ref={fileInputRef} type="file" accept="application/json" style={{ display: "none" }} onChange={doImport} />
-                <button className="btn btn--sm btn--danger" onClick={doReset}>Reset defaults</button>
-                {configApiEnabled && (
-                  <button className="btn btn--sm btn--primary" onClick={doPublish}>Publish to server</button>
-                )}
-                <button className="btn btn--sm" onClick={handleLock} title="Lock editing">Lock</button>
-              </>
-            ) : (
-              <button className="btn btn--sm btn--primary" onClick={() => { setPrompting(p => !p); setKeyError(""); }}>
-                Unlock to edit
-              </button>
-            )}
-          </div>
-
-          {!unlocked && prompting && (
-            <form className="settings-panel__unlock" onSubmit={submitKey}>
-              <span className="settings-panel__unlock-label">Passkey required to edit evaluation parameters</span>
-              <div className="settings-panel__unlock-row">
-                <input type="password" className="input" value={keyInput} autoFocus autoComplete="off" placeholder="Enter passkey"
-                  onChange={e => { setKeyInput(e.target.value); setKeyError(""); }} />
-                <button className="btn btn--sm btn--primary" type="submit">Unlock</button>
-              </div>
-              {keyError && <span className="settings-panel__warn">{keyError}</span>}
-            </form>
+          {unlocked ? (
+            <div className="settings-panel__toolbar">
+              <button className="btn btn--sm" onClick={doExport}>Export JSON</button>
+              <button className="btn btn--sm" onClick={() => fileInputRef.current?.click()}>Import JSON</button>
+              <input ref={fileInputRef} type="file" accept="application/json" style={{ display: "none" }} onChange={doImport} />
+              <button className="btn btn--sm btn--danger" onClick={doReset}>Reset defaults</button>
+              {configApiEnabled && (
+                <button className="btn btn--sm btn--primary" onClick={doPublish}>Publish to server</button>
+              )}
+            </div>
+          ) : (
+            <p className="settings-panel__desc" style={{ margin: 0 }}>Read-only · unlock in the Administration header to edit.</p>
           )}
-          {configApiEnabled && (
+
+          {unlocked && configApiEnabled && (
             <p className="settings-panel__desc" style={{ margin: 0 }}>
               Edits are local until published. Publishing updates the shared config for everyone and is verified against the passkey on the server.
             </p>

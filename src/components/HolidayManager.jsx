@@ -77,7 +77,7 @@ export function HolidayManager({ defaultYear }) {
       </div>
 
       {!unlocked && (
-        <div className="holiday-manager__hint">Read-only · unlock in Scoring rules to edit</div>
+        <div className="holiday-manager__hint">Read-only · unlock in the Administration header to edit</div>
       )}
       {error && <div className="config-notice config-notice--warn" role="alert">{error}</div>}
 

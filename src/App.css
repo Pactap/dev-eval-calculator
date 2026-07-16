@@ -1959,6 +1959,75 @@ button {
   color: var(--text-tertiary);
 }
 
+/* Per-sprint non-working days breakdown (weekends + company holidays + restricted) */
+.sprint-card__nonworking {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+}
+
+.sprint-card__nonworking-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sprint-card__nonworking-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--track-caps);
+  color: var(--text-tertiary);
+}
+
+.sprint-card__nonworking-counts {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+}
+
+.sprint-card__nonworking-counts strong {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.sprint-card__nonworking-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.nw-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.nw-chip--muted {
+  border-style: dashed;
+  color: var(--text-tertiary);
+}
+
+.nw-chip--accent {
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
 /* Availability & time-off panel */
 .availability__head {
   display: flex;
@@ -2255,6 +2324,24 @@ button {
 /* Heading spacing is handled by the flex gap, so drop its own margin here. */
 .admin .section-heading {
   margin: 0;
+}
+
+.admin-unlock__form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-unlock__form .input {
+  min-width: 150px;
+  max-width: 200px;
+}
+
+.admin-unlock__err {
+  flex-basis: 100%;
+  text-align: right;
 }
 
 /* Workspace "active rules" glance (read-only, live) */

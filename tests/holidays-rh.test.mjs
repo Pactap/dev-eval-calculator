@@ -12,7 +12,7 @@ globalThis.localStorage = (() => {
   };
 })();
 
-import { countWorkingDays, isWeekend, effectiveCountStart, dayName } from "../src/utils.js";
+import { countWorkingDays, isWeekend, effectiveCountStart, dayName, countWeekends } from "../src/utils.js";
 import { summarizeAvailability } from "../src/availability.js";
 import { devKeyOf, normalizeEmpId, yearOf, rhUsage, recordRh, clearRh } from "../src/restrictedHolidays.js";
 import {
@@ -109,6 +109,13 @@ test("dayName returns the weekday of an ISO date", () => {
   assert.equal(dayName("2026-03-06"), "Friday");
   assert.equal(dayName("2026-03-08"), "Sunday");
   assert.equal(dayName(""), "");
+});
+
+test("countWeekends counts Sat+Sun in a range (for the per-sprint breakdown)", () => {
+  assert.equal(countWeekends("2026-03-02", "2026-03-13"), 2); // Mar 7 (Sat) + Mar 8 (Sun)
+  assert.equal(countWeekends("2026-03-02", "2026-03-06"), 0); // Mon–Fri
+  assert.equal(countWeekends("2026-03-07", "2026-03-08"), 2); // Sat + Sun
+  assert.equal(countWeekends("2026-03-13", "2026-03-02"), 0); // reversed range
 });
 
 test("yearOf extracts the calendar year", () => {

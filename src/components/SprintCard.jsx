@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { formatDate, addDaysISO, isWeekend } from "../utils.js";
+import { formatDate, addDaysISO, isWeekend, countWeekends } from "../utils.js";
 import { useConfig } from "../configStore.jsx";
 import { Pill } from "./Pill.jsx";
 import { MetricSection } from "./MetricSection.jsx";
@@ -13,6 +13,7 @@ export function SprintCard({
   const { config } = useConfig();
   const { weights, codeQualityOptions } = config;
   const holidays = config.holidays || [];
+  const holidayNames = config.holidayNames || {};
 
   const METRIC_CONFIGS = [
     { key: "ph", icon: "PH", title: "Planned Hours", weightLabel: `${(weights.ph * 100).toFixed(0)}%`, tipText: "(Completed + Collaboration) / Allotted Hours. Rework excluded." },
@@ -34,6 +35,14 @@ export function SprintCard({
     .filter(e => e && !isWeekend(e.date) && !holidays.includes(e.date) && s.startDate && s.endDate && e.date >= rhEffMin && e.date <= s.endDate)
     .sort((a, b) => a.date.localeCompare(b.date));
   const availedRh = (restrictedHolidayPool || []).find(e => e && e.date === s.restrictedHoliday) || null;
+
+  // Non-working days inside this sprint's counted window — explains why productive
+  // days are fewer than the calendar span (weekends + company holidays + any RH).
+  const hasDates = Boolean(s.startDate && s.endDate);
+  const sprintCompanyHolidays = hasDates
+    ? holidays.filter(d => d >= rhEffMin && d <= s.endDate).sort()
+    : [];
+  const weekendDays = hasDates ? countWeekends(rhEffMin, s.endDate) : 0;
 
   const [localStartDate, setLocalStartDate] = useState(s.startDate);
   const [localEndDate, setLocalEndDate] = useState(s.endDate);
@@ -222,6 +231,33 @@ export function SprintCard({
       {sw.sharesStartBoundary && !isLocked && (
         <div className="sprint-card__leak-note">
           Shares its start date ({formatDate(s.startDate)}) with the previous sprint — that day is counted in the previous sprint, so it's excluded from this sprint's productive days.
+        </div>
+      )}
+
+      {hasDates && (weekendDays > 0 || sprintCompanyHolidays.length > 0 || s.restrictedHoliday) && (
+        <div className="sprint-card__nonworking">
+          <div className="sprint-card__nonworking-head">
+            <span className="sprint-card__nonworking-title">Non-working days in this sprint</span>
+            <span className="sprint-card__nonworking-counts">
+              <span>Weekends <strong>{weekendDays}</strong></span>
+              <span>Company <strong>{sprintCompanyHolidays.filter(d => !isWeekend(d)).length}</strong></span>
+              <span>Restricted <strong>{s.restrictedHoliday ? 1 : 0}</strong></span>
+            </span>
+          </div>
+          {(sprintCompanyHolidays.length > 0 || s.restrictedHoliday) && (
+            <div className="sprint-card__nonworking-chips">
+              {sprintCompanyHolidays.map(d => (
+                <span key={d} className={`nw-chip${isWeekend(d) ? " nw-chip--muted" : ""}`}>
+                  {holidayNames[d] || "Holiday"} · {formatDate(d)}{isWeekend(d) ? " · weekend" : ""}
+                </span>
+              ))}
+              {s.restrictedHoliday && (
+                <span className="nw-chip nw-chip--accent">
+                  {(availedRh && availedRh.label) || "Restricted holiday"} · {formatDate(s.restrictedHoliday)}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       )}
 

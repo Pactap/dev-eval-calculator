@@ -12,6 +12,7 @@ import { QuarterlySummary } from "./components/QuarterlySummary.jsx";
 import { AvailabilityPanel } from "./components/AvailabilityPanel.jsx";
 import { ConfigGlance } from "./components/ConfigGlance.jsx";
 import { SettingsPanel } from "./components/SettingsPanel.jsx";
+import { AdminUnlock } from "./components/AdminUnlock.jsx";
 import { BulkIOPanel } from "./components/BulkIOPanel.jsx";
 import { DevUsagePanel } from "./components/DevUsagePanel.jsx";
 import { Framework } from "./components/Framework.jsx";
@@ -137,7 +138,7 @@ function isPristineSprint(s) {
 
 export default function DevEvaluationCalculator() {
   const theme = useTheme();
-  const { config, updateKey, rhUsage, claimRh, releaseRh, rhWritable } = useConfig();
+  const { config, updateKey, rhUsage, claimRh, releaseRh, rhWritable, unlocked } = useConfig();
   const holidays = config.holidays || [];
   const holidayNames = config.holidayNames || {};
   const restrictedHolidayPool = config.restrictedHolidayPool || [];
@@ -584,18 +585,19 @@ export default function DevEvaluationCalculator() {
                 <div className="eyebrow">Administration</div>
                 <h2>Evaluation Parameters &amp; Calendar</h2>
               </div>
+              <AdminUnlock />
             </div>
             <SettingsPanel />
             <HolidayManager defaultYear={quarterStart ? quarterStart.slice(0, 4) : undefined} />
-            <BulkIOPanel />
-            <DevUsagePanel />
+            {unlocked && <BulkIOPanel />}
+            {unlocked && <DevUsagePanel />}
           </section>
         )}
 
         {view === "framework" && <Framework />}
 
         <footer className="app__footer">
-          Performance Evaluation Centre · v{APP_VERSION} · Runs entirely in your browser · No data leaves this device
+          Performance Evaluation Centre · v{APP_VERSION}
         </footer>
       </div>
 

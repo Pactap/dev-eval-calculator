@@ -32,6 +32,24 @@ export function parseLocalDate(str) {
 }
 
 /**
+ * Count Saturdays + Sundays between two ISO date strings (inclusive). Used to show
+ * the weekend portion of a sprint's non-working days.
+ */
+export function countWeekends(startStr, endStr) {
+  const s = parseLocalDate(startStr);
+  const e = parseLocalDate(endStr);
+  if (!s || !e || s > e) return 0;
+  let n = 0;
+  const d = new Date(s);
+  while (d <= e) {
+    const day = d.getDay();
+    if (day === 0 || day === 6) n++;
+    d.setDate(d.getDate() + 1);
+  }
+  return n;
+}
+
+/**
  * True if an ISO "YYYY-MM-DD" date falls on a Saturday or Sunday (parsed local time).
  * Weekends are already non-productive, so a holiday landing on one has no scoring impact.
  */

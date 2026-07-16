@@ -56,9 +56,10 @@ export function Framework() {
       <DocSection eyebrow="Framework" title="What This Is">
         <p className="doc-p">
           The Performance Evaluation Centre is a client-side tool that turns a developer's
-          sprint activity into a transparent, pro-rata quarterly score. Every calculation runs
-          in the browser — no data leaves the device — and every rule below is configurable and
-          auditable so the outcome is explainable, not a black box.
+          sprint activity into a transparent, pro-rata quarterly score. All scoring runs in the
+          browser; the shared evaluation parameters, holiday calendar and restricted-holiday quota
+          sync through a Cloudflare Worker so they stay consistent across the team. Every rule below
+          is configurable and auditable so the outcome is explainable, not a black box.
         </p>
       </DocSection>
 
