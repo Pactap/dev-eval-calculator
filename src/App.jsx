@@ -4,10 +4,12 @@ import { countWorkingDays, countWorkingDaysInWindow, parseLocalDate, toISO, gene
 import { computeSprintResult, computeQuarterlySummary } from "./scoring.js";
 import { devKeyOf, yearOf, canonicalEmpId } from "./restrictedHolidays.js";
 import { useConfig } from "./configStore.jsx";
+import { useNotify } from "./notify.jsx";
+import { Boundary } from "./ErrorBoundary.jsx";
+import { AnalyticsView } from "./components/AnalyticsView.jsx";
 import { QuarterConfig } from "./components/QuarterConfig.jsx";
 import { HolidayManager } from "./components/HolidayManager.jsx";
 import { SprintCard } from "./components/SprintCard.jsx";
-import { CorrelationChart } from "./components/CorrelationChart.jsx";
 import { QuarterlySummary } from "./components/QuarterlySummary.jsx";
 import { AvailabilityPanel } from "./components/AvailabilityPanel.jsx";
 import { ConfigGlance } from "./components/ConfigGlance.jsx";
@@ -179,8 +181,8 @@ export default function DevEvaluationCalculator() {
   const [dailyCapacity, setDailyCapacity] = useState(6);
   const [sprints, setSprints] = useState([createSprint({ name: "Sprint 1" })]);
   const [reportMeta, setReportMeta] = useState({ devName: "", empId: "", quarterLabel: "", doj: "" });
-  const [view, setView] = useState("workspace"); // "workspace" | "framework"
-  const [toast, setToast] = useState(null); // { type: "success" | "error", message }
+  const [view, setView] = useState("workspace"); // "workspace" | "analytics" | "admin" | "framework"
+  const notify = useNotify();
 
   const totalWorkingDays = useMemo(() => countWorkingDays(quarterStart, quarterEnd, holidays), [quarterStart, quarterEnd, holidays]);
   const dailyRate = totalWorkingDays > 0 ? quarterBase / totalWorkingDays : 0;
@@ -202,8 +204,13 @@ export default function DevEvaluationCalculator() {
     const lastSprint = sprints[sprints.length - 1];
     const nextStart = lastSprint.endDate || "";
     setSprints(p => [...p, createSprint({ name: `Sprint ${p.length + 1}`, startDate: nextStart })]);
+    notify.info(`Sprint ${sprints.length + 1} added.`);
   };
-  const removeSprint = (i) => setSprints(p => p.filter((_, j) => j !== i));
+  const removeSprint = (i) => {
+    const name = sprints[i]?.name || `Sprint ${i + 1}`;
+    setSprints(p => p.filter((_, j) => j !== i));
+    notify.info(`${name} removed.`);
+  };
 
   // Mark (or clear, with "") a developer's restricted holiday on a sprint. Enforces
   // the one-per-calendar-year quota against both the current evaluation and the
@@ -216,7 +223,7 @@ export default function DevEvaluationCalculator() {
     const prev = sprint.restrictedHoliday || "";
     // With a server, recording an RH is an authenticated write.
     if (!rhWritable) {
-      setToast({ type: "error", message: "Unlock in Scoring rules (passkey) to record restricted holidays." });
+      notify.error("Unlock in Scoring rules (passkey) to record restricted holidays.");
       return;
     }
     // Release the prior claim under the identity it was RECORDED with — which may
@@ -235,7 +242,7 @@ export default function DevEvaluationCalculator() {
 
     // The date must be one the admin declared in the restricted-holiday pool.
     if (!restrictedHolidayPool.some(e => e.date === date)) {
-      setToast({ type: "error", message: "Pick a restricted holiday the admin has declared in the pool for this sprint." });
+      notify.error("Pick a restricted holiday the admin has declared in the pool for this sprint.");
       return;
     }
 
@@ -245,20 +252,17 @@ export default function DevEvaluationCalculator() {
     const prevEnd = i > 0 ? sprints[i - 1].endDate : "";
     const countStart = effectiveCountStart(sprint.startDate, prevEnd);
     if ((countStart && date < countStart) || (sprint.endDate && date > sprint.endDate)) {
-      setToast({
-        type: "error",
-        message: date === sprint.startDate && countStart !== sprint.startDate
-          ? "That day is shared with the previous sprint and already counts there — pick a later day for the restricted holiday."
-          : "Restricted holiday must fall within the sprint's dates.",
-      });
+      notify.error(date === sprint.startDate && countStart !== sprint.startDate
+        ? "That day is shared with the previous sprint and already counts there — pick a later day for the restricted holiday."
+        : "Restricted holiday must fall within the sprint's dates.");
       return;
     }
     if (isWeekend(date)) {
-      setToast({ type: "error", message: "That date is a weekend — already non-working, so no restricted holiday is needed." });
+      notify.error("That date is a weekend — already non-working, so no restricted holiday is needed.");
       return;
     }
     if (holidays.includes(date)) {
-      setToast({ type: "error", message: "That date is already a company holiday — the day is off for everyone." });
+      notify.error("That date is already a company holiday — the day is off for everyone.");
       return;
     }
 
@@ -266,19 +270,13 @@ export default function DevEvaluationCalculator() {
     // Cross-quarter quota: the per-developer ledger (server-authoritative when configured).
     const ledgerHit = devKey ? rhUsage(devKey, year) : null;
     if (ledgerHit && ledgerHit.date !== prev && ledgerHit.date !== date) {
-      setToast({
-        type: "error",
-        message: `${reportMeta.devName || reportMeta.empId || "This developer"} has already used their ${year} restricted holiday on ${formatDate(ledgerHit.date)}${ledgerHit.quarterLabel ? ` (${ledgerHit.quarterLabel})` : ""}.`,
-      });
+      notify.error(`${reportMeta.devName || reportMeta.empId || "This developer"} has already used their ${year} restricted holiday on ${formatDate(ledgerHit.date)}${ledgerHit.quarterLabel ? ` (${ledgerHit.quarterLabel})` : ""}.`);
       return;
     }
     // In-evaluation quota: no other sprint in the same calendar year may hold one.
     const clash = sprints.find((s, j) => j !== i && s.restrictedHoliday && yearOf(s.restrictedHoliday) === year);
     if (clash) {
-      setToast({
-        type: "error",
-        message: `A ${year} restricted holiday is already recorded on "${clash.name || "another sprint"}" (${formatDate(clash.restrictedHoliday)}). Only one is allowed per calendar year.`,
-      });
+      notify.error(`A ${year} restricted holiday is already recorded on "${clash.name || "another sprint"}" (${formatDate(clash.restrictedHoliday)}). Only one is allowed per calendar year.`);
       return;
     }
 
@@ -295,14 +293,11 @@ export default function DevEvaluationCalculator() {
         });
       }
     } catch (err) {
-      setToast({ type: "error", message: err.message });
+      notify.error(err.message);
       return;
     }
     setSprints(p => p.map((s, j) => (j === i ? { ...s, restrictedHoliday: date, restrictedHolidayKey: devKey } : s)));
-    setToast({
-      type: "success",
-      message: `Restricted holiday recorded for ${formatDate(date)}${devKey ? "" : " (add an Employee ID to track it across quarters)"}.`,
-    });
+    notify.success(`Restricted holiday recorded for ${formatDate(date)}${devKey ? "" : " (add an Employee ID to track it across quarters)"}.`);
   };
 
   const sprintsWithWD = useMemo(() => {
@@ -356,32 +351,34 @@ export default function DevEvaluationCalculator() {
   const handleQuarterLock = () => {
     if (quarterLocked) {          // unlock — leave sprints untouched
       setQuarterLocked(false);
+      notify.info("Evaluation period unlocked — edit the dates and re-lock when ready.");
       return;
     }
     if (!quarterStart || !quarterEnd) return;
     if (!reportMeta.quarterLabel) {
-      setToast({ type: "error", message: "Select the financial quarter before locking the evaluation period." });
+      notify.error("Select the financial quarter before locking the evaluation period.");
       return;
     }
     if (parseLocalDate(quarterStart) > parseLocalDate(quarterEnd)) {
-      setToast({ type: "error", message: "Evaluation start date is after the end date." });
+      notify.error("Evaluation start date is after the end date.");
       return;
     }
     // On first lock, scaffold the period into 14-day draft sprints — but only when
     // the sprint list is untouched, so we never clobber work the user already entered.
+    let generated = 0;
     if (sprints.every(isPristineSprint)) {
       // +1: generateSprintPeriods lengths are inclusive of the shared boundary day,
       // so a 14-day fortnightly cadence spans 15 calendar dates (start..start+14).
       const periods = generateSprintPeriods(quarterStart, quarterEnd, SPRINT_LENGTH_DAYS + 1);
       if (periods.length > 0) {
         setSprints(periods.map(p => createSprint({ ...p, draft: true })));
-        setToast({
-          type: "success",
-          message: `Locked. Generated ${periods.length} draft sprint${periods.length > 1 ? "s" : ""} (${SPRINT_LENGTH_DAYS}-day) — edit or remove any before locking each.`,
-        });
+        generated = periods.length;
       }
     }
     setQuarterLocked(true);
+    notify.success(generated > 0
+      ? `Evaluation period locked. Generated ${generated} draft sprint${generated > 1 ? "s" : ""} (${SPRINT_LENGTH_DAYS}-day) — edit or remove any before locking each.`
+      : "Evaluation period locked.");
   };
 
   const lastSprintExceedsQuarter = useMemo(() => {
@@ -409,12 +406,6 @@ export default function DevEvaluationCalculator() {
     && sprintResults.some(r => r.wdTotal > 0)
     && String(reportMeta.empId || "").trim());
 
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 4500);
-    return () => clearTimeout(t);
-  }, [toast]);
-
   const [exporting, setExporting] = useState(false);
 
   const handleExportPdf = async () => {
@@ -422,7 +413,7 @@ export default function DevEvaluationCalculator() {
       const why = !String(reportMeta.empId || "").trim()
         ? "Employee ID is required before exporting."
         : "Add the evaluation period and at least one sprint with productive days before exporting.";
-      setToast({ type: "error", message: why });
+      notify.error(why);
       return;
     }
     setExporting(true);
@@ -434,10 +425,10 @@ export default function DevEvaluationCalculator() {
         totalWorkingDays, dailyRate, config, sprints, sprintResults, summary: qSummary,
         reportMeta,
       });
-      setToast({ type: "success", message: "PDF report generated." });
+      notify.success("PDF report generated.");
     } catch (err) {
       console.error("PDF export failed:", err);
-      setToast({ type: "error", message: `Could not generate PDF: ${err.message}` });
+      notify.error(`Could not generate PDF: ${err.message}`);
     } finally {
       setExporting(false);
     }
@@ -468,6 +459,13 @@ export default function DevEvaluationCalculator() {
                 onClick={() => setView("workspace")}
               >
                 Workspace
+              </button>
+              <button
+                role="tab" aria-selected={view === "analytics"}
+                className={`view-tabs__btn${view === "analytics" ? " view-tabs__btn--active" : ""}`}
+                onClick={() => setView("analytics")}
+              >
+                Analytics
               </button>
               <button
                 role="tab" aria-selected={view === "admin"}
@@ -562,6 +560,7 @@ export default function DevEvaluationCalculator() {
 
         <ConfigGlance />
 
+        <Boundary label="Sprint ledger">
         <section className="workspace" aria-label="Sprint ledger">
           <div className="section-heading">
             <div>
@@ -597,7 +596,9 @@ export default function DevEvaluationCalculator() {
             ))}
           </div>
         </section>
+        </Boundary>
 
+        <Boundary label="Availability summary">
         <AvailabilityPanel
           quarterStart={quarterStart} quarterEnd={quarterEnd}
           holidays={holidays} holidayNames={holidayNames}
@@ -605,9 +606,10 @@ export default function DevEvaluationCalculator() {
           totalWorkingDays={totalWorkingDays} dailyCapacity={dailyCapacity}
           hasDevId={Boolean(devKeyOf(reportMeta))}
         />
+        </Boundary>
 
-        <section className="insight-grid" aria-label="Quarter insights">
-          <CorrelationChart sprintResults={sprintResults} theme={theme.resolved} />
+        <Boundary label="Quarterly summary">
+        <section className="insight-grid insight-grid--single" aria-label="Quarter insights">
           <QuarterlySummary
             sprints={sprints}
             sprintResults={sprintResults}
@@ -616,7 +618,14 @@ export default function DevEvaluationCalculator() {
             quarterBase={quarterBase}
           />
         </section>
+        </Boundary>
         </>
+        )}
+
+        {view === "analytics" && (
+          <Boundary label="Analytics dashboard">
+            <AnalyticsView sprintResults={sprintResults} theme={theme.resolved} />
+          </Boundary>
         )}
 
         {view === "admin" && (
@@ -628,27 +637,19 @@ export default function DevEvaluationCalculator() {
               </div>
               <AdminUnlock />
             </div>
-            <SettingsPanel />
-            <HolidayManager defaultYear={quarterStart ? quarterStart.slice(0, 4) : undefined} />
-            {unlocked && <BulkIOPanel />}
-            {unlocked && <DevUsagePanel />}
+            <Boundary label="Evaluation parameters"><SettingsPanel /></Boundary>
+            <Boundary label="Holiday calendar"><HolidayManager defaultYear={quarterStart ? quarterStart.slice(0, 4) : undefined} /></Boundary>
+            {unlocked && <Boundary label="Bulk import/export"><BulkIOPanel /></Boundary>}
+            {unlocked && <Boundary label="Developer usage"><DevUsagePanel /></Boundary>}
           </section>
         )}
 
-        {view === "framework" && <Framework />}
+        {view === "framework" && <Boundary label="Framework"><Framework /></Boundary>}
 
         <footer className="app__footer">
           Performance Evaluation Centre · v{APP_VERSION}
         </footer>
       </div>
-
-      {toast && (
-        <div className={`toast toast--${toast.type}`} role="status" aria-live="polite">
-          <span className="toast__dot" />
-          <span>{toast.message}</span>
-          <button className="toast__close" aria-label="Dismiss" onClick={() => setToast(null)}>×</button>
-        </div>
-      )}
     </div>
   );
 }

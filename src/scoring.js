@@ -51,7 +51,8 @@ export function computeSprintResult(sprint, dailyRate, dailyCapacity, config) {
 
   return {
     wd: wdInQuarter, wdTotal, wdInQuarter, leaks,
-    bp, ah, phPct, effPct, ipPct, zeroDone, noAssigned, noActivity, reop, assigned, closed,
+    bp, ah, phPct, effPct, ipPct, zeroDone, noAssigned, noActivity,
+    comp, collab, reop, assigned, closed, done,
     phB, cqO, effB, ipB, phM, cqM, effM, ipM,
     phA, cqA, effA, ipA, phAch, cqAch, effAch, ipAch,
     total, name: sprint.name,

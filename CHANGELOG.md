@@ -4,6 +4,22 @@ All notable changes to this project are documented here.
 
 The format is inspired by Keep a Changelog, and this project follows semantic versioning.
 
+## 4.7.0 - 2026-07-16
+
+Analytics dashboard, a real notification system, and per-section error resilience.
+
+### Added
+
+- **Analytics tab** (`components/AnalyticsView.jsx`, `analytics.js`): a developer monitoring dashboard with seven theme-aware charts across the quarter's sprints — score composition, achieved-vs-target trend, parameter trends (PH/Efficiency/Issue Persistence), a strengths radar, a score-contribution donut, hours utilization, and ticket throughput. Pure data transforms are unit-tested (`tests/analytics.test.mjs`).
+- **Notification system** (`notify.jsx`): a stacked, dismissible toast system (success / error / info / warning) with per-type auto-dismiss and `aria-live`, provided via context (`useNotify`). Action feedback wired into lock/unlock, add/remove sprint, restricted-holiday, import and export.
+- **Per-section error boundaries** (`Boundary` in `ErrorBoundary.jsx`) around each chart, the sprint ledger, availability, and the admin panels — a scoped Retry fallback instead of a blank app.
+
+### Changed
+
+- `computeSprintResult` now also returns `comp`, `collab`, and `done` (used by the utilization/throughput charts).
+- Previously silent server-sync failures (config fetch, restricted-holiday ledger) now surface as non-blocking notifications.
+- The score-composition chart moved from the workspace into the Analytics tab.
+
 ## 4.6.1 - 2026-07-16
 
 Required/optional field markers and refreshed placeholders.

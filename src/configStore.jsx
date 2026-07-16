@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef } f
 import { DEFAULT_CONFIG } from "./constants.js";
 import { validateConfig } from "./configValidation.js";
 import { loadLedger, saveLedger, recordRh, clearRh } from "./restrictedHolidays.js";
+import { useNotify } from "./notify.jsx";
 
 const STORAGE_KEY = "devEvalConfig.v1";
 // Optional backend (Cloudflare Worker). Set VITE_CONFIG_API to enable the shared,
@@ -57,6 +58,7 @@ function loadConfig() {
 }
 
 export function ConfigProvider({ children }) {
+  const notify = useNotify();
   const [config, setConfig] = useState(loadConfig);
   const [unlocked, setUnlocked] = useState(false); // editing gate; re-auth each page load
   const keyRef = useRef("");
@@ -102,7 +104,9 @@ export function ConfigProvider({ children }) {
           dirtyRef.current = true;
         }
       })
-      .catch(() => {}); // offline -> keep local
+      .catch(() => { // offline -> keep local, but let the user know why edits stay local
+        if (!cancelled) notify.info("Working offline — using this browser's saved configuration.");
+      });
     return () => { cancelled = true; };
   }, []);
 
@@ -148,7 +152,9 @@ export function ConfigProvider({ children }) {
       try {
         const res = await fetch(`${CONFIG_API}/rh`, { headers: { "X-Passkey": keyRef.current || "" } });
         if (res.ok) server = (await res.json()).ledger || null;
-      } catch { /* offline */ }
+      } catch {
+        if (!cancelled) notify.warning("Couldn't reach the server for the restricted-holiday ledger — using the local copy.");
+      }
       if (cancelled) return;
       const local = loadLedger();
       if (server && Object.keys(server).length) {

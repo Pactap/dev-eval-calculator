@@ -1,9 +1,20 @@
 // Single source of truth for the app version and its history.
 // Bump APP_VERSION and prepend a CHANGELOG entry on every release
 // (semantic versioning: MAJOR.MINOR.PATCH).
-export const APP_VERSION = "4.6.1";
+export const APP_VERSION = "4.7.0";
 
 export const CHANGELOG = [
+  {
+    version: "4.7.0",
+    date: "2026-07-16",
+    title: "Analytics dashboard, notifications & resilient error handling",
+    type: "minor",
+    changes: [
+      "New Analytics tab — a developer monitoring dashboard with seven charts across the quarter's sprints: score composition, achieved-vs-target trend, parameter trends (Planned Hours / Efficiency / Issue Persistence), a strengths radar, a score-contribution donut, hours utilization, and ticket throughput. All theme-aware and computed from the live sprint data.",
+      "Rebuilt action notifications: a stacked, dismissible toast system (success / error / info / warning) with per-type duration and accessibility, surfaced through a shared context so any part of the app can raise one. Wired feedback into lock/unlock, add/remove sprint, restricted-holiday, import and export actions.",
+      "Hardened error handling: per-section error boundaries (each chart, the sprint ledger, admin panels, availability) with a Retry, so one failure can't blank the app; previously silent server-sync failures now surface as non-blocking notifications.",
+    ],
+  },
   {
     version: "4.6.1",
     date: "2026-07-16",
