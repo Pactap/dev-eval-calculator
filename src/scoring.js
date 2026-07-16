@@ -27,15 +27,17 @@ export function computeSprintResult(sprint, dailyRate, dailyCapacity, config) {
   const phPct = ah > 0 ? ((comp + collab) / ah) * 100 : 0;
   const noAssigned = assigned === 0;
   const effPct = noAssigned ? 0 : (closed / assigned) * 100;
-  const zeroDone = done === 0;
-  const ipPct = zeroDone ? 100 : (reop / done) * 100;
+  // Issue Persistence: tickets reopened in the sprint over tickets closed in the sprint.
+  // Zero closed -> worst band, so a sprint can't dodge reopen penalties by closing nothing.
+  const zeroClosed = closed === 0;
+  const ipPct = zeroClosed ? 100 : (reop / closed) * 100;
 
   const NEUTRAL = { label: "—", multiplier: 0 };
   const NO_TICKETS = { label: "no tickets", multiplier: 0 }; // zero assigned tickets earns no efficiency credit
   const phB = getBand(Math.min(phPct, 100), plannedHoursBands);
   const cqO = codeQualityOptions.find(o => o.label === sprint.codeQuality) || codeQualityOptions[Math.min(1, codeQualityOptions.length - 1)] || NEUTRAL;
   const effB = noAssigned ? NO_TICKETS : getBand(effPct, efficiencyBands);
-  const ipB = (zeroDone ? issuePersistBands[issuePersistBands.length - 1] : getBand(ipPct, issuePersistBands)) || NEUTRAL;
+  const ipB = (zeroClosed ? issuePersistBands[issuePersistBands.length - 1] : getBand(ipPct, issuePersistBands)) || NEUTRAL;
 
   // Effective multiplier zeroes out entirely when there is no activity, so the
   // per-parameter Allocated x Multiplier = Achieved column stays self-consistent.
@@ -51,7 +53,7 @@ export function computeSprintResult(sprint, dailyRate, dailyCapacity, config) {
 
   return {
     wd: wdInQuarter, wdTotal, wdInQuarter, leaks,
-    bp, ah, phPct, effPct, ipPct, zeroDone, noAssigned, noActivity,
+    bp, ah, phPct, effPct, ipPct, zeroClosed, noAssigned, noActivity,
     comp, collab, reop, assigned, closed, done,
     phB, cqO, effB, ipB, phM, cqM, effM, ipM,
     phA, cqA, effA, ipA, phAch, cqAch, effAch, ipAch,

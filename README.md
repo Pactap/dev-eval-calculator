@@ -146,13 +146,13 @@ it).
 **Formula:**
 
 ```text
-issuePersistence% = reopenedTickets / doneTickets * 100
+issuePersistence% = reopenedTickets / closedTickets * 100
 ```
 
-**Zero done tickets forces the worst band** — a sprint cannot dodge reopen penalties by reporting no
-completed work.
+**Zero closed tickets forces the worst band** — a sprint cannot dodge reopen penalties by closing no
+tickets.
 
-**Example.** `2` reopened of `40` done → `issuePersistence% = 2 / 40 × 100 = 5%`. The default band
+**Example.** `2` reopened of `40` closed → `issuePersistence% = 2 / 40 × 100 = 5%`. The default band
 covering 5% (`0–10%`) supplies **1.50×** (best). But at the default weight `0.00`:
 `allocated = 15 × 0.00 = 0`, so `achieved = 0` regardless of the multiplier. Give it a non-zero
 weight and it starts contributing.
@@ -191,7 +191,7 @@ multiplier, or grade in the Admin panel and every number here moves with it.
 
 - A sprint with **no hours and no tickets** scores zero — the default grade never awards free points.
 - **Zero assigned tickets** earns no efficiency credit (`0×`).
-- **Zero done tickets** forces Issue Persistence to its worst band.
+- **Zero closed tickets** forces Issue Persistence to its worst band.
 - Numeric inputs are clamped with `Math.max(0, …)`, so negative input cannot produce invalid scores.
 - **Cross-quarter sprints** use their full length for hours and percentages, but only in-quarter
   productive days claim base points for this quarter.

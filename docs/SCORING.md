@@ -37,7 +37,7 @@ a fixed rule.
 | Planned Hours | 40% | Planned utilization of available time (rework excluded) | `(completedHours + collaborationHours) / allottedHours * 100`, capped at 100% |
 | Code Quality | 20% | Team-lead quality judgment, cross-checked against the CQI | grade label → multiplier |
 | Efficiency | 40% | Delivery of assigned work | `closedTickets / assignedTickets * 100` |
-| Issue Persistence | 0% | Defect recurrence (legacy reach-back, zero-weighted by default) | `reopenedTickets / doneTickets * 100` |
+| Issue Persistence | 0% | Defect recurrence (reopens vs tickets closed, zero-weighted by default) | `reopenedTickets / closedTickets * 100` |
 
 ```text
 allocated   = sprintBasePoints * weight
@@ -60,7 +60,7 @@ capacity `allottedHours = 60`. Using the shipped default weights and bands:
 | Planned Hours | 40 completed + 8 collab of 60 allotted | `48/60 = 80%` | `1.50×` (band 80–90) | 0.40 | `15 × 0.40 × 1.50 =` **9.00** |
 | Code Quality | Lead grade "Good" | — | `1.30×` | 0.20 | `15 × 0.20 × 1.30 =` **3.90** |
 | Efficiency | 16 closed of 20 assigned | `16/20 = 80%` | `0.40×` (band 71–80) | 0.40 | `15 × 0.40 × 0.40 =` **2.40** |
-| Issue Persistence | 2 reopened of 40 done | `2/40 = 5%` | `1.50×` (band 0–10) | 0.00 | `15 × 0.00 × 1.50 =` **0.00** |
+| Issue Persistence | 2 reopened of 40 closed | `2/40 = 5%` | `1.50×` (band 0–10) | 0.00 | `15 × 0.00 × 1.50 =` **0.00** |
 | **Sprint total** | | | | | **15.30** |
 
 The sprint earned `15.30` against its `15`-point base allocation. Retune any weight, band multiplier,
@@ -68,7 +68,7 @@ or grade in the Admin panel and every number above moves with it — the in-app 
 recomputes this example against the live configuration.
 
 Edge behaviours reflected by the formulas: Planned Hours is **capped at 100%**; **zero assigned
-tickets** gives Efficiency no credit (`0×`, distinct from closing 0 of N); and **zero done tickets**
+tickets** gives Efficiency no credit (`0×`, distinct from closing 0 of N); and **zero closed tickets**
 forces Issue Persistence to its worst band rather than letting a sprint dodge reopen penalties.
 
 ## Cross-quarter & shared-boundary sprints
@@ -101,8 +101,8 @@ forces Issue Persistence to its worst band rather than letting a sprint dodge re
 
 - A sprint with **no hours and no tickets** scores zero — the default grade never awards free points.
 - **Zero assigned tickets** earns no efficiency credit (0×), distinct from closing 0 of N assigned.
-- If `doneTickets` is zero, Issue Persistence is forced to its worst band, so a sprint cannot dodge reopen
-  penalties by reporting no completed work.
+- If `closedTickets` is zero, Issue Persistence is forced to its worst band, so a sprint cannot dodge reopen
+  penalties by closing no tickets.
 - `computeSprintResult` clamps numeric inputs with `Math.max(0, parseFloat(value) || 0)`, so negative input
   cannot produce invalid scores.
 - Remaining quarter allocation is clamped at zero and never reads negative.

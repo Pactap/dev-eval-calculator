@@ -100,7 +100,7 @@ export function QuarterConfig({
           />
         </div>
         <div className="quarter-config__field--sm">
-          <label className="label">Capacity (hrs/day) <span className="quarter-config__req">*</span></label>
+          <label className="label">Capacity Per Developer (Hrs/Day) <span className="quarter-config__req">*</span></label>
           <input
             type="number"
             value={dailyCapacity}

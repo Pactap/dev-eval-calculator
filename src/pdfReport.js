@@ -284,7 +284,7 @@ export function generateQuarterlyReportPDF(data) {
         ["Planned Hours", n2(r.phA), `${pct(r.phPct)} -> ${r.phB.label}`, mult(r.phM), n2(r.phAch)],
         ["Code Quality", n2(r.cqA), r.cqO.label, mult(r.cqM), n2(r.cqAch)],
         ["Efficiency", n2(r.effA), r.noAssigned ? "no tickets" : `${pct(r.effPct)} -> ${r.effB.label}`, mult(r.effM), n2(r.effAch)],
-        ["Issue Persistence", n2(r.ipA), r.zeroDone ? "zero done -> worst" : `${pct(r.ipPct)} -> ${r.ipB.label}`, mult(r.ipM), n2(r.ipAch)],
+        ["Issue Persistence", n2(r.ipA), r.zeroClosed ? "zero closed -> worst" : `${pct(r.ipPct)} -> ${r.ipB.label}`, mult(r.ipM), n2(r.ipAch)],
       ]),
       foot: [["Sprint total", "", "", "", n2(r.total)]],
       ...tableTheme(),

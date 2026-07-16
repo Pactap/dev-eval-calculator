@@ -170,7 +170,7 @@ const FORMULA_GROUPS = [
     ["Planned Hours", "(completed + collaboration) ÷ allotted × 100, capped at 100"],
     ["Code Quality", "lead grade → multiplier"],
     ["Efficiency", "tickets closed ÷ tickets assigned × 100"],
-    ["Issue Persistence", "reopened ÷ done tickets × 100"],
+    ["Issue Persistence", "reopened ÷ closed tickets × 100"],
   ] },
 ];
 function FormulaView() {

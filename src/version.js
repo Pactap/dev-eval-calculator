@@ -1,9 +1,20 @@
 // Single source of truth for the app version and its history.
 // Bump APP_VERSION and prepend a CHANGELOG entry on every release
 // (semantic versioning: MAJOR.MINOR.PATCH).
-export const APP_VERSION = "4.8.0";
+export const APP_VERSION = "4.9.0";
 
 export const CHANGELOG = [
+  {
+    version: "4.9.0",
+    date: "2026-07-16",
+    title: "Issue Persistence = reopened ÷ closed tickets",
+    type: "minor",
+    changes: [
+      "Issue Persistence is now Tickets Reopened ÷ Tickets Closed in the sprint (previously ÷ Done tickets). Zero tickets closed still forces the worst band, so reopens can't be dodged by closing nothing. All formula displays, tooltips, the PDF and docs updated to match.",
+      "Renamed the capacity field to \"Capacity Per Developer (Hrs/Day)\" for clarity.",
+      "The Done-tickets input is retained for the ticket-throughput chart but no longer feeds Issue Persistence.",
+    ],
+  },
   {
     version: "4.8.0",
     date: "2026-07-16",

@@ -4,6 +4,17 @@ All notable changes to this project are documented here.
 
 The format is inspired by Keep a Changelog, and this project follows semantic versioning.
 
+## 4.9.0 - 2026-07-16
+
+Issue Persistence formula change + capacity label.
+
+### Changed
+
+- **Issue Persistence** is now `reopenedTickets / closedTickets * 100` (was `/ doneTickets`) — reopens against tickets *closed* in the same sprint. Zero closed still forces the worst band. Updated `scoring.js` (`zeroClosed` replaces `zeroDone`), every formula display (Framework, Settings panel, SprintCard tooltip/result, ScoreTable, PDF), and the docs (README, SCORING.md, CLAUDE.md).
+- Renamed the capacity field label to **Capacity Per Developer (Hrs/Day)**.
+- The Done-tickets input remains for the ticket-throughput chart but no longer affects Issue Persistence.
+- Tests updated + added (`reopened / closed`, zero-closed worst band); 88 front-end tests.
+
 ## 4.8.0 - 2026-07-16
 
 Analytics presentation polish, touch/submit validation, and charts in the PDF.

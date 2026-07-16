@@ -9,7 +9,7 @@ export function ScoreTable({ result, dailyRate }) {
     { n: "Planned Hrs", a: r.phA, b: r.phB.label, m: r.phM, v: r.phAch },
     { n: "Code Quality", a: r.cqA, b: r.cqO.label, m: r.cqM, v: r.cqAch },
     { n: "Efficiency", a: r.effA, b: r.noAssigned ? "no tickets" : r.effB.label, m: r.effM, v: r.effAch },
-    { n: "Issue Persist", a: r.ipA, b: r.zeroDone ? "40%+ default" : r.ipB.label, m: r.ipM, v: r.ipAch },
+    { n: "Issue Persist", a: r.ipA, b: r.zeroClosed ? "40%+ default" : r.ipB.label, m: r.ipM, v: r.ipAch },
   ];
 
   return (

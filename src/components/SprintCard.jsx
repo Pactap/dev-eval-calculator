@@ -19,7 +19,7 @@ export function SprintCard({
     { key: "ph", icon: "PH", title: "Planned Hours", weightLabel: `${(weights.ph * 100).toFixed(0)}%`, tipText: "(Completed + Collaboration) / Allotted Hours. Rework excluded." },
     { key: "cq", icon: "CQ", title: "Code Quality", weightLabel: `${(weights.cq * 100).toFixed(0)}%`, tipText: "Team lead grade, cross-checked against CQI." },
     { key: "eff", icon: "EF", title: "Efficiency", weightLabel: `${(weights.eff * 100).toFixed(0)}%`, tipText: "Tickets Marked Closed / Tickets Assigned in sprint." },
-    { key: "ip", icon: "IP", title: "Issue Persists", weightLabel: `${(weights.ip * 100).toFixed(0)}%`, tipText: "Reopened / Done. Legacy reach-back, each reopen counted separately. Zero Done = worst band." },
+    { key: "ip", icon: "IP", title: "Issue Persists", weightLabel: `${(weights.ip * 100).toFixed(0)}%`, tipText: "Tickets Reopened / Tickets Closed in this sprint. Each reopen counted separately. Zero Closed = worst band. (Done tickets are recorded for the throughput chart only.)" },
   ];
 
   const s = sprint;
@@ -148,10 +148,10 @@ export function SprintCard({
             </div>
           ),
           resultDisplay: hasInput ? (
-            <div className={`metric__result${r.zeroDone ? " metric__result--error" : ""}`}>
-              {r.zeroDone
-                ? <><span className="metric__emphasis">Zero Done - worst band</span><Pill value={r.ipB.multiplier} /></>
-                : <><span>{r.ipPct.toFixed(1)}%</span><span className="metric__arrow">{"->"}</span><span>{r.ipB.label}</span><Pill value={r.ipB.multiplier} /></>}
+            <div className={`metric__result${r.zeroClosed ? " metric__result--error" : ""}`}>
+              {r.zeroClosed
+                ? <><span className="metric__emphasis">Zero Closed - worst band</span><Pill value={r.ipB.multiplier} /></>
+                : <><span>{r.reop}/{r.closed} = {r.ipPct.toFixed(1)}%</span><span className="metric__arrow">{"->"}</span><span>{r.ipB.label}</span><Pill value={r.ipB.multiplier} /></>}
             </div>
           ) : null,
         };

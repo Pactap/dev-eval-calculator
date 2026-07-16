@@ -80,9 +80,9 @@ export function Framework() {
     },
     {
       n: "Issue Persistence", w: wpct(w.ip),
-      formula: "Reopened / Done tickets × 100. Zero done → worst band.",
-      d: `Defect recurrence — a legacy reach-back signal${zeroIp ? ", retained but currently zero-weighted" : ""}.`,
-      ex: `2 reopened of 40 done → 5%. The band covering 5% gives ${mx(ipMult)}; achieved = ${B} × ${wpct(w.ip)} × ${mx(ipMult)} = ${ach(w.ip, ipMult)} pts${zeroIp ? " (zero at the current 0% weight — give it weight and it contributes)" : ""}.`,
+      formula: "Reopened / Closed tickets × 100. Zero closed → worst band.",
+      d: `Defect recurrence — reopens against tickets closed in the sprint${zeroIp ? "; retained but currently zero-weighted" : ""}.`,
+      ex: `2 reopened of 40 closed → 5%. The band covering 5% gives ${mx(ipMult)}; achieved = ${B} × ${wpct(w.ip)} × ${mx(ipMult)} = ${ach(w.ip, ipMult)} pts${zeroIp ? " (zero at the current 0% weight — give it weight and it contributes)" : ""}.`,
     },
   ];
 

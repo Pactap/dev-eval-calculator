@@ -116,7 +116,8 @@ test("computeSprintResult: negative numeric inputs clamp to zero", () => {
   }, 2, 7, CFG);
   assert.equal(r.phPct, 0);        // (0+0)/35
   assert.equal(r.effPct, 0);       // 0/10
-  assert.equal(r.ipPct, 0);        // 0/4
+  assert.equal(r.ipPct, 100);      // closed clamped to 0 -> zero closed -> worst band
+  assert.equal(r.zeroClosed, true);
 });
 
 test("computeSprintResult: planned-hours over 100% is clamped to the top band", () => {

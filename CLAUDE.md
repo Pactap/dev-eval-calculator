@@ -44,7 +44,7 @@ src/
 - **Planned Hours (50%)**: (completed + collaboration) ÷ allotted. Rework excluded.
 - **Code Quality (20%)**: Team lead grade (Outstanding/Good/Satisfactory/Needs Improvement/Unsatisfactory/Poor), cross-checked against CQI.
 - **Efficiency (10%)**: completed ÷ allotted. Auto-calculated, no collab hours.
-- **Issue Persists (20%)**: reopened ÷ done tickets. Legacy reach-back. Each reopen counted separately. Zero done = worst band.
+- **Issue Persists (20%)**: reopened ÷ closed tickets (this sprint). Each reopen counted separately. Zero closed = worst band.
 
 ### Dual penalty
 Reopened tickets penalize both Planned Hours (rework time excluded) and Issue Persists (reopen ratio). Intentional by design.

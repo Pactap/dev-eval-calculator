@@ -173,16 +173,27 @@ test("computeSprintResult: activity via hours alone still scores CQ/PH but not e
   assert.equal(r.effAch, 0);           // but no tickets -> no efficiency award
 });
 
-test("computeSprintResult assigns worst issue-persist band when done tickets are zero", () => {
+test("computeSprintResult assigns worst issue-persist band when closed tickets are zero", () => {
   const r = computeSprintResult({
-    workingDays: "5", completedHours: "10", closedTickets: "1", assignedTickets: "2",
-    codeQuality: "Satisfactory", reopenedTickets: "0", doneTickets: "0",
+    workingDays: "5", completedHours: "10", closedTickets: "0", assignedTickets: "2",
+    codeQuality: "Satisfactory", reopenedTickets: "1", doneTickets: "3",
   }, 2, 7, CFG);
 
-  assert.equal(r.zeroDone, true);
+  assert.equal(r.zeroClosed, true);
   assert.equal(r.ipPct, 100);
   assert.equal(r.ipB.label, "40%+");
   assert.equal(r.ipB.multiplier, -0.5);
+});
+
+test("computeSprintResult: issue persistence is reopened / closed (this sprint)", () => {
+  const r = computeSprintResult({
+    workingDays: "5", completedHours: "10", closedTickets: "10", assignedTickets: "12",
+    codeQuality: "Satisfactory", reopenedTickets: "1", doneTickets: "3",
+  }, 2, 7, CFG);
+
+  assert.equal(r.zeroClosed, false);
+  assert.equal(round(r.ipPct), 10);          // 1 reopened / 10 closed (not / doneTickets=3)
+  assert.equal(r.ipB.label, "10-20%");       // 10% is the lower bound of 10-20 (inclusive)
 });
 
 /* ---------------- cross-quarter split ---------------- */
