@@ -56,7 +56,7 @@ export function QuarterConfig({
           </select>
         </div>
         <div className="quarter-config__field">
-          <label className="label">Evaluation Start Date</label>
+          <label className="label">Evaluation Start Date <span className="quarter-config__req">*</span></label>
           <input
             type="date"
             value={quarterStart}
@@ -66,7 +66,7 @@ export function QuarterConfig({
           />
         </div>
         <div className="quarter-config__field">
-          <label className="label">Evaluation End Date</label>
+          <label className="label">Evaluation End Date <span className="quarter-config__req">*</span></label>
           <input
             type="date"
             value={quarterEnd}
@@ -76,7 +76,7 @@ export function QuarterConfig({
           />
         </div>
         <div className="quarter-config__field--sm">
-          <label className="label">Base score</label>
+          <label className="label">Base score <span className="quarter-config__req">*</span></label>
           <input
             type="number"
             value={quarterBase}
@@ -86,7 +86,7 @@ export function QuarterConfig({
           />
         </div>
         <div className="quarter-config__field--sm">
-          <label className="label">Capacity (hrs/day)</label>
+          <label className="label">Capacity (hrs/day) <span className="quarter-config__req">*</span></label>
           <input
             type="number"
             value={dailyCapacity}

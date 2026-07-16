@@ -4,6 +4,16 @@ All notable changes to this project are documented here.
 
 The format is inspired by Keep a Changelog, and this project follows semantic versioning.
 
+## 4.6.1 - 2026-07-16
+
+Required/optional field markers and refreshed placeholders.
+
+### Changed
+
+- Marked the evaluation-period fields (Evaluation Start/End Date, Base score, Capacity) and Financial Quarter as **required** (`*`).
+- **Employee ID is now required** and enforced before PDF export; Developer full name and Date of joining marked optional; section renamed to **Developer Details**.
+- Placeholder examples refreshed to in-house conventions (Ram Sharma, ABS100).
+
 ## 4.6.0 - 2026-07-16
 
 Evaluation period: mandatory Financial Quarter dropdown, decoupled dates, fortnightly sprints.

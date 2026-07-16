@@ -1,9 +1,20 @@
 // Single source of truth for the app version and its history.
 // Bump APP_VERSION and prepend a CHANGELOG entry on every release
 // (semantic versioning: MAJOR.MINOR.PATCH).
-export const APP_VERSION = "4.6.0";
+export const APP_VERSION = "4.6.1";
 
 export const CHANGELOG = [
+  {
+    version: "4.6.1",
+    date: "2026-07-16",
+    title: "Field labels: required/optional markers",
+    type: "patch",
+    changes: [
+      "Marked the evaluation-period fields (Start, End, Base score, Capacity) and the Financial Quarter as required (*).",
+      "Developer Details: Employee ID is now required (and enforced before PDF export); full name and date of joining are marked optional; section renamed from \"Developer Details (Optional)\".",
+      "Refreshed placeholder examples to match in-house conventions (Ram Sharma, ABS100).",
+    ],
+  },
   {
     version: "4.6.0",
     date: "2026-07-16",

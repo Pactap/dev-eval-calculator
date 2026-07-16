@@ -578,6 +578,12 @@ button {
 
 .quarter-config__req { color: var(--negative); font-weight: 700; }
 
+/* Required (*) / optional markers on field labels, shared across panels. */
+.field-req { color: var(--negative); font-weight: 700; }
+.field-opt { color: var(--text-muted); font-weight: 400; font-size: 11px; }
+.input--invalid,
+.input--invalid:focus { border-color: var(--negative); }
+
 /* The financial-quarter <select> reuses .input; keep its height/appearance aligned. */
 .quarter-config__inputs select.input {
   appearance: none;

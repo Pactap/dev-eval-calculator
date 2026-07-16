@@ -106,9 +106,9 @@ function KpiCard({ label, value, detail, tone = "default" }) {
 }
 
 const REPORT_FIELDS = [
-  { key: "devName", label: "Developer full name", type: "text", placeholder: "e.g. Jordan Rivera" },
-  { key: "empId", label: "Employee ID", type: "text", placeholder: "e.g. PT-1042" },
-  { key: "doj", label: "Date of joining", type: "date", placeholder: "" },
+  { key: "devName", label: "Developer full name", type: "text", placeholder: "e.g. Ram Sharma", required: false },
+  { key: "empId", label: "Employee ID", type: "text", placeholder: "e.g. ABS100", required: true },
+  { key: "doj", label: "Date of joining", type: "date", placeholder: "", required: false },
 ];
 
 function ReportDetails({ meta, onChange }) {
@@ -117,24 +117,33 @@ function ReportDetails({ meta, onChange }) {
       <div className="report-details__head">
         <div>
           <div className="eyebrow">Report Details</div>
-          <h2>Developer Details (Optional)</h2>
+          <h2>Developer Details</h2>
         </div>
         <span className="report-details__hint">Included in the PDF report header</span>
       </div>
       <div className="report-details__grid">
-        {REPORT_FIELDS.map(f => (
-          <div key={f.key} className="report-details__field">
-            <label className="label" htmlFor={`rd-${f.key}`}>{f.label}</label>
-            <input
-              id={`rd-${f.key}`}
-              type={f.type}
-              value={meta[f.key]}
-              placeholder={f.placeholder}
-              className="input"
-              onChange={e => onChange({ ...meta, [f.key]: e.target.value })}
-            />
-          </div>
-        ))}
+        {REPORT_FIELDS.map(f => {
+          const missing = f.required && !String(meta[f.key] || "").trim();
+          return (
+            <div key={f.key} className="report-details__field">
+              <label className="label" htmlFor={`rd-${f.key}`}>
+                {f.label}{" "}
+                {f.required
+                  ? <span className="field-req">*</span>
+                  : <span className="field-opt">(optional)</span>}
+              </label>
+              <input
+                id={`rd-${f.key}`}
+                type={f.type}
+                value={meta[f.key]}
+                placeholder={f.placeholder}
+                className={`input${missing ? " input--invalid" : ""}`}
+                aria-invalid={missing || undefined}
+                onChange={e => onChange({ ...meta, [f.key]: e.target.value })}
+              />
+            </div>
+          );
+        })}
       </div>
     </section>
   );
@@ -397,7 +406,8 @@ export default function DevEvaluationCalculator() {
   const lockedCount = useMemo(() => sprints.filter(s => s.locked).length, [sprints]);
 
   const canExport = Boolean(quarterStart && quarterEnd && totalWorkingDays > 0
-    && sprintResults.some(r => r.wdTotal > 0));
+    && sprintResults.some(r => r.wdTotal > 0)
+    && String(reportMeta.empId || "").trim());
 
   useEffect(() => {
     if (!toast) return;
@@ -409,7 +419,10 @@ export default function DevEvaluationCalculator() {
 
   const handleExportPdf = async () => {
     if (!canExport) {
-      setToast({ type: "error", message: "Add quarter dates and at least one sprint with productive days before exporting." });
+      const why = !String(reportMeta.empId || "").trim()
+        ? "Employee ID is required before exporting."
+        : "Add the evaluation period and at least one sprint with productive days before exporting.";
+      setToast({ type: "error", message: why });
       return;
     }
     setExporting(true);
@@ -481,7 +494,7 @@ export default function DevEvaluationCalculator() {
                   className="btn btn--primary btn--export"
                   onClick={handleExportPdf}
                   disabled={!canExport || exporting}
-                  title={canExport ? "Export a formatted PDF report" : "Add quarter dates and sprint data first"}
+                  title={canExport ? "Export a formatted PDF report" : "Add the evaluation period, Employee ID, and sprint data first"}
                 >
                   {exporting ? "Generating…" : "Export PDF"}
                 </button>

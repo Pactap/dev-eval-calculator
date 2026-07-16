@@ -107,7 +107,7 @@ export function DevUsagePanel() {
       </p>
 
       <div className="dev-usage__add">
-        <input className="input" placeholder="Employee ID (e.g. PT-1042)" value={empId}
+        <input className="input" placeholder="Employee ID (e.g. ABS100)" value={empId}
           onChange={(e) => setEmpId(e.target.value)} aria-label="Employee ID" />
         <select className="input" value={selDate} onChange={(e) => setSelDate(e.target.value)}
           disabled={!pool.length} aria-label="Restricted holiday">
