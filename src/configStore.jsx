@@ -12,7 +12,7 @@ const ConfigContext = createContext(null);
 // Passkey gate for editing every evaluation parameter (weights, bands, grades,
 // AND holidays). Only the SHA-256 hash of the key ships; the raw key is held in
 // memory (this page load) to authorize a server publish.
-const PASS_HASH = "49efb886446cb7b6b3018bff28018333edf402f4cdf2b4074deda5cbe82a54f4";
+const PASS_HASH = "12877a7977da00b5fd066e7dfec573873ff3be9b67a4a0b067807fe25e78c45e";
 async function sha256(str) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
   return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
