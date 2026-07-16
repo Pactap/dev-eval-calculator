@@ -123,7 +123,7 @@ export function generateQuarterlyReportPDF(data) {
 
     // Constructive framing: time away scales the target down, it is not a penalty.
     const note = avail.dilutedDays > 0
-      ? "Scoring is pro-rata to productive days. Company holidays and approved restricted leave reduce the point pool proportionally and are not attributed to the developer; measured per-day performance is unaffected."
+      ? "Scoring is pro-rata to productive days. Company holidays and restricted holidays reduce the point pool proportionally and are not attributed to the developer; measured per-day performance is unaffected."
       : "The recorded holidays fell on weekends, which are already non-working days, so they had no additional impact on productive days or the score.";
     doc.setFont("helvetica", "italic");
     doc.setFontSize(8.5);

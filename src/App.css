@@ -2462,7 +2462,38 @@ button {
   flex-shrink: 0;
 }
 
-/* Developer usage table */
+/* Developer usage table + editor */
+.dev-usage__desc {
+  margin: 0 0 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-tertiary);
+}
+
+.dev-usage__add {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.dev-usage__add .input {
+  flex: 1 1 160px;
+  min-width: 140px;
+}
+
+.dev-usage__add .input:first-of-type {
+  max-width: 240px;
+}
+
+.dev-usage__row-select {
+  min-width: 200px;
+  min-height: 30px;
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
 .dev-usage__table-wrap {
   overflow-x: auto;
 }

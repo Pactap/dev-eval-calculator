@@ -29,7 +29,7 @@ export function AvailabilityPanel({ quarterStart, quarterEnd, holidays, holidayN
       <div className="availability__head">
         <div>
           <div className="eyebrow">Availability &amp; time off</div>
-          <h2>Holidays &amp; Approved Leave</h2>
+          <h2>Company &amp; Restricted Holidays</h2>
         </div>
         <span className="availability__hint">Context for the score — not a deduction against the developer</span>
       </div>
@@ -81,7 +81,7 @@ export function AvailabilityPanel({ quarterStart, quarterEnd, holidays, holidayN
       <p className="availability__note">
         {a.dilutedDays > 0 ? (
           <>
-            {a.dilutedDays} productive day{a.dilutedDays === 1 ? "" : "s"} (~{dilutedHrs.toFixed(0)} hrs) {a.dilutedDays === 1 ? "was" : "were"} unavailable due to holidays and approved leave.
+            {a.dilutedDays} productive day{a.dilutedDays === 1 ? "" : "s"} (~{dilutedHrs.toFixed(0)} hrs) {a.dilutedDays === 1 ? "was" : "were"} unavailable due to company holidays and restricted holidays.
             Scoring is <strong>pro-rata to productive days</strong>, so this time away reduces the point pool proportionally and is
             <strong> not</strong> counted as underperformance — measured per-day performance is unaffected.
           </>
