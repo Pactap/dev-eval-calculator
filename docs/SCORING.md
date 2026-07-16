@@ -39,7 +39,9 @@ Efficiency and the denominator of Issue Persistence.
 **Tickets Reopened** are reopened by **Quality Assurance** — on grounds such as *failed acceptance
 criteria, regression bugs, unmet technical standards, or environment errors* (not limited to these) —
 either on QA's own evaluation or on the recommendation of **Product Management**, the **Engineering Team
-Lead**, or the **Engineering Manager** on similar grounds (not limited to these).
+Lead**, or the **Engineering Manager** on similar grounds (not limited to these). A ticket Reopened and
+counted in a Sprint may have been Marked Closed in **this or an earlier Sprint** — QA testing can reach
+back and reopen a previously-closed ticket.
 
 | Parameter | Default weight | What it measures (in this Sprint) | Calculation |
 | --- | ---: | --- | --- |

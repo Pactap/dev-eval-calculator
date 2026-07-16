@@ -1,9 +1,18 @@
 // Single source of truth for the app version and its history.
 // Bump APP_VERSION and prepend a CHANGELOG entry on every release
 // (semantic versioning: MAJOR.MINOR.PATCH).
-export const APP_VERSION = "4.9.2";
+export const APP_VERSION = "4.9.3";
 
 export const CHANGELOG = [
+  {
+    version: "4.9.3",
+    date: "2026-07-16",
+    title: "Clarify that reopens can reach back to earlier sprints",
+    type: "patch",
+    changes: [
+      "Documented explicitly that a Ticket Reopened and counted in a Sprint may have been Marked Closed in this or an earlier Sprint — QA testing can reach back and reopen a previously-closed ticket. Added to the Framework tab, sprint tooltip, README and SCORING.md.",
+    ],
+  },
   {
     version: "4.9.2",
     date: "2026-07-16",

@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 
 The format is inspired by Keep a Changelog, and this project follows semantic versioning.
 
+## 4.9.3 - 2026-07-16
+
+Clarify that reopens can reach back to earlier sprints.
+
+### Changed
+
+- Documented explicitly (Framework tab, sprint tooltip, README, `docs/SCORING.md`) that a **Ticket Reopened and counted in a Sprint may have been Marked Closed in this or an earlier Sprint** — QA testing can reach back and reopen a previously-closed ticket.
+
 ## 4.9.2 - 2026-07-16
 
 Full ticket-term labels, reopen-grounds clarification, and cleanup.

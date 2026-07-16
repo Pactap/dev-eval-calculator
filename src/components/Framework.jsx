@@ -81,7 +81,7 @@ export function Framework() {
     {
       n: "Issue Persistence", w: wpct(w.ip),
       formula: "Tickets Reopened ÷ Tickets Marked Closed (the same Marked-Closed value as Efficiency), in this Sprint × 100. Zero Marked Closed → worst band.",
-      d: `Defect recurrence. Tickets are Reopened by Quality Assurance — on grounds such as failed acceptance criteria, regression bugs, unmet technical standards, or environment errors (not limited to these) — on QA's own evaluation or on the recommendation of Product Management, the Engineering Team Lead, or the Engineering Manager on similar grounds. Measured against the developer's Tickets Marked Closed in the Sprint${zeroIp ? "; retained but currently zero-weighted" : ""}.`,
+      d: `Defect recurrence. Tickets are Reopened by Quality Assurance — on grounds such as failed acceptance criteria, regression bugs, unmet technical standards, or environment errors (not limited to these) — on QA's own evaluation or on the recommendation of Product Management, the Engineering Team Lead, or the Engineering Manager on similar grounds. Tickets Reopened counted in this Sprint may be tickets Marked Closed in this or an earlier Sprint that QA has since tested and reopened. Measured against the developer's Tickets Marked Closed in the Sprint${zeroIp ? "; retained but currently zero-weighted" : ""}.`,
       ex: `2 Reopened of 40 Marked Closed → 5%. The band covering 5% gives ${mx(ipMult)}; achieved = ${B} × ${wpct(w.ip)} × ${mx(ipMult)} = ${ach(w.ip, ipMult)} pts${zeroIp ? " (zero at the current 0% weight — give it weight and it contributes)" : ""}.`,
     },
   ];

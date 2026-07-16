@@ -151,7 +151,8 @@ contributes nothing unless a team re-weights it).
 as *failed acceptance criteria, regression bugs, unmet technical standards, or environment errors*
 (not limited to these) — either on QA's own evaluation or on the recommendation of **Product
 Management**, the **Engineering Team Lead**, or the **Engineering Manager** on similar grounds (not
-limited to these).
+limited to these). A ticket Reopened and counted in this Sprint may have been **Marked Closed in this
+or an earlier Sprint** — QA testing can reach back and reopen a previously-closed ticket.
 
 **Formula:**
 
