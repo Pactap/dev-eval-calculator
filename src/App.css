@@ -319,6 +319,10 @@ button {
   padding: 24px;
 }
 
+.availability {
+  margin-top: 20px;
+}
+
 /* Cards stay visually stable (no hover border shift) for a calmer, premium feel. */
 
 .panel-heading {
@@ -620,7 +624,7 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin: 26px 0 12px;
+  margin: 20px 0 14px;
 }
 
 .add-sprint-btn {
@@ -1500,7 +1504,6 @@ button {
 /* Settings panel */
 .settings-panel {
   padding: 24px;
-  margin-top: 20px;
 }
 
 .settings-panel__header {
@@ -2245,7 +2248,13 @@ button {
 .admin {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* Heading spacing is handled by the flex gap, so drop its own margin here. */
+.admin .section-heading {
+  margin: 0;
 }
 
 /* Workspace "active rules" glance (read-only, live) */
@@ -2255,6 +2264,7 @@ button {
   gap: 24px;
   flex-wrap: wrap;
   padding: 16px 24px;
+  margin-top: 20px;
 }
 
 .config-glance__label {
