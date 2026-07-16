@@ -2235,13 +2235,21 @@ button {
 
 .holiday-manager__add {
   display: flex;
+  align-items: center;
   gap: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   flex-wrap: wrap;
 }
 
-.holiday-manager__add .input { flex: 1; min-width: 120px; }
-.holiday-manager__add .input[type="date"] { flex: 0 0 auto; }
+/* Date + name share the row equally; Add stays content-width and aligned. */
+.holiday-manager__add .input {
+  flex: 1 1 140px;
+  min-width: 130px;
+}
+
+.holiday-manager__add button {
+  flex: 0 0 auto;
+}
 
 .holiday-manager__list {
   list-style: none;
@@ -2479,12 +2487,20 @@ button {
 }
 
 .dev-usage__add .input {
-  flex: 1 1 160px;
-  min-width: 140px;
+  min-width: 150px;
 }
 
-.dev-usage__add .input:first-of-type {
-  max-width: 240px;
+/* Employee ID stays compact; the holiday select fills so its text never clips. */
+.dev-usage__add input.input {
+  flex: 0 1 230px;
+}
+
+.dev-usage__add select.input {
+  flex: 1 1 260px;
+}
+
+.dev-usage__add button {
+  flex: 0 0 auto;
 }
 
 .dev-usage__row-select {

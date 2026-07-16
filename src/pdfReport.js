@@ -1,6 +1,6 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import { sanitizePdfText as A } from "./utils.js";
+import { sanitizePdfText as A, countWeekends, isWeekend, addDaysISO } from "./utils.js";
 import { summarizeAvailability } from "./availability.js";
 import { APP_VERSION } from "./version.js";
 
@@ -104,7 +104,7 @@ export function generateQuarterlyReportPDF(data) {
   const avail = summarizeAvailability({ quarterStart, quarterEnd, holidays, holidayNames, restrictedHolidayPool, sprints });
   if (avail.companyHolidays.length || avail.restrictedHolidays.length) {
     y = ensureSpace(doc, y, 150);
-    y = sectionTitle(doc, "Availability & Time Off", y);
+    y = sectionTitle(doc, "Holidays & Availability", y);
 
     const holidayLine = avail.companyHolidays.length
       ? avail.companyHolidays.map(h => `${h.name ? h.name + " - " : ""}${fmtDate(h.date)}${h.weekend ? " (weekend, no impact)" : ""}`).join(",  ")
@@ -211,7 +211,7 @@ export function generateQuarterlyReportPDF(data) {
   sprintResults.forEach((r, i) => {
     const s = sprints[i];
     // Reserve the whole block so heading + table + base line never split across a page.
-    y = ensureSpace(doc, y, 250);
+    y = ensureSpace(doc, y, 275);
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
@@ -239,6 +239,28 @@ export function generateQuarterlyReportPDF(data) {
     const inputLines = doc.splitTextToSize(A(inputs), contentW);
     doc.text(inputLines, MARGIN.left, y);
     y += inputLines.length * 11 + 1;
+
+    // Non-working days inside this sprint's counted window (weekends + company
+    // holidays + restricted holiday) — the same breakdown shown in the workspace.
+    const prevEnd = i > 0 ? sprints[i - 1].endDate : "";
+    const shares = Boolean(s.startDate && prevEnd && s.startDate === prevEnd);
+    const effStart = shares ? addDaysISO(s.startDate, 1) : s.startDate;
+    if (s.startDate && s.endDate) {
+      const sprintHols = (holidays || []).filter(d => d >= effStart && d <= s.endDate).sort();
+      const parts = [`Weekends ${countWeekends(effStart, s.endDate)}`];
+      if (sprintHols.length) {
+        parts.push(`Company: ${sprintHols.map(d => `${holidayNames[d] || "Holiday"} ${fmtDate(d)}${isWeekend(d) ? " (wknd)" : ""}`).join(", ")}`);
+      }
+      if (s.restrictedHoliday) {
+        const lbl = (restrictedHolidayPool || []).find(e => e.date === s.restrictedHoliday);
+        parts.push(`Restricted: ${(lbl && lbl.label) || "holiday"} ${fmtDate(s.restrictedHoliday)}`);
+      }
+      const nwLines = doc.splitTextToSize(A(`Non-working days   ${parts.join("   |   ")}`), contentW);
+      doc.setTextColor(...NAVY);
+      doc.text(nwLines, MARGIN.left, y);
+      doc.setTextColor(...MUTED);
+      y += nwLines.length * 11 + 3;
+    }
 
     autoTable(doc, {
       startY: y,
