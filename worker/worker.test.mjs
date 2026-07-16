@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import worker from "./worker.js";
 
+// Self-contained test passkey — the tests set env.PASSKEY to this same value, so any
+// literal works. NOT the production passkey (that lives only in the Worker secret).
 const KEY = "test-passkey";
 const mkEnv = () => ({
   PASSKEY: KEY,

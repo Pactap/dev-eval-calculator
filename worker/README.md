@@ -11,7 +11,7 @@ browser).
 cd worker
 npx wrangler login                       # your Cloudflare account
 npx wrangler kv namespace create CONFIG  # copy the printed id into wrangler.toml
-npx wrangler secret put PASSKEY          # paste: test-passkey
+npx wrangler secret put PASSKEY          # paste the passkey (kept out of source)
 npx wrangler deploy                      # prints the Worker URL
 ```
 
