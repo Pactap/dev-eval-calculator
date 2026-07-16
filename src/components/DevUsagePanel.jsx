@@ -54,19 +54,32 @@ export function DevUsagePanel() {
     } finally { setBusy(false); }
   };
 
-  // Edit: move a developer's restricted holiday to another declared date (release the
-  // old year's slot, claim the new one — both server-synced).
+  // Edit: move a developer's restricted holiday to another declared date. Moving to
+  // a different year is refused if that year is already taken (no destructive
+  // release), and if the claim fails after releasing we restore the original slot —
+  // so the developer never loses their recorded restricted holiday.
   const change = async (row, newDate) => {
     if (!newDate || newDate === row.date) return;
     const entry = pool.find((e) => e.date === newDate);
     if (!entry) return;
+    const newYear = entry.date.slice(0, 4);
+    if (newYear !== row.year) {
+      const clash = rhUsage(row.devKey, newYear);
+      if (clash && clash.date !== entry.date) {
+        setStatus({ type: "err", msg: `${row.empId} already has a ${newYear} restricted holiday (${clash.name || formatDate(clash.date)}). Remove it first.` });
+        return;
+      }
+    }
     setBusy(true);
+    const original = { date: row.date, name: row.name, empId: row.empId };
     try {
       await releaseRh(row.devKey, row.year);
-      await claimRh(row.devKey, entry.date.slice(0, 4), { date: entry.date, name: entry.label, empId: row.empId });
+      await claimRh(row.devKey, newYear, { date: entry.date, name: entry.label, empId: row.empId });
       setStatus({ type: "ok", msg: `Updated ${row.empId}.` });
     } catch (e) {
-      setStatus({ type: "err", msg: e.message });
+      // Restore the original slot so the edit is all-or-nothing.
+      try { await claimRh(row.devKey, row.year, original); } catch { /* best effort */ }
+      setStatus({ type: "err", msg: `Could not update ${row.empId}: ${e.message}` });
     } finally { setBusy(false); }
   };
 
