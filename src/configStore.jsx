@@ -102,15 +102,18 @@ export function ConfigProvider({ children }) {
   // per-browser localStorage ledger. Held in memory so reads stay synchronous.
   const [rhLedger, setRhLedger] = useState(() => (CONFIG_API ? {} : loadLedger()));
 
+  // The server ledger holds employee IDs + usage, so its GET is passkey-gated:
+  // load it once unlocked (with the key), and drop it from memory on lock.
   useEffect(() => {
     if (!CONFIG_API) return;
+    if (!unlocked) { setRhLedger({}); return; }
     let cancelled = false;
-    fetch(`${CONFIG_API}/rh`)
+    fetch(`${CONFIG_API}/rh`, { headers: { "X-Passkey": keyRef.current || "" } })
       .then(r => (r.ok ? r.json() : null))
       .then(d => { if (!cancelled && d && d.ledger) setRhLedger(d.ledger); })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, []);
+  }, [unlocked]);
 
   const rhUsage = useCallback((devKey, year) => {
     if (!devKey || !year) return null;

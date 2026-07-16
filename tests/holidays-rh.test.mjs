@@ -14,7 +14,7 @@ globalThis.localStorage = (() => {
 
 import { countWorkingDays, isWeekend, effectiveCountStart, dayName, countWeekends } from "../src/utils.js";
 import { summarizeAvailability } from "../src/availability.js";
-import { devKeyOf, normalizeEmpId, yearOf, rhUsage, recordRh, clearRh } from "../src/restrictedHolidays.js";
+import { devKeyOf, normalizeEmpId, yearOf, rhUsage, recordRh, clearRh, rhConflicts } from "../src/restrictedHolidays.js";
 import {
   exportCompanyHolidays, importCompanyHolidays,
   exportRestrictedPool, importRestrictedPool,
@@ -121,6 +121,13 @@ test("countWeekends counts Sat+Sun in a range (for the per-sprint breakdown)", (
 test("yearOf extracts the calendar year", () => {
   assert.equal(yearOf("2026-03-13"), "2026");
   assert.equal(yearOf(""), "");
+});
+
+test("rhConflicts: only a different date in the same slot conflicts", () => {
+  assert.equal(rhConflicts(null, "2026-03-06"), false);                        // nothing recorded
+  assert.equal(rhConflicts({ date: "2026-03-06" }, "2026-03-06"), false);      // same date -> idempotent
+  assert.equal(rhConflicts({ date: "2026-03-06" }, "2026-08-28"), true);       // different date -> blocked
+  assert.equal(rhConflicts({ date: "2026-03-06" }, ""), false);
 });
 
 test("ledger records, isolates by dev + year, and clears", () => {

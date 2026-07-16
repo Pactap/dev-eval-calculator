@@ -1,9 +1,23 @@
 // Single source of truth for the app version and its history.
 // Bump APP_VERSION and prepend a CHANGELOG entry on every release
 // (semantic versioning: MAJOR.MINOR.PATCH).
-export const APP_VERSION = "4.3.0";
+export const APP_VERSION = "4.4.0";
 
 export const CHANGELOG = [
+  {
+    version: "4.4.0",
+    date: "2026-07-16",
+    title: "Admin centre, bulk data & Fortune-50 revamp",
+    type: "minor",
+    changes: [
+      "New Admin tab centralises the evaluation parameters, the holiday calendar, bulk import/export and developer-usage management behind one passkey unlock; read-only visitors see the rules and holidays but not the write tools.",
+      "Bulk JSON import/export for company holidays, restricted holidays and per-developer usage (each { date, day, name }), with downloadable sample templates and strict alphanumeric Employee-ID normalisation.",
+      "Developer restricted holidays are added, edited and removed in the Admin tab; edits are all-or-nothing and sync to the server ledger, whose read is now passkey-gated.",
+      "Restricted holidays are framed as an admin-declared list (not a depletable pool) — one developer availing a day never blocks another; 'approved leave' wording removed throughout.",
+      "Each sprint shows a Non-working days breakdown (weekends + company holidays + restricted holiday), mirrored in the PDF report.",
+      "Fortune-50 presentation pass: Inter typography, soft-UI layered elevation, restrained gradients, a consistent 24px / 20px spacing rhythm, aligned controls and Title Case section titles.",
+    ],
+  },
   {
     version: "4.3.0",
     date: "2026-07-15",

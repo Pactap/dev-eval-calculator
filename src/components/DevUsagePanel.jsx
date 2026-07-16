@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useConfig } from "../configStore.jsx";
 import { formatDate } from "../utils.js";
-import { normalizeEmpId } from "../restrictedHolidays.js";
+import { normalizeEmpId, rhConflicts } from "../restrictedHolidays.js";
 
 /**
  * Manage each developer's restricted holiday (one per calendar year) directly in
@@ -40,7 +40,7 @@ export function DevUsagePanel() {
     // One per developer per calendar year — pre-check so a duplicate is blocked
     // consistently (the server also enforces this with a 409).
     const existing = rhUsage(devKey, year);
-    if (existing && existing.date !== entry.date) {
+    if (rhConflicts(existing, entry.date)) {
       setStatus({ type: "err", msg: `${empId.trim()} already has a ${year} restricted holiday (${existing.name || formatDate(existing.date)}). Edit or remove the existing row.` });
       return;
     }
@@ -65,7 +65,7 @@ export function DevUsagePanel() {
     const newYear = entry.date.slice(0, 4);
     if (newYear !== row.year) {
       const clash = rhUsage(row.devKey, newYear);
-      if (clash && clash.date !== entry.date) {
+      if (rhConflicts(clash, entry.date)) {
         setStatus({ type: "err", msg: `${row.empId} already has a ${newYear} restricted holiday (${clash.name || formatDate(clash.date)}). Remove it first.` });
         return;
       }

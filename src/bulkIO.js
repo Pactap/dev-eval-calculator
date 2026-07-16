@@ -72,7 +72,7 @@ export function importRestrictedPool(json) {
 }
 
 /* ---------------- Developer usage (the restricted-holiday ledger) ---------------- */
-// ledger: { [devKey]: { [year]: { date, name?, empId?, devName?, sprintName? } } }
+// ledger: { [devKey]: { [year]: { date, name?, empId?, sprintName? } } }
 
 export function exportDeveloperUsage(ledger = {}) {
   const usage = [];
@@ -136,7 +136,7 @@ export function importDeveloperUsage(json) {
     if (ledger[devKey][year] && ledger[devKey][year].date !== date) {
       throw new Error(`Row ${i + 1}: ${rawId} already has a ${year} restricted holiday (${ledger[devKey][year].date}). Only one per calendar year.`);
     }
-    ledger[devKey][year] = { date, name, empId: String(rawId).trim(), devName: (e.devName || "").trim() };
+    ledger[devKey][year] = { date, name, empId: String(rawId).trim() };
   });
   return ledger;
 }

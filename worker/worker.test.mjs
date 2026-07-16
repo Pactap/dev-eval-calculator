@@ -50,8 +50,9 @@ test("OPTIONS preflight carries CORS headers", async () => {
 
 /* ---- restricted-holiday quota ledger ---- */
 
-test("GET /rh returns an empty ledger before anything is claimed", async () => {
-  const r = await worker.fetch(reqTo("/rh", "GET"), mkEnv());
+test("GET /rh is passkey-gated (holds employee IDs); empty ledger with the key", async () => {
+  assert.equal((await worker.fetch(reqTo("/rh", "GET"), mkEnv())).status, 401); // no key
+  const r = await worker.fetch(reqTo("/rh", "GET", undefined, KEY), mkEnv());
   assert.equal(r.status, 200);
   assert.deepEqual(await r.json(), { ok: true, ledger: {} });
 });
@@ -107,8 +108,19 @@ test("PUT /rh bulk-replaces the whole ledger (admin import), passkey-gated", asy
   assert.equal(env.CONFIG.store.rhLedger, undefined);
   const ok = await worker.fetch(reqTo("/rh", "PUT", ledger, KEY), env);
   assert.equal(ok.status, 200);
-  const get = await worker.fetch(reqTo("/rh", "GET"), env);
+  const get = await worker.fetch(reqTo("/rh", "GET", undefined, KEY), env);
   assert.deepEqual((await get.json()).ledger, ledger);
+});
+
+test("PUT /rh rejects a malformed entry with 400", async () => {
+  const env = mkEnv();
+  const badDate = await worker.fetch(reqTo("/rh", "PUT", { pt1: { "2026": { date: "nope" } } }, KEY), env);
+  assert.equal(badDate.status, 400);
+  const yearMismatch = await worker.fetch(reqTo("/rh", "PUT", { pt1: { "2026": { date: "2027-03-06" } } }, KEY), env);
+  assert.equal(yearMismatch.status, 400);
+  const notObject = await worker.fetch(reqTo("/rh", "PUT", { pt1: "x" }, KEY), env);
+  assert.equal(notObject.status, 400);
+  assert.equal(env.CONFIG.store.rhLedger, undefined); // nothing persisted
 });
 
 test("claim rejects a malformed year/date with 400", async () => {

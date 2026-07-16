@@ -63,12 +63,27 @@ export default {
        same dev+year could both pass. Fine for this low-volume internal tool; move to a
        Durable Object if real concurrency ever needs true atomicity. */
     if (url.pathname === "/rh") {
-      if (request.method === "GET") return json({ ok: true, ledger: await readLedger(env) });
+      // Read is passkey-gated too: the ledger holds employee IDs and their usage.
+      if (request.method === "GET") {
+        if (!authed()) return json({ error: "Invalid passkey" }, 401);
+        return json({ ok: true, ledger: await readLedger(env) });
+      }
       if (request.method === "PUT") {                // bulk replace (admin import) — passkey-gated
         if (!authed()) return json({ error: "Invalid passkey" }, 401);
         let body;
         try { body = JSON.parse(await request.text()); } catch { return json({ error: "Invalid JSON" }, 400); }
         if (!body || typeof body !== "object" || Array.isArray(body)) return json({ error: "Ledger must be an object" }, 400);
+        // Validate every dev/year entry so a hand-crafted PUT can't store malformed data.
+        for (const dev of Object.keys(body)) {
+          const byYear = body[dev];
+          if (!byYear || typeof byYear !== "object" || Array.isArray(byYear)) return json({ error: `Malformed ledger at "${dev}"` }, 400);
+          for (const yr of Object.keys(byYear)) {
+            const e = byYear[yr];
+            if (!e || typeof e !== "object" || typeof e.date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(e.date) || e.date.slice(0, 4) !== yr) {
+              return json({ error: `Malformed entry at ${dev}/${yr}` }, 400);
+            }
+          }
+        }
         await env.CONFIG.put(RH_KEY, JSON.stringify(body));
         return json({ ok: true, ledger: body });
       }

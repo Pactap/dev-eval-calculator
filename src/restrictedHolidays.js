@@ -55,6 +55,15 @@ export function yearOf(iso) {
   return iso ? String(iso).slice(0, 4) : "";
 }
 
+/**
+ * Does an existing ledger entry block recording `date` for that dev+year?
+ * True only when the slot is already taken by a DIFFERENT date (one per year).
+ * Pure, so the quota rule can be unit-tested independently of the UI.
+ */
+export function rhConflicts(existing, date) {
+  return Boolean(existing && existing.date && date && existing.date !== date);
+}
+
 /** The restricted-holiday entry recorded for a developer + year, or null. */
 export function rhUsage(devKey, year) {
   if (!devKey || !year) return null;

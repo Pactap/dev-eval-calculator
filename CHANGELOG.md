@@ -4,6 +4,24 @@ All notable changes to this project are documented here.
 
 The format is inspired by Keep a Changelog, and this project follows semantic versioning.
 
+## 4.4.0 - 2026-07-16
+
+Admin centre, bulk data management, and a Fortune-50 presentation pass.
+
+### Added
+
+- **Admin tab** (`components/AdminUnlock.jsx`, `BulkIOPanel.jsx`, `DevUsagePanel.jsx`, `HolidayManager.jsx`, `ConfigGlance.jsx`): a single passkey-gated place for evaluation parameters, the holiday calendar, bulk import/export and developer-usage management. One centralized Unlock control; read-only visitors see the rules + holidays, not the write tools.
+- **Bulk JSON import/export** (`src/bulkIO.js`) for company holidays, restricted holidays and per-developer usage — `{ date, day, name }` rows, downloadable sample templates (`samples/`), strict alphanumeric Employee-ID normalization.
+- **Developer restricted-holiday management** — add / edit / remove in the Admin tab; edits are all-or-nothing and sync to the server ledger.
+- **Per-sprint Non-working days** breakdown (weekends + company holidays + restricted holiday) in the workspace and the PDF report.
+
+### Changed
+
+- Restricted holidays are an **admin-declared list, not a depletable pool** (one developer availing a day never blocks another); removed all "approved leave" wording.
+- `GET /rh` on the Worker is now **passkey-gated** (it holds employee IDs + usage); the client loads the ledger on unlock. `PUT /rh` validates every entry's shape.
+- **Fortune-50 presentation pass**: Inter typography, soft-UI layered elevation, restrained gradients, a consistent 24px / 20px spacing rhythm, aligned controls, Title Case section titles.
+- 75 front-end tests + 14 Worker tests.
+
 ## 4.3.0 - 2026-07-15
 
 Server-authoritative restricted-holiday quota, plus code-review hardening.

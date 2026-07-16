@@ -263,7 +263,6 @@ export default function DevEvaluationCalculator() {
           sprintName: sprint.name || `Sprint ${i + 1}`,
           quarterLabel: reportMeta.quarterLabel || "",
           empId: reportMeta.empId || "",
-          devName: reportMeta.devName || "",
         });
       }
     } catch (err) {

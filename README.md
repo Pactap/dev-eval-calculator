@@ -23,16 +23,17 @@ Weights, bands, and grades are editable in-app (Settings panel) and persist loca
 
 - Pro-rata allocation across variable-length sprints; configurable base score and daily capacity.
 - Cross-quarter sprints scored proportionally; shared-boundary sprints count the boundary day once.
-- **Holiday calendar** managed per year (2025–2050): named company holidays and an admin-declared restricted-holiday pool. Weekend-dated holidays are recorded but flagged as no-impact (counted once, never twice).
-- **Restricted (optional) holidays**: a developer avails one per calendar year, picked per sprint from the admin pool, excluded from productive days pro-rata so leave never reads as underperformance. The one-per-year quota is **server-authoritative** across machines via the Cloudflare Worker when configured, else a per-browser ledger.
-- Constructive **Availability & time-off** summary (in-app stat tiles + PDF section) explaining holidays, restricted leave, and the pro-rata dilution of productive hours in no-fault language.
+- **Holiday calendar** managed per year (2025–2050): named company holidays and an admin-declared list of restricted holidays. Weekend-dated holidays are recorded but flagged as no-impact (counted once, never twice).
+- **Restricted (optional) holidays**: a developer avails one per calendar year, picked per sprint from the admin's declared list (one developer availing a day never blocks another), excluded from productive days pro-rata so time away never reads as underperformance. The one-per-year quota is **server-authoritative** across machines via the Cloudflare Worker when configured, else a per-browser ledger.
+- **Admin tab** (passkey-gated): centralised evaluation parameters + holiday calendar, bulk JSON import/export (company holidays, restricted holidays, developer usage) with sample templates, and add/edit/remove of each developer's restricted holiday.
+- Constructive **availability** summary (in-app stat tiles + PDF section) plus a per-sprint non-working-days breakdown (weekends + company holidays + restricted holiday) in no-fault language.
 - Auto-generated 14-day draft sprints on quarter lock; auto-suggested period end date.
 - Lockable quarters and immutable locked-sprint snapshots.
 - Integrity rules: empty sprints score zero; zero-ticket efficiency awards nothing.
 - Per-sprint score-composition chart; quarterly executive rollup.
 - Formatted PDF report with optional developer/quarter metadata.
 - In-app **Framework** tab: workflows, definitions, constraints, enablers, and version history.
-- Light / system / dark themes; error boundary; 66 automated tests.
+- Light / system / dark themes; error boundary; 75 front-end + 14 Worker tests.
 
 ## Tech stack
 
@@ -49,7 +50,7 @@ Weights, bands, and grades are editable in-app (Settings panel) and persist loca
 ```bash
 npm install
 npm run dev      # start dev server
-npm run test     # run scoring / utility / edge-case tests (66)
+npm run test     # run scoring / utility / edge-case tests (75)
 npm run build    # production build to dist/
 npm run check    # test + build
 
