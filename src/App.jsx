@@ -113,7 +113,10 @@ const REPORT_FIELDS = [
   { key: "doj", label: "Date of joining", type: "date", placeholder: "", required: false },
 ];
 
-function ReportDetails({ meta, onChange }) {
+function ReportDetails({ meta, onChange, attempted }) {
+  // Show the required-invalid state only after a field is touched or the user has
+  // attempted to lock/export — never red on an untouched field at load.
+  const [touched, setTouched] = useState({});
   return (
     <section className="card report-details" aria-label="Report details">
       <div className="report-details__head">
@@ -125,7 +128,8 @@ function ReportDetails({ meta, onChange }) {
       </div>
       <div className="report-details__grid">
         {REPORT_FIELDS.map(f => {
-          const missing = f.required && !String(meta[f.key] || "").trim();
+          const empty = f.required && !String(meta[f.key] || "").trim();
+          const invalid = empty && (touched[f.key] || attempted);
           return (
             <div key={f.key} className="report-details__field">
               <label className="label" htmlFor={`rd-${f.key}`}>
@@ -139,8 +143,9 @@ function ReportDetails({ meta, onChange }) {
                 type={f.type}
                 value={meta[f.key]}
                 placeholder={f.placeholder}
-                className={`input${missing ? " input--invalid" : ""}`}
-                aria-invalid={missing || undefined}
+                className={`input${invalid ? " input--invalid" : ""}`}
+                aria-invalid={invalid || undefined}
+                onBlur={() => setTouched(t => ({ ...t, [f.key]: true }))}
                 onChange={e => onChange({ ...meta, [f.key]: e.target.value })}
               />
             </div>
@@ -182,6 +187,7 @@ export default function DevEvaluationCalculator() {
   const [sprints, setSprints] = useState([createSprint({ name: "Sprint 1" })]);
   const [reportMeta, setReportMeta] = useState({ devName: "", empId: "", quarterLabel: "", doj: "" });
   const [view, setView] = useState("workspace"); // "workspace" | "analytics" | "admin" | "framework"
+  const [attempted, setAttempted] = useState(false); // a lock/export was tried -> reveal all missing required fields
   const notify = useNotify();
 
   const totalWorkingDays = useMemo(() => countWorkingDays(quarterStart, quarterEnd, holidays), [quarterStart, quarterEnd, holidays]);
@@ -410,6 +416,7 @@ export default function DevEvaluationCalculator() {
 
   const handleExportPdf = async () => {
     if (!canExport) {
+      setAttempted(true); // reveal every missing required field at once
       const why = !String(reportMeta.empId || "").trim()
         ? "Employee ID is required before exporting."
         : "Add the evaluation period and at least one sprint with productive days before exporting.";
@@ -489,9 +496,10 @@ export default function DevEvaluationCalculator() {
                   {quarterLocked ? "Quarter locked" : "Quarter open"}
                 </div>
                 <button
-                  className="btn btn--primary btn--export"
+                  className={`btn btn--primary btn--export${!canExport ? " btn--inactive" : ""}`}
                   onClick={handleExportPdf}
-                  disabled={!canExport || exporting}
+                  disabled={exporting}
+                  aria-disabled={!canExport || undefined}
                   title={canExport ? "Export a formatted PDF report" : "Add the evaluation period, Employee ID, and sprint data first"}
                 >
                   {exporting ? "Generating…" : "Export PDF"}
@@ -513,9 +521,11 @@ export default function DevEvaluationCalculator() {
             totalWorkingDays={totalWorkingDays} dailyRate={dailyRate}
             sprintCount={sprints.length}
             holidays={holidays}
+            attempted={attempted}
             onChangeStart={handleQuarterStartChange} onChangeEnd={handleQuarterEndChange}
             onChangeBase={setQuarterBase} onChangeCapacity={setDailyCapacity}
             onChangeQuarterLabel={(v) => setReportMeta(m => ({ ...m, quarterLabel: v }))}
+            onInvalidAttempt={() => { setAttempted(true); notify.warning("Fill the required fields marked * before locking the evaluation period."); }}
             onToggleLock={handleQuarterLock}
           />
 
@@ -556,7 +566,7 @@ export default function DevEvaluationCalculator() {
           </div>
         </section>
 
-        <ReportDetails meta={reportMeta} onChange={setReportMeta} />
+        <ReportDetails meta={reportMeta} onChange={setReportMeta} attempted={attempted} />
 
         <ConfigGlance />
 

@@ -1,9 +1,21 @@
 // Single source of truth for the app version and its history.
 // Bump APP_VERSION and prepend a CHANGELOG entry on every release
 // (semantic versioning: MAJOR.MINOR.PATCH).
-export const APP_VERSION = "4.7.0";
+export const APP_VERSION = "4.8.0";
 
 export const CHANGELOG = [
+  {
+    version: "4.8.0",
+    date: "2026-07-16",
+    title: "Analytics polish, smarter validation & charts in the PDF",
+    type: "minor",
+    changes: [
+      "Analytics dashboard refined to a solid, uniform grid: every chart shares one padded card shell with aligned headers, fixed plot heights, and a fully responsive layout (single column on mobile) — no more leaking titles or clipped cards.",
+      "Charts no longer show misleading data for empty sprints: each chart falls back to a clear 'awaiting sprint activity' state until it has real hours, tickets, or scored points (fixes the flat 100% line and empty donut).",
+      "Smarter required-field validation: fields turn red only after you touch them or press Lock/Export — never on load — so nothing prematurely nudges you to Employee ID. Base score and Daily capacity are enforced as mandatory alongside the dates and quarter.",
+      "The exported PDF now includes a Performance Analytics page with four charts (score composition, achieved-vs-target, strengths radar, score contribution), rendered from the same definitions as the dashboard.",
+    ],
+  },
   {
     version: "4.7.0",
     date: "2026-07-16",

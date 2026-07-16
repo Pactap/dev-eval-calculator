@@ -4,6 +4,22 @@ All notable changes to this project are documented here.
 
 The format is inspired by Keep a Changelog, and this project follows semantic versioning.
 
+## 4.8.0 - 2026-07-16
+
+Analytics presentation polish, touch/submit validation, and charts in the PDF.
+
+### Added
+
+- **Performance Analytics page in the PDF** (`pdfReport.js`, shared `src/analyticsCharts.js`): four charts — score composition, achieved-vs-target, strengths radar, score contribution — rendered off-screen from the same config builders the dashboard uses, embedded 2×2. Skipped when there is no data.
+- Per-chart **empty states** (`analytics.js` predicates `hasHours`/`hasTickets`/`hasActivity`/`hasAchieved`): each chart shows a clear "awaiting activity" placeholder instead of misleading zeros, a flat 100% line, or an empty donut.
+
+### Changed
+
+- **Analytics dashboard** unified into one padded `ChartCard` shell for every chart (including score composition), aligned headers, fixed plot heights, and a responsive grid (single column ≤ 720px). Fixes the leaking titles / uneven cards.
+- **Validation** is now touch/submit-based: required fields turn red only after being touched or after pressing Lock/Export — never on load — and pressing Lock/Export reveals all missing required fields at once. Base score and Daily capacity are enforced as mandatory (block Lock).
+- Chart config builders extracted to `src/analyticsCharts.js` (shared by the dashboard and PDF); the standalone `CorrelationChart.jsx` was removed.
+- `computeSprintResult` gained no new fields here; charts reuse `comp`/`collab`/`done` from v4.7.0.
+
 ## 4.7.0 - 2026-07-16
 
 Analytics dashboard, a real notification system, and per-section error resilience.

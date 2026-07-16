@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { formatDate, fyQuarterOptions } from "../utils.js";
 
 const QUARTER_OPTIONS = fyQuarterOptions(2026, 6); // FY2026-27 → FY2031-32
@@ -5,27 +6,32 @@ const QUARTER_OPTIONS = fyQuarterOptions(2026, 6); // FY2026-27 → FY2031-32
 export function QuarterConfig({
   quarterStart, quarterEnd, quarterBase, dailyCapacity, quarterLabel,
   quarterLocked, totalWorkingDays, dailyRate, sprintCount,
-  holidays = [],
-  onChangeStart, onChangeEnd, onChangeBase, onChangeCapacity, onChangeQuarterLabel, onToggleLock,
+  holidays = [], attempted,
+  onChangeStart, onChangeEnd, onChangeBase, onChangeCapacity, onChangeQuarterLabel, onInvalidAttempt, onToggleLock,
 }) {
-  const canLock = quarterStart && quarterEnd && quarterLabel;
+  const canLock = quarterStart && quarterEnd && quarterLabel && quarterBase > 0 && dailyCapacity > 0;
+
+  // Required-field red is shown only after the field is touched or a lock/export was
+  // attempted — never on an untouched field at load.
+  const [touched, setTouched] = useState({});
+  const touch = (k) => setTouched(t => ({ ...t, [k]: true }));
+  const invCls = (k, empty) => (empty && (touched[k] || attempted) && !quarterLocked ? " input--invalid" : "");
+  const lockedCls = quarterLocked ? " input--disabled" : "";
 
   // Company holidays that actually fall inside the evaluation period (informational).
   const holidaysInQuarter = quarterStart && quarterEnd
     ? holidays.filter(d => d >= quarterStart && d <= quarterEnd).length
     : 0;
 
-  // Validation surfaced to the user (instead of silently computing 0 days).
+  // Cross-field data conflicts (always worth showing once they occur). Missing required
+  // fields are handled by the per-field red state, not this list.
   const issues = [];
   if (quarterStart && quarterEnd && quarterStart > quarterEnd) {
-    issues.push("Quarter start date is after the end date.");
+    issues.push("Evaluation start date is after the end date.");
   }
   if (quarterStart && quarterEnd && quarterStart <= quarterEnd && totalWorkingDays === 0) {
     issues.push("No productive days in this range (all weekends/holidays).");
   }
-  if (!(quarterBase > 0)) issues.push("Base score must be greater than zero.");
-  if (!(dailyCapacity > 0)) issues.push("Daily capacity must be greater than zero.");
-  if (!quarterLabel) issues.push("Select the financial quarter (required to lock).");
 
   return (
     <div className={`card quarter-config${quarterLocked ? " quarter-config--locked" : ""}`}>
@@ -36,7 +42,11 @@ export function QuarterConfig({
         </div>
         <button
           className={`btn${quarterLocked ? " btn--primary" : ""}`}
-          onClick={() => { if (!quarterLocked && !canLock) return; onToggleLock(); }}
+          onClick={() => {
+            if (quarterLocked) { onToggleLock(); return; }
+            if (!canLock) { onInvalidAttempt?.(); return; } // reveal missing required fields
+            onToggleLock();
+          }}
         >
           {quarterLocked ? "Unlock" : "Lock"}
         </button>
@@ -48,8 +58,9 @@ export function QuarterConfig({
           <select
             value={quarterLabel || ""}
             disabled={quarterLocked}
-            className={`input${quarterLocked ? " input--disabled" : ""}`}
-            onChange={e => onChangeQuarterLabel(e.target.value)}
+            className={`input${lockedCls}${invCls("quarter", !quarterLabel)}`}
+            onBlur={() => touch("quarter")}
+            onChange={e => { touch("quarter"); onChangeQuarterLabel(e.target.value); }}
           >
             <option value="">Select quarter…</option>
             {QUARTER_OPTIONS.map(q => <option key={q} value={q}>{q}</option>)}
@@ -61,7 +72,8 @@ export function QuarterConfig({
             type="date"
             value={quarterStart}
             disabled={quarterLocked}
-            className={`input${quarterLocked ? " input--disabled" : ""}`}
+            className={`input${lockedCls}${invCls("start", !quarterStart)}`}
+            onBlur={() => touch("start")}
             onChange={e => onChangeStart(e.target.value)}
           />
         </div>
@@ -71,7 +83,8 @@ export function QuarterConfig({
             type="date"
             value={quarterEnd}
             disabled={quarterLocked}
-            className={`input${quarterLocked ? " input--disabled" : ""}`}
+            className={`input${lockedCls}${invCls("end", !quarterEnd)}`}
+            onBlur={() => touch("end")}
             onChange={e => onChangeEnd(e.target.value)}
           />
         </div>
@@ -81,7 +94,8 @@ export function QuarterConfig({
             type="number"
             value={quarterBase}
             disabled={quarterLocked}
-            className={`input${quarterLocked ? " input--disabled" : ""}`}
+            className={`input${lockedCls}${invCls("base", !(quarterBase > 0))}`}
+            onBlur={() => touch("base")}
             onChange={e => onChangeBase(parseFloat(e.target.value) || 0)}
           />
         </div>
@@ -91,7 +105,8 @@ export function QuarterConfig({
             type="number"
             value={dailyCapacity}
             disabled={quarterLocked}
-            className={`input${quarterLocked ? " input--disabled" : ""}`}
+            className={`input${lockedCls}${invCls("capacity", !(dailyCapacity > 0))}`}
+            onBlur={() => touch("capacity")}
             onChange={e => onChangeCapacity(parseFloat(e.target.value) || 0)}
           />
         </div>

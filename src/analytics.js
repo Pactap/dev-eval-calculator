@@ -9,6 +9,25 @@ export function validResults(results = []) {
   return results.filter(r => r && r.wdTotal > 0);
 }
 
+// Per-chart "is there anything meaningful to plot" checks. Sprints with dates but no
+// recorded activity would otherwise render misleading zeros / a flat 100% line / an
+// empty donut, so each chart falls back to an empty state until these pass.
+export function hasHours(results = []) {
+  return validResults(results).some(r => (Number(r.comp) || 0) + (Number(r.collab) || 0) > 0);
+}
+export function hasTickets(results = []) {
+  return validResults(results).some(r =>
+    (Number(r.assigned) || 0) + (Number(r.closed) || 0) + (Number(r.reop) || 0) + (Number(r.done) || 0) > 0);
+}
+export function hasActivity(results = []) {
+  return hasHours(results) || hasTickets(results);
+}
+// Score-based charts (composition, achieved-vs-target, radar, contribution) have signal
+// once any points were achieved anywhere.
+export function hasAchieved(results = []) {
+  return validResults(results).some(r => Math.abs(Number(r.total) || 0) > 0.005);
+}
+
 const label = (r, i) => r.name || `Sprint ${i + 1}`;
 
 // Achieved total vs pro-rata base target, per sprint.

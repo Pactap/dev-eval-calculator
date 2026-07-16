@@ -584,6 +584,9 @@ button {
 .input--invalid,
 .input--invalid:focus { border-color: var(--negative); }
 
+/* Primary action shown but visibly inert until its preconditions are met. */
+.btn--inactive { opacity: 0.5; }
+
 /* The financial-quarter <select> reuses .input; keep its height/appearance aligned. */
 .quarter-config__inputs select.input {
   appearance: none;
@@ -2894,18 +2897,67 @@ body {
   max-width: 100%;
 }
 
-/* Analytics dashboard */
+/* Analytics dashboard — uniform, padded chart cards, no content leaking */
 .analytics { display: flex; flex-direction: column; gap: 20px; }
 .analytics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 18px;
 }
-.analytics-card { display: flex; flex-direction: column; gap: 12px; }
-.analytics-card__head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-.analytics-card__head h3 { margin: 0; font-size: 14px; font-weight: 700; color: var(--text-primary); }
-.analytics-card__sub { font-size: 11px; color: var(--text-tertiary); }
-.analytics-card__canvas { position: relative; height: 260px; }
+.analytics-card {
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;               /* let grid items shrink instead of overflowing */
+  overflow: hidden;           /* clip any chart bleed to the rounded card */
+}
+.analytics-card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 14px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.analytics-card__head h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  min-width: 0;
+}
+.analytics-card__sub {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  margin-left: auto;          /* right-align, drop below the title when it can't fit */
+}
+/* Fixed, uniform plot area; the canvas fills it and never exceeds the card. */
+.analytics-card__canvas {
+  position: relative;
+  width: 100%;
+  height: 260px;
+}
+.analytics-card__canvas canvas { max-width: 100%; }
+.analytics-card__empty {
+  height: 260px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 18px 22px;
+  color: var(--text-tertiary);
+  font-size: 12.5px;
+  line-height: 1.55;
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle, var(--bg-overlay));
+}
 .analytics-empty {
   padding: 28px;
   text-align: center;
@@ -2913,6 +2965,13 @@ body {
   font-size: 13px;
 }
 .insight-grid--single { grid-template-columns: 1fr; }
+
+@media (max-width: 720px) {
+  .analytics-grid { grid-template-columns: 1fr; gap: 14px; }
+  .analytics-card { padding: 16px; }
+  .analytics-card__sub { margin-left: 0; white-space: normal; }
+  .analytics-card__canvas, .analytics-card__empty { height: 240px; }
+}
 
 /* View tabs (discreet Workspace / Framework switcher) */
 .view-tabs {

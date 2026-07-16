@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   validResults, trendSeries, parameterTrendSeries,
   contributionTotals, strengthAverages, utilizationSeries, throughputSeries,
+  hasHours, hasTickets, hasActivity, hasAchieved,
 } from "../src/analytics.js";
 
 // Two productive sprints + one empty (wdTotal 0, must be excluded everywhere).
@@ -52,4 +53,22 @@ test("utilizationSeries reports used (completed+collab) vs allotted", () => {
 
 test("throughputSeries maps ticket counts", () => {
   assert.deepEqual(throughputSeries(RESULTS)[1], { name: "S2", assigned: 10, closed: 5, reopened: 4, done: 20 });
+});
+
+test("data predicates are true for real activity, false for dates-only sprints", () => {
+  assert.equal(hasHours(RESULTS), true);
+  assert.equal(hasTickets(RESULTS), true);
+  assert.equal(hasActivity(RESULTS), true);
+  assert.equal(hasAchieved(RESULTS), true);
+
+  const datesOnly = [{
+    name: "D1", wdTotal: 10, total: 0, bp: 15, ah: 60,
+    comp: 0, collab: 0, assigned: 0, closed: 0, reop: 0, done: 0,
+    phAch: 0, cqAch: 0, effAch: 0, ipAch: 0, phM: 0, cqM: 0, effM: 0, ipM: 0,
+    phPct: 0, effPct: 0, ipPct: 100,
+  }];
+  assert.equal(hasHours(datesOnly), false);
+  assert.equal(hasTickets(datesOnly), false);
+  assert.equal(hasActivity(datesOnly), false);
+  assert.equal(hasAchieved(datesOnly), false);
 });

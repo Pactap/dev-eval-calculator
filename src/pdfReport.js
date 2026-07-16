@@ -1,8 +1,22 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import {
+  Chart as ChartJS,
+  BarController, LineController, DoughnutController, RadarController,
+  CategoryScale, LinearScale, RadialLinearScale,
+  BarElement, LineElement, PointElement, ArcElement, Filler, Tooltip, Legend,
+} from "chart.js";
 import { sanitizePdfText as A, countWeekends, isWeekend, addDaysISO } from "./utils.js";
 import { summarizeAvailability } from "./availability.js";
+import { validResults, hasAchieved } from "./analytics.js";
+import { compositionConfig, trendConfig, strengthsConfig, contributionConfig } from "./analyticsCharts.js";
 import { APP_VERSION } from "./version.js";
+
+ChartJS.register(
+  BarController, LineController, DoughnutController, RadarController,
+  CategoryScale, LinearScale, RadialLinearScale,
+  BarElement, LineElement, PointElement, ArcElement, Filler, Tooltip, Legend,
+);
 
 /* ---- Palette (Fortune-500 restrained navy/slate) ---- */
 const NAVY = [30, 58, 138];
@@ -298,6 +312,14 @@ export function generateQuarterlyReportPDF(data) {
     y += 26;
   });
 
+  /* ---------- performance analytics charts (curated four) ---------- */
+  try {
+    addAnalyticsPage(doc, contentW, sprintResults);
+  } catch (err) {
+    // Charts are a nice-to-have; never let a rendering hiccup abort the whole report.
+    console.error("Analytics charts skipped in PDF:", err);
+  }
+
   /* ---------- header + footer on every page ---------- */
   paintChrome(doc, { genLabel, meta });
 
@@ -371,6 +393,58 @@ function ensureSpace(doc, y, needed) {
     return MARGIN.top;
   }
   return y;
+}
+
+/* ---- Analytics charts (rendered off-screen to PNG, embedded in the report) ---- */
+const CHART_RENDER = 2;    // canvas pixels per PDF point (crisp on print)
+const CHART_FONT_SCALE = 1.6;
+
+// Render a Chart.js config to a white-backed PNG data URL at (w x h) device pixels.
+function chartPng(config, w, h) {
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  const cfg = {
+    ...config,
+    options: { ...(config.options || {}), responsive: false, animation: false, maintainAspectRatio: false, devicePixelRatio: 1 },
+    plugins: [{
+      id: "whiteBg",
+      beforeDraw: (c) => { const x = c.ctx; x.save(); x.globalCompositeOperation = "destination-over"; x.fillStyle = "#ffffff"; x.fillRect(0, 0, c.width, c.height); x.restore(); },
+    }],
+  };
+  const chart = new ChartJS(canvas, cfg);
+  const url = canvas.toDataURL("image/png", 1.0);
+  chart.destroy();
+  return url;
+}
+
+// A dedicated "Performance Analytics" page with the curated four charts (2x2).
+// Skipped entirely when there is nothing meaningful to plot.
+function addAnalyticsPage(doc, contentW, sprintResults) {
+  const vr = validResults(sprintResults);
+  if (!hasAchieved(vr)) return;
+
+  doc.addPage();
+  const y0 = sectionTitle(doc, "Performance Analytics", MARGIN.top);
+  const opts = { scale: CHART_FONT_SCALE, animate: false };
+  const charts = [
+    ["Score Composition (points per sprint)", compositionConfig(vr, false, opts)],
+    ["Achieved vs Target", trendConfig(vr, false, opts)],
+    ["Strengths - avg multiplier by parameter", strengthsConfig(vr, false, opts)],
+    ["Score Contribution", contributionConfig(vr, false, opts)],
+  ];
+  const gutter = 18;
+  const cw = (contentW - gutter) / 2;
+  const chH = Math.round(cw * 0.66);
+  charts.forEach(([title, cfg], i) => {
+    const colX = MARGIN.left + (i % 2) * (cw + gutter);
+    const rowY = y0 + Math.floor(i / 2) * (chH + 32);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(...INK);
+    doc.text(clip(doc, A(title), cw), colX, rowY);
+    const img = chartPng(cfg, Math.round(cw * CHART_RENDER), Math.round(chH * CHART_RENDER));
+    doc.addImage(img, "PNG", colX, rowY + 7, cw, chH);
+  });
 }
 
 function scoreCallout(doc, { y, contentW, achieved, base, delta, pctOfBase, daysUsed, totalDays }) {
