@@ -4,6 +4,20 @@ All notable changes to this project are documented here.
 
 The format is inspired by Keep a Changelog, and this project follows semantic versioning.
 
+## 4.9.2 - 2026-07-16
+
+Full ticket-term labels, reopen-grounds clarification, and cleanup.
+
+### Changed
+
+- Sprint input labels are now spelled out in full: **Efficiency** = "Tickets Marked Closed" / "Tickets Assigned"; **Issue Persistence** = "Tickets Reopened" / "Tickets Marked Closed". The two Marked-Closed inputs bind to the same value — editing either updates both.
+- **Clarified who reopens tickets and why** (Framework tab, sprint tooltip, README, `docs/SCORING.md`): Tickets are **Reopened by Quality Assurance** on grounds such as failed acceptance criteria, regression bugs, unmet technical standards, or environment errors (not limited to) — on QA's own evaluation or on the recommendation of Product Management, the Engineering Team Lead, or the Engineering Manager.
+
+### Removed
+
+- The retired **Done tickets** field (input, `doneTickets` model field, the throughput "Done" bar, and the PDF column) — orphaned once Issue Persistence moved to Tickets Marked Closed. Throughput now shows Assigned / Marked Closed / Reopened.
+- Dead `quarterEndFrom` helper (superseded by `evaluationEndFrom`) and an unused `export` (ponytail-audit follow-ups).
+
 ## 4.9.1 - 2026-07-16
 
 Uniform ticket terminology, clearer parameter definitions, bordered report charts.

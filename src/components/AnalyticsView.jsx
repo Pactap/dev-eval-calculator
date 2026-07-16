@@ -116,8 +116,8 @@ export function AnalyticsView({ sprintResults = [], theme }) {
           show={hours} empty="Enter completed and collaboration hours to see utilization."
           config={cfg.utilization} ariaLabel="Grouped bar chart of used versus allotted hours per sprint." />
         <Chart title="Ticket Throughput" subtitle="Per sprint"
-          show={tickets} empty="Enter ticket counts (assigned / closed / done / reopened) to see throughput."
-          config={cfg.throughput} ariaLabel="Grouped bar chart of assigned, closed, done and reopened tickets per sprint." />
+          show={tickets} empty="Enter ticket counts (Assigned / Marked Closed / Reopened) to see throughput."
+          config={cfg.throughput} ariaLabel="Grouped bar chart of Tickets Assigned, Marked Closed and Reopened per sprint." />
       </div>
     </section>
   );

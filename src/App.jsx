@@ -169,7 +169,7 @@ function isPristineSprint(s) {
     && !s.startDate && !s.endDate
     && !s.completedHours && !s.collaborationHours
     && !s.assignedTickets && !s.closedTickets
-    && !s.reopenedTickets && !s.doneTickets;
+    && !s.reopenedTickets;
 }
 
 export default function DevEvaluationCalculator() {

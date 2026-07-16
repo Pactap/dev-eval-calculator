@@ -32,8 +32,14 @@ The **percentage formulas are fixed**; the **weights and the band/grade multipli
 and edited in-app (Admin → Evaluation Parameters). Weights should sum to 100%. The default weights
 below are the shipped starting point, not a fixed rule.
 
-Two ticket terms are shared and always mean the same recorded value: **Tickets Marked Closed** (by the
-Developer) and **Tickets Reopened** (by Quality Assurance / Product Management).
+Two ticket terms are shared and always mean the same recorded value: **Tickets Marked Closed** (closed
+by the *Developer*) and **Tickets Reopened**. The *same* Tickets Marked Closed value is the numerator of
+Efficiency and the denominator of Issue Persistence.
+
+**Tickets Reopened** are reopened by **Quality Assurance** — on grounds such as *failed acceptance
+criteria, regression bugs, unmet technical standards, or environment errors* (not limited to these) —
+either on QA's own evaluation or on the recommendation of **Product Management**, the **Engineering Team
+Lead**, or the **Engineering Manager** on similar grounds (not limited to these).
 
 | Parameter | Default weight | What it measures (in this Sprint) | Calculation |
 | --- | ---: | --- | --- |

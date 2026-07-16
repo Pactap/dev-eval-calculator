@@ -40,7 +40,7 @@ export function Framework() {
     ["Set the evaluation period", "Enter a start date — the end date is auto-suggested one quarter later. Both stay editable until the period is locked."],
     ["Configure capacity & holidays", "Set the base score and daily capacity (hrs/day). In the Holiday calendar, admins declare company holidays and the restricted-holiday pool per year (2025–2050); weekend-dated holidays are recorded but flagged as no-impact."],
     ["Lock the period", "Locking scaffolds the quarter into 14-day draft sprints. Drafts are fully editable and removable before you commit each one."],
-    ["Record each sprint", "Enter completed & collaboration hours, the code-quality grade, tickets closed/assigned, and reopened/done tickets. If the developer availed a restricted holiday, pick it from the admin's pool (one per calendar year)."],
+    ["Record each sprint", "Enter Completed & Collaboration hours, the code-quality grade, Tickets Marked Closed / Assigned, and Tickets Reopened. If the developer availed a restricted holiday, pick it from the admin's pool (one per calendar year)."],
     ["Lock each sprint", "Locking a sprint freezes its score as an immutable snapshot, immune to later configuration or holiday changes."],
     ["Review & export", "Track the quarterly rollup and score composition, then export a formatted PDF report with optional developer details."],
   ];
@@ -80,8 +80,8 @@ export function Framework() {
     },
     {
       n: "Issue Persistence", w: wpct(w.ip),
-      formula: "Tickets Reopened (by QA/PM) ÷ Tickets Marked Closed (by Developer), in this Sprint × 100. Zero Marked Closed → worst band.",
-      d: `Defect recurrence — QA/PM reopens against the developer's tickets Marked Closed in the Sprint${zeroIp ? "; retained but currently zero-weighted" : ""}.`,
+      formula: "Tickets Reopened ÷ Tickets Marked Closed (the same Marked-Closed value as Efficiency), in this Sprint × 100. Zero Marked Closed → worst band.",
+      d: `Defect recurrence. Tickets are Reopened by Quality Assurance — on grounds such as failed acceptance criteria, regression bugs, unmet technical standards, or environment errors (not limited to these) — on QA's own evaluation or on the recommendation of Product Management, the Engineering Team Lead, or the Engineering Manager on similar grounds. Measured against the developer's Tickets Marked Closed in the Sprint${zeroIp ? "; retained but currently zero-weighted" : ""}.`,
       ex: `2 Reopened of 40 Marked Closed → 5%. The band covering 5% gives ${mx(ipMult)}; achieved = ${B} × ${wpct(w.ip)} × ${mx(ipMult)} = ${ach(w.ip, ipMult)} pts${zeroIp ? " (zero at the current 0% weight — give it weight and it contributes)" : ""}.`,
     },
   ];

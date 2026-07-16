@@ -149,22 +149,9 @@ export function effectiveCountStart(startDate, prevEndDate) {
   return shares ? addDaysISO(startDate, 1) : startDate;
 }
 
-/**
- * Given an evaluation-period start date, return the auto-suggested end date:
- * `months` calendar months later, minus one day (e.g. 2026-04-01 → 2026-06-30).
- * Empty string for invalid input. Always editable before the period is locked.
- */
-export function quarterEndFrom(startStr, months = 3) {
-  const s = parseLocalDate(startStr);
-  if (!s) return "";
-  const d = new Date(s.getFullYear(), s.getMonth() + months, s.getDate());
-  d.setDate(d.getDate() - 1);
-  return toISO(d);
-}
-
 // Auto-suggested evaluation end: `days` after the start (default 84 = 6 fortnightly
-// sprints). Unlike quarterEndFrom there is no −1, because with shared sprint
-// boundaries the 6th sprint's end lands exactly on start + 6×14.
+// sprints). No −1, because with shared sprint boundaries the 6th sprint's end lands
+// exactly on start + 6×14. Empty string for invalid input; editable before lock.
 export function evaluationEndFrom(startStr, days = 84) {
   const s = parseLocalDate(startStr);
   if (!s) return "";

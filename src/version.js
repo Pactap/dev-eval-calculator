@@ -1,9 +1,21 @@
 // Single source of truth for the app version and its history.
 // Bump APP_VERSION and prepend a CHANGELOG entry on every release
 // (semantic versioning: MAJOR.MINOR.PATCH).
-export const APP_VERSION = "4.9.1";
+export const APP_VERSION = "4.9.2";
 
 export const CHANGELOG = [
+  {
+    version: "4.9.2",
+    date: "2026-07-16",
+    title: "Full ticket-term labels, reopen-grounds clarification, cleanup",
+    type: "patch",
+    changes: [
+      "Sprint input labels spelled out in full: Efficiency shows \"Tickets Marked Closed\" and \"Tickets Assigned\"; Issue Persistence shows \"Tickets Reopened\" and \"Tickets Marked Closed\" (the same shared value — editing it in either section updates both).",
+      "Documented who reopens tickets and why: Tickets are Reopened by Quality Assurance on grounds such as failed acceptance criteria, regression bugs, unmet technical standards, or environment errors (not limited to) — on QA's own evaluation or on the recommendation of Product Management, the Engineering Team Lead, or the Engineering Manager. Shown in the Framework tab, sprint tooltip, README and SCORING.md.",
+      "Removed the retired \"Done tickets\" field — it no longer fed any score after Issue Persistence moved to Tickets Marked Closed; the throughput chart now shows Assigned / Marked Closed / Reopened.",
+      "Internal cleanup: dropped the dead quarterEndFrom helper and an unused export.",
+    ],
+  },
   {
     version: "4.9.1",
     date: "2026-07-16",

@@ -19,7 +19,7 @@ export function SprintCard({
     { key: "ph", icon: "PH", title: "Planned Hours", weightLabel: `${(weights.ph * 100).toFixed(0)}%`, tipText: "(Completed hours + Collaboration hours) / Allotted hours, in this Sprint. Rework excluded; capped at 100%." },
     { key: "cq", icon: "CQ", title: "Code Quality", weightLabel: `${(weights.cq * 100).toFixed(0)}%`, tipText: "Team-lead grade for this Sprint, cross-checked against the CQI." },
     { key: "eff", icon: "EF", title: "Efficiency", weightLabel: `${(weights.eff * 100).toFixed(0)}%`, tipText: "Tickets Marked Closed (by Developer) / Tickets Assigned, in this Sprint. Zero Assigned = no credit." },
-    { key: "ip", icon: "IP", title: "Issue Persists", weightLabel: `${(weights.ip * 100).toFixed(0)}%`, tipText: "Tickets Reopened (by QA/PM) / Tickets Marked Closed (by Developer), in this Sprint. Each reopen counted separately. Zero Marked Closed = worst band. (Done tickets are recorded for the throughput chart only.)" },
+    { key: "ip", icon: "IP", title: "Issue Persists", weightLabel: `${(weights.ip * 100).toFixed(0)}%`, tipText: "Tickets Reopened / Tickets Marked Closed (the same Marked-Closed value as Efficiency), in this Sprint. Tickets are Reopened by Quality Assurance on grounds such as failed acceptance criteria, regression bugs, unmet technical standards or environment errors (not limited to) — on QA's own evaluation or on the recommendation of Product Management, the Engineering Team Lead, or the Engineering Manager on similar grounds. Each reopen counted separately. Zero Marked Closed = worst band." },
   ];
 
   const s = sprint;
@@ -108,13 +108,13 @@ export function SprintCard({
           children: (
             <div className="metric__inputs">
               <div className="metric__input-field">
-                <label className="label">Marked Closed</label>
+                <label className="label">Tickets Marked Closed</label>
                 <input type="number" min="0" placeholder="0" value={s.closedTickets} disabled={isLocked}
                   className={`input${isLocked ? " input--disabled" : ""}`}
                   onChange={e => onUpdate("closedTickets", e.target.value)} />
               </div>
               <div className="metric__input-field">
-                <label className="label">Assigned</label>
+                <label className="label">Tickets Assigned</label>
                 <input type="number" min="0" placeholder="0" value={s.assignedTickets} disabled={isLocked}
                   className={`input${isLocked ? " input--disabled" : ""}`}
                   onChange={e => onUpdate("assignedTickets", e.target.value)} />
@@ -134,23 +134,24 @@ export function SprintCard({
           children: (
             <div className="metric__inputs">
               <div className="metric__input-field">
-                <label className="label">Reopened</label>
+                <label className="label">Tickets Reopened</label>
                 <input type="number" min="0" placeholder="0" value={s.reopenedTickets} disabled={isLocked}
                   className={`input${isLocked ? " input--disabled" : ""}`}
                   onChange={e => onUpdate("reopenedTickets", e.target.value)} />
               </div>
               <div className="metric__input-field">
-                <label className="label">Done tickets</label>
-                <input type="number" min="0" placeholder="0" value={s.doneTickets} disabled={isLocked}
+                {/* Same shared value as Efficiency's Tickets Marked Closed (the IP denominator). */}
+                <label className="label">Tickets Marked Closed</label>
+                <input type="number" min="0" placeholder="0" value={s.closedTickets} disabled={isLocked}
                   className={`input${isLocked ? " input--disabled" : ""}`}
-                  onChange={e => onUpdate("doneTickets", e.target.value)} />
+                  onChange={e => onUpdate("closedTickets", e.target.value)} />
               </div>
             </div>
           ),
           resultDisplay: hasInput ? (
             <div className={`metric__result${r.zeroClosed ? " metric__result--error" : ""}`}>
               {r.zeroClosed
-                ? <><span className="metric__emphasis">Zero Closed - worst band</span><Pill value={r.ipB.multiplier} /></>
+                ? <><span className="metric__emphasis">Zero Marked Closed - worst band</span><Pill value={r.ipB.multiplier} /></>
                 : <><span>{r.reop}/{r.closed} = {r.ipPct.toFixed(1)}%</span><span className="metric__arrow">{"->"}</span><span>{r.ipB.label}</span><Pill value={r.ipB.multiplier} /></>}
             </div>
           ) : null,

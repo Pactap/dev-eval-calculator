@@ -52,7 +52,7 @@ test("utilizationSeries reports used (completed+collab) vs allotted", () => {
 });
 
 test("throughputSeries maps ticket counts", () => {
-  assert.deepEqual(throughputSeries(RESULTS)[1], { name: "S2", assigned: 10, closed: 5, reopened: 4, done: 20 });
+  assert.deepEqual(throughputSeries(RESULTS)[1], { name: "S2", assigned: 10, closed: 5, reopened: 4 });
 });
 
 test("data predicates are true for real activity, false for dates-only sprints", () => {

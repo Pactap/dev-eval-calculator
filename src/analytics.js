@@ -17,7 +17,7 @@ export function hasHours(results = []) {
 }
 export function hasTickets(results = []) {
   return validResults(results).some(r =>
-    (Number(r.assigned) || 0) + (Number(r.closed) || 0) + (Number(r.reop) || 0) + (Number(r.done) || 0) > 0);
+    (Number(r.assigned) || 0) + (Number(r.closed) || 0) + (Number(r.reop) || 0) > 0);
 }
 export function hasActivity(results = []) {
   return hasHours(results) || hasTickets(results);
@@ -78,6 +78,5 @@ export function throughputSeries(results = []) {
     assigned: Number(r.assigned) || 0,
     closed: Number(r.closed) || 0,
     reopened: Number(r.reop) || 0,
-    done: Number(r.done) || 0,
   }));
 }

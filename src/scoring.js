@@ -17,11 +17,10 @@ export function computeSprintResult(sprint, dailyRate, dailyCapacity, config) {
   const assigned = Math.max(0, parseFloat(sprint.assignedTickets) || 0);
   const closed = Math.max(0, parseFloat(sprint.closedTickets) || 0);
   const reop = Math.max(0, parseFloat(sprint.reopenedTickets) || 0);
-  const done = Math.max(0, parseFloat(sprint.doneTickets) || 0);
 
   // A sprint with no recorded work (no hours AND no tickets of any kind) earns nothing —
   // the default code-quality grade must not hand out free points.
-  const hasActivity = comp > 0 || collab > 0 || assigned > 0 || closed > 0 || reop > 0 || done > 0;
+  const hasActivity = comp > 0 || collab > 0 || assigned > 0 || closed > 0 || reop > 0;
   const noActivity = !hasActivity;
 
   const phPct = ah > 0 ? ((comp + collab) / ah) * 100 : 0;
@@ -54,7 +53,7 @@ export function computeSprintResult(sprint, dailyRate, dailyCapacity, config) {
   return {
     wd: wdInQuarter, wdTotal, wdInQuarter, leaks,
     bp, ah, phPct, effPct, ipPct, zeroClosed, noAssigned, noActivity,
-    comp, collab, reop, assigned, closed, done,
+    comp, collab, reop, assigned, closed,
     phB, cqO, effB, ipB, phM, cqM, effM, ipM,
     phA, cqA, effA, ipA, phAch, cqAch, effAch, ipAch,
     total, name: sprint.name,

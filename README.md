@@ -144,8 +144,14 @@ covering 80% (`71–80%`) supplies **0.40×**. With `sprintBasePoints = 15` and 
 #### 4. Issue Persistence — *default weight 0%*
 
 **What it measures:** defect recurrence — how often the developer's **Tickets Marked Closed** are
-**Reopened by QA/PM**, in this Sprint. A legacy reach-back signal, retained but zero-weighted by
-default (so it contributes nothing unless a team re-weights it).
+**Reopened**, in this Sprint. A legacy reach-back signal, retained but zero-weighted by default (so it
+contributes nothing unless a team re-weights it).
+
+**Who reopens, and on what grounds:** Tickets are **Reopened by Quality Assurance** — on grounds such
+as *failed acceptance criteria, regression bugs, unmet technical standards, or environment errors*
+(not limited to these) — either on QA's own evaluation or on the recommendation of **Product
+Management**, the **Engineering Team Lead**, or the **Engineering Manager** on similar grounds (not
+limited to these).
 
 **Formula:**
 

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { computeSprintResult, computeQuarterlySummary } from "../src/scoring.js";
-import { countWorkingDays, countWorkingDaysInWindow, getBand, generateSprintPeriods, quarterEndFrom, addDaysISO } from "../src/utils.js";
+import { countWorkingDays, countWorkingDaysInWindow, getBand, generateSprintPeriods, addDaysISO } from "../src/utils.js";
 import { DEFAULT_CONFIG } from "../src/constants.js";
 import { validateConfig } from "../src/configValidation.js";
 
@@ -29,13 +29,6 @@ test("generateSprintPeriods clamps the tail and rejects bad ranges", () => {
   assert.equal(p[2].endDate, "2026-04-28");
   assert.deepEqual(generateSprintPeriods("2026-06-30", "2026-04-01", 14), []); // start after end
   assert.deepEqual(generateSprintPeriods("", "2026-04-01", 14), []);
-});
-
-test("quarterEndFrom returns one day short of `months` months later; empty for bad input", () => {
-  assert.equal(quarterEndFrom("2026-04-01"), "2026-06-30"); // Q2
-  assert.equal(quarterEndFrom("2026-01-01"), "2026-03-31"); // Q1
-  assert.equal(quarterEndFrom("2026-07-15"), "2026-10-14");
-  assert.equal(quarterEndFrom(""), "");
 });
 
 test("addDaysISO shifts a local date by n days", () => {

@@ -243,8 +243,8 @@ export function generateQuarterlyReportPDF(data) {
     // inputs line (wraps if long so it never runs past the right margin)
     const inputs = [
       `Completed ${num(s.completedHours)}h`, `Collab ${num(s.collaborationHours)}h`,
-      `Marked Closed ${num(s.closedTickets)}`, `Assigned ${num(s.assignedTickets)}`,
-      `Reopened ${num(s.reopenedTickets)}`, `Done ${num(s.doneTickets)}`,
+      `Tickets Marked Closed ${num(s.closedTickets)}`, `Tickets Assigned ${num(s.assignedTickets)}`,
+      `Tickets Reopened ${num(s.reopenedTickets)}`,
       `Grade ${dash(s.codeQuality)}`,
     ].join("   |   ");
     doc.setFont("helvetica", "normal");

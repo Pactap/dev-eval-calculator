@@ -14,7 +14,7 @@ export const PARAM = {
 };
 export const col = (k, dark) => (dark ? PARAM[k].d : PARAM[k].l);
 
-export function themeColors(dark) {
+function themeColors(dark) {
   return {
     tick: dark ? "#94a3b8" : "#64748b",
     grid: dark ? "rgba(148,163,184,0.12)" : "rgba(15,23,42,0.07)",
@@ -151,10 +151,9 @@ export function throughputConfig(results, dark, opts = {}) {
   return {
     type: "bar",
     data: { labels: s.map(x => x.name), datasets: [
-      bar("Assigned", "assigned", dark ? "#64748b" : "#94a3b8"),
-      bar("Closed", "closed", col("eff", dark)),
-      bar("Done", "done", col("ph", dark)),
-      bar("Reopened", "reopened", col("ip", dark)),
+      bar("Tickets Assigned", "assigned", dark ? "#64748b" : "#94a3b8"),
+      bar("Tickets Marked Closed", "closed", col("eff", dark)),
+      bar("Tickets Reopened", "reopened", col("ip", dark)),
     ] },
     options: baseOpts(dark, opts),
   };

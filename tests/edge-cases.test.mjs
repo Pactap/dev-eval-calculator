@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { computeSprintResult, computeQuarterlySummary } from "../src/scoring.js";
 import {
   countWorkingDays, countWorkingDaysInWindow, getBand,
-  generateSprintPeriods, quarterEndFrom, evaluationEndFrom, fyQuarterOptions,
+  generateSprintPeriods, evaluationEndFrom, fyQuarterOptions,
   addDaysISO, toISO, parseLocalDate,
   sanitizePdfText,
 } from "../src/utils.js";
@@ -246,13 +246,8 @@ test("fyQuarterOptions: labels from FY2026-27, four per year", () => {
 });
 
 /* =================================================================
-   quarterEndFrom & addDaysISO — calendar rollover
+   addDaysISO — calendar rollover
    ================================================================= */
-
-test("quarterEndFrom: month-end overflow clamps sensibly", () => {
-  assert.equal(quarterEndFrom("2026-01-31"), "2026-04-30"); // Jan31 +3mo-1d
-  assert.equal(quarterEndFrom("2026-04-01", 1), "2026-04-30"); // custom 1-month period
-});
 
 test("addDaysISO: negative shift and year rollover", () => {
   assert.equal(addDaysISO("2026-01-01", -1), "2025-12-31");
