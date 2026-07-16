@@ -27,14 +27,17 @@ allottedHours    = dailyCapacity * sprintWorkingDays
 
 ## Weighted Parameters
 
-Each sprint base allocation is split across four parameters. Weights are configurable and should sum to 100%.
+Each sprint base allocation is split across four parameters. The **percentage formulas are fixed**;
+the **weights and the band/grade multipliers are configurable** and edited in-app (Admin → Evaluation
+Parameters). Weights should sum to 100%. The default weights below are the shipped starting point, not
+a fixed rule.
 
-| Parameter | Default weight | Calculation |
-| --- | ---: | --- |
-| Planned Hours | 40% | `(completedHours + collaborationHours) / allottedHours * 100`, capped at 100% |
-| Code Quality | 20% | Team-lead grade multiplier, cross-checked against the CQI |
-| Efficiency | 40% | `closedTickets / assignedTickets * 100` |
-| Issue Persistence | 0% | `reopenedTickets / doneTickets * 100` (retained, currently zero-weighted) |
+| Parameter | Default weight | What it measures | Calculation |
+| --- | ---: | --- | --- |
+| Planned Hours | 40% | Planned utilization of available time (rework excluded) | `(completedHours + collaborationHours) / allottedHours * 100`, capped at 100% |
+| Code Quality | 20% | Team-lead quality judgment, cross-checked against the CQI | grade label → multiplier |
+| Efficiency | 40% | Delivery of assigned work | `closedTickets / assignedTickets * 100` |
+| Issue Persistence | 0% | Defect recurrence (legacy reach-back, zero-weighted by default) | `reopenedTickets / doneTickets * 100` |
 
 ```text
 allocated   = sprintBasePoints * weight
@@ -45,6 +48,28 @@ sprintTotal = sum(parameter achieved values)
 Bands (Planned Hours, Efficiency, Issue Persistence) and Code Quality grades map percentages/labels to
 multipliers; they are configurable and listed read-only in the app. Bands are inclusive of their lower
 bound and exclusive of their upper.
+
+### Worked example
+
+Take a quarter with `60` total productive days and a base of `90` → `dailyRate = 1.5`/day. A sprint of
+`10` productive days claims `sprintBasePoints = 1.5 × 10 = 15`, and at the default `6` hrs/day
+capacity `allottedHours = 60`. Using the shipped default weights and bands:
+
+| Parameter | Recorded | Percentage | Default multiplier | Weight | Achieved (`15 × weight × mult`) |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Planned Hours | 40 completed + 8 collab of 60 allotted | `48/60 = 80%` | `1.50×` (band 80–90) | 0.40 | `15 × 0.40 × 1.50 =` **9.00** |
+| Code Quality | Lead grade "Good" | — | `1.30×` | 0.20 | `15 × 0.20 × 1.30 =` **3.90** |
+| Efficiency | 16 closed of 20 assigned | `16/20 = 80%` | `0.40×` (band 71–80) | 0.40 | `15 × 0.40 × 0.40 =` **2.40** |
+| Issue Persistence | 2 reopened of 40 done | `2/40 = 5%` | `1.50×` (band 0–10) | 0.00 | `15 × 0.00 × 1.50 =` **0.00** |
+| **Sprint total** | | | | | **15.30** |
+
+The sprint earned `15.30` against its `15`-point base allocation. Retune any weight, band multiplier,
+or grade in the Admin panel and every number above moves with it — the in-app **Framework** tab
+recomputes this example against the live configuration.
+
+Edge behaviours reflected by the formulas: Planned Hours is **capped at 100%**; **zero assigned
+tickets** gives Efficiency no credit (`0×`, distinct from closing 0 of N); and **zero done tickets**
+forces Issue Persistence to its worst band rather than letting a sprint dodge reopen penalties.
 
 ## Cross-quarter & shared-boundary sprints
 

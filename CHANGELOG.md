@@ -97,7 +97,7 @@ Renamed to **Performance Evaluation Centre** and published as a public web app v
 - **Report metadata** (developer name, employee ID, quarter, date of joining) feeding a systematic PDF report (`pdfReport.js`).
 - **Error boundary**, inline validation notices, and graceful config fallbacks.
 - Comprehensive edge-case test suite (`tests/edge-cases.test.mjs`); 53 tests total.
-- Published publicly on GitHub Pages at https://pactap.github.io/dev-eval-calculator/ (served from the `gh-pages` branch; relative Vite base for project-site hosting).
+- Static-build hosting on the `gh-pages` branch (relative Vite base for subpath hosting).
 
 ### Changed
 

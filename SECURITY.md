@@ -2,19 +2,18 @@
 
 ## Supported versions
 
-This is a single, continuously released web application. Only the latest version deployed at
-<https://pactap.github.io/dev-eval-calculator/> (and `master`) is supported.
+This is a single, continuously released web application. Only the latest version on `master` (and the
+current deployed build) is supported.
 
 ## Reporting a vulnerability
 
 Please report suspected vulnerabilities **privately** rather than opening a public issue:
 
 - Use GitHub's **[Report a vulnerability](https://github.com/Pactap/dev-eval-calculator/security/advisories/new)**
-  (Security → Advisories), or
-- email the maintainers at **umendra.singh@pactap.com**.
+  (Security → Advisories). This routes the report privately to the repository maintainers.
 
-Include steps to reproduce, affected version/URL, and impact. We aim to acknowledge within a few business
-days and to fix confirmed issues promptly.
+Include steps to reproduce, the affected version, and impact. We aim to acknowledge within a few
+business days and to fix confirmed issues promptly.
 
 ## Security model (what to keep in mind)
 
@@ -25,7 +24,7 @@ days and to fix confirmed issues promptly.
   performed **server-side** by an optional Cloudflare Worker (`worker/`) using a constant-time comparison
   before persisting the shared config. Treat the client gate alone as non-authoritative.
 - The **restricted-holiday quota** (one per developer per calendar year) is likewise enforced by the Worker
-  when configured: `/rh/claim` and `/rh/release` are passkey-gated writes; `/rh` read is public (it exposes
-  only holiday dates and the entered Employee ID / name, the same trust level as the shared config).
+  when configured: `/rh/claim`, `/rh/release` and the bulk `PUT /rh` are passkey-gated writes, and the
+  `GET /rh` read is **passkey-gated** as well because the ledger holds entered Employee IDs and names.
 - Because the code is client-side, a lack of client-side permission enforcement is not itself a
   vulnerability; report issues that bypass the **server** check, expose secrets, or execute untrusted input.

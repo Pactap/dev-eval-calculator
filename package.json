@@ -5,7 +5,6 @@
   "type": "module",
   "description": "Performance Evaluation Centre - Developer Sprint Evaluation Framework with pro-rata scoring",
   "license": "MIT",
-  "homepage": "https://pactap.github.io/dev-eval-calculator/",
   "repository": {
     "type": "git",
     "url": "https://github.com/Pactap/dev-eval-calculator.git"

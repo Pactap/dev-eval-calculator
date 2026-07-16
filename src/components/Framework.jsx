@@ -1,5 +1,6 @@
 import { APP_VERSION, CHANGELOG } from "../version.js";
 import { useConfig } from "../configStore.jsx";
+import { getBand } from "../utils.js";
 
 /* Small presentational helpers ------------------------------------------- */
 function DocSection({ eyebrow, title, children }) {
@@ -44,11 +45,45 @@ export function Framework() {
     ["Review & export", "Track the quarterly rollup and score composition, then export a formatted PDF report with optional developer details."],
   ];
 
+  // Worked examples are computed against the *live* config so the multipliers and
+  // achieved points shown here stay correct when bands/grades/weights are retuned.
+  const B = 15; // illustrative sprint base points (e.g. 1.5 daily rate × 10 productive days)
+  const bandMult = (pct, bands) => Number((getBand(pct, bands) || {}).multiplier) || 0;
+  const midGrade = (config.codeQualityOptions || [])[1] || (config.codeQualityOptions || [])[0] || { label: "Satisfactory", multiplier: 1 };
+  const round2 = (n) => (Math.round(n * 100) / 100);
+  const ach = (weight, mult) => round2(B * (Number(weight) || 0) * mult);
+  const mx = (n) => `${Number(n).toFixed(2)}×`;
+  const phMult = bandMult(80, config.plannedHoursBands || []);
+  const effMult = bandMult(80, config.efficiencyBands || []);
+  const ipMult = bandMult(5, config.issuePersistBands || []);
+  const cqMult = Number(midGrade.multiplier) || 0;
+  const zeroIp = (Number(w.ip) || 0) === 0;
+
   const PARAMS = [
-    ["Planned Hours", wpct(w.ph), "(Completed + Collaboration hours) / Allotted hours. Rework is excluded. Capped at 100%."],
-    ["Code Quality", wpct(w.cq), `Team-lead grade (${gradeRange}), each mapped to a multiplier and cross-checked against the CQI.`],
-    ["Efficiency", wpct(w.eff), "Tickets marked Closed / Tickets assigned in the sprint. Zero tickets assigned earns no efficiency credit."],
-    ["Issue Persistence", wpct(w.ip), `Reopened / Done tickets — a legacy reach-back signal${(Number(w.ip) || 0) === 0 ? ", retained but currently zero-weighted" : ""}.`],
+    {
+      n: "Planned Hours", w: wpct(w.ph),
+      formula: "(Completed + Collaboration hours) / Allotted hours × 100, capped at 100%.",
+      d: "Planned utilization of available time. Rework is excluded.",
+      ex: `48 hrs logged of 60 allotted → 80%. The band covering 80% gives ${mx(phMult)}; for a ${B}-point sprint base, achieved = ${B} × ${wpct(w.ph)} × ${mx(phMult)} = ${ach(w.ph, phMult)} pts.`,
+    },
+    {
+      n: "Code Quality", w: wpct(w.cq),
+      formula: "Team-lead grade → multiplier, cross-checked against the CQI.",
+      d: `Grades ${gradeRange}, each mapped to a multiplier.`,
+      ex: `A "${midGrade.label}" grade → ${mx(cqMult)}; achieved = ${B} × ${wpct(w.cq)} × ${mx(cqMult)} = ${ach(w.cq, cqMult)} pts.`,
+    },
+    {
+      n: "Efficiency", w: wpct(w.eff),
+      formula: "Tickets closed / Tickets assigned × 100. Zero assigned earns no credit.",
+      d: "Delivery of assigned work in the sprint.",
+      ex: `16 closed of 20 assigned → 80%. The band covering 80% gives ${mx(effMult)}; achieved = ${B} × ${wpct(w.eff)} × ${mx(effMult)} = ${ach(w.eff, effMult)} pts.`,
+    },
+    {
+      n: "Issue Persistence", w: wpct(w.ip),
+      formula: "Reopened / Done tickets × 100. Zero done → worst band.",
+      d: `Defect recurrence — a legacy reach-back signal${zeroIp ? ", retained but currently zero-weighted" : ""}.`,
+      ex: `2 reopened of 40 done → 5%. The band covering 5% gives ${mx(ipMult)}; achieved = ${B} × ${wpct(w.ip)} × ${mx(ipMult)} = ${ach(w.ip, ipMult)} pts${zeroIp ? " (zero at the current 0% weight — give it weight and it contributes)" : ""}.`,
+    },
   ];
 
   return (
@@ -99,15 +134,18 @@ export function Framework() {
         </DefRow>
         <DefRow term="Four parameters">
           <div className="doc-params">
-            {PARAMS.map(([n, w, d]) => (
-              <div key={n} className="doc-param">
-                <div className="doc-param__head"><span>{n}</span><span className="doc-param__w">{w}</span></div>
-                <div className="doc-param__desc">{d}</div>
+            {PARAMS.map((p) => (
+              <div key={p.n} className="doc-param">
+                <div className="doc-param__head"><span>{p.n}</span><span className="doc-param__w">{p.w}</span></div>
+                <div className="doc-param__desc">{p.d}</div>
+                <div className="doc-param__formula mono">{p.formula}</div>
+                <div className="doc-param__example"><strong>Example:</strong> {p.ex}</div>
               </div>
             ))}
           </div>
           Each parameter's achieved points = base points × parameter weight × the reward-band
-          multiplier for the recorded performance.
+          multiplier for the recorded performance. The examples above are computed against the current
+          configuration, so they track any change to the weights, bands, or grades.
         </DefRow>
         <DefRow term="Reward bands">
           Performance percentages map to multipliers via configurable bands
