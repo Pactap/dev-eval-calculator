@@ -217,7 +217,8 @@ business rule, not a bug.
 - Config **auto-saves** to the shared server on every admin edit (when a backend is configured), with
   a sync indicator and stranded-data recovery; edits survive reloads and redeploys.
 - Employee IDs are matched normalization-insensitively and displayed in one canonical uppercase form.
-- Auto-generated 14-day draft sprints on quarter lock; auto-suggested period end date.
+- Mandatory Financial Quarter label (dropdown) decoupled from the scored **evaluation period**; picking the Evaluation Start Date auto-fills the End Date to 84 days (6 fortnightly sprints, editable).
+- Auto-generated fortnightly (14-day) draft sprints on lock, landing on true sprint boundaries; drafts stay editable.
 - Per-sprint score-composition chart; quarterly executive rollup.
 - Formatted PDF report with optional developer/quarter metadata.
 - In-app **Framework** tab: workflows, definitions (with the same worked examples), constraints,

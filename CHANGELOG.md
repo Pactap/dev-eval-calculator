@@ -4,6 +4,22 @@ All notable changes to this project are documented here.
 
 The format is inspired by Keep a Changelog, and this project follows semantic versioning.
 
+## 4.6.0 - 2026-07-16
+
+Evaluation period: mandatory Financial Quarter dropdown, decoupled dates, fortnightly sprints.
+
+### Added
+
+- **Mandatory Financial Quarter dropdown** in the Evaluation Period panel (`QuarterConfig.jsx`): Q1–Q4 for FY2026-27 onward (`fyQuarterOptions` in `utils.js`). A pure label, decoupled from the scored dates; required before the period can be locked. Moved out of Report Details; still flows to the PDF via `reportMeta.quarterLabel`.
+- Test coverage for `evaluationEndFrom`, fortnightly 6-sprint division, and `fyQuarterOptions` (79 front-end tests).
+
+### Changed
+
+- Renamed the date inputs to **Evaluation Start Date / Evaluation End Date** — the scored window is independent of the financial quarter.
+- Selecting the Evaluation Start Date auto-fills the End Date to **+84 days** (`evaluationEndFrom`, 6 fortnightly sprints); editable while unlocked.
+- Sprint scaffolding is now **true fortnightly** (14-day cadence): `generateSprintPeriods` is called with an inclusive length of 15 so drafts land on the real sprint boundaries (e.g. 27 May → 10 Jun → 24 Jun …). Drafts stay editable.
+- PDF report labels the metadata row **Financial Quarter** (shown alongside the evaluation-period dates).
+
 ## 4.5.0 - 2026-07-16
 
 Durable admin data: auto-save, stranded-data recovery, and the scoring formula in-app.

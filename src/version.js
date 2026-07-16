@@ -1,9 +1,22 @@
 // Single source of truth for the app version and its history.
 // Bump APP_VERSION and prepend a CHANGELOG entry on every release
 // (semantic versioning: MAJOR.MINOR.PATCH).
-export const APP_VERSION = "4.5.0";
+export const APP_VERSION = "4.6.0";
 
 export const CHANGELOG = [
+  {
+    version: "4.6.0",
+    date: "2026-07-16",
+    title: "Evaluation period: quarter dropdown & fortnightly sprints",
+    type: "minor",
+    changes: [
+      "The Evaluation Period panel now has a mandatory Financial Quarter dropdown (Q1–Q4, FY2026-27 onward) — a globally-consistent label, decoupled from the scored dates. It moved out of Report Details and is required before locking.",
+      "Renamed \"Quarter start / end\" to \"Evaluation Start Date / Evaluation End Date\" to reflect that the scored window is independent of the financial quarter.",
+      "Selecting the Evaluation Start Date auto-fills the End Date to 84 days later (6 fortnightly sprints); always editable while unlocked.",
+      "Sprint scaffolding is now true fortnightly (14-day cadence) so the auto-generated 14-day drafts land on the real sprint boundaries; drafts remain fully editable.",
+      "The PDF report shows both the Financial Quarter label and the evaluation period dates.",
+    ],
+  },
   {
     version: "4.5.0",
     date: "2026-07-16",

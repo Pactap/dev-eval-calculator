@@ -1,12 +1,14 @@
-import { formatDate } from "../utils.js";
+import { formatDate, fyQuarterOptions } from "../utils.js";
+
+const QUARTER_OPTIONS = fyQuarterOptions(2026, 6); // FY2026-27 → FY2031-32
 
 export function QuarterConfig({
-  quarterStart, quarterEnd, quarterBase, dailyCapacity,
+  quarterStart, quarterEnd, quarterBase, dailyCapacity, quarterLabel,
   quarterLocked, totalWorkingDays, dailyRate, sprintCount,
   holidays = [],
-  onChangeStart, onChangeEnd, onChangeBase, onChangeCapacity, onToggleLock,
+  onChangeStart, onChangeEnd, onChangeBase, onChangeCapacity, onChangeQuarterLabel, onToggleLock,
 }) {
-  const canLock = quarterStart && quarterEnd;
+  const canLock = quarterStart && quarterEnd && quarterLabel;
 
   // Company holidays that actually fall inside the evaluation period (informational).
   const holidaysInQuarter = quarterStart && quarterEnd
@@ -23,6 +25,7 @@ export function QuarterConfig({
   }
   if (!(quarterBase > 0)) issues.push("Base score must be greater than zero.");
   if (!(dailyCapacity > 0)) issues.push("Daily capacity must be greater than zero.");
+  if (!quarterLabel) issues.push("Select the financial quarter (required to lock).");
 
   return (
     <div className={`card quarter-config${quarterLocked ? " quarter-config--locked" : ""}`}>
@@ -41,7 +44,19 @@ export function QuarterConfig({
 
       <div className="quarter-config__inputs">
         <div className="quarter-config__field">
-          <label className="label">Quarter start</label>
+          <label className="label">Financial quarter <span className="quarter-config__req">*</span></label>
+          <select
+            value={quarterLabel || ""}
+            disabled={quarterLocked}
+            className={`input${quarterLocked ? " input--disabled" : ""}`}
+            onChange={e => onChangeQuarterLabel(e.target.value)}
+          >
+            <option value="">Select quarter…</option>
+            {QUARTER_OPTIONS.map(q => <option key={q} value={q}>{q}</option>)}
+          </select>
+        </div>
+        <div className="quarter-config__field">
+          <label className="label">Evaluation Start Date</label>
           <input
             type="date"
             value={quarterStart}
@@ -51,7 +66,7 @@ export function QuarterConfig({
           />
         </div>
         <div className="quarter-config__field">
-          <label className="label">Quarter end</label>
+          <label className="label">Evaluation End Date</label>
           <input
             type="date"
             value={quarterEnd}

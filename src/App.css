@@ -576,6 +576,15 @@ button {
   min-height: 27px;
 }
 
+.quarter-config__req { color: var(--negative); font-weight: 700; }
+
+/* The financial-quarter <select> reuses .input; keep its height/appearance aligned. */
+.quarter-config__inputs select.input {
+  appearance: none;
+  cursor: pointer;
+}
+.quarter-config__inputs select.input:disabled { cursor: default; }
+
 .quarter-config__stats {
   display: flex;
   flex-wrap: wrap;

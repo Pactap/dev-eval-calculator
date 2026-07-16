@@ -162,6 +162,27 @@ export function quarterEndFrom(startStr, months = 3) {
   return toISO(d);
 }
 
+// Auto-suggested evaluation end: `days` after the start (default 84 = 6 fortnightly
+// sprints). Unlike quarterEndFrom there is no −1, because with shared sprint
+// boundaries the 6th sprint's end lands exactly on start + 6×14.
+export function evaluationEndFrom(startStr, days = 84) {
+  const s = parseLocalDate(startStr);
+  if (!s) return "";
+  const d = new Date(s.getFullYear(), s.getMonth(), s.getDate() + days);
+  return toISO(d);
+}
+
+// Financial-quarter labels for the mandatory dropdown, e.g. "Q1 FY2026-27".
+// Pure labels (no date semantics); scoring uses the evaluation start/end dates.
+export function fyQuarterOptions(startFY = 2026, years = 6) {
+  const out = [];
+  for (let y = startFY; y < startFY + years; y++) {
+    const yy = String((y + 1) % 100).padStart(2, "0");
+    for (let q = 1; q <= 4; q++) out.push(`Q${q} FY${y}-${yy}`);
+  }
+  return out;
+}
+
 /**
  * Sanitize text for jsPDF's built-in Helvetica (WinAnsi/Latin-1). Typographic
  * glyphs like → — · × … are not encodable and corrupt the whole run, so map

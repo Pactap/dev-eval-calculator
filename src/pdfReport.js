@@ -79,7 +79,7 @@ export function generateQuarterlyReportPDF(data) {
   y = sectionTitle(doc, "Report Summary", y);
   const identity = [
     ["Developer", dash(meta.devName), "Employee ID", dash(meta.empId)],
-    ["Quarter", dash(meta.quarterLabel), "Date of joining", meta.doj ? fmtDate(meta.doj) : "-"],
+    ["Financial Quarter", dash(meta.quarterLabel), "Date of joining", meta.doj ? fmtDate(meta.doj) : "-"],
     ["Evaluation period", periodLabel, "Generated", A(genLabel)],
   ];
   keyValueTable(doc, y, contentW, identity);

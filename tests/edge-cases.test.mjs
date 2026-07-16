@@ -4,7 +4,8 @@ import assert from "node:assert/strict";
 import { computeSprintResult, computeQuarterlySummary } from "../src/scoring.js";
 import {
   countWorkingDays, countWorkingDaysInWindow, getBand,
-  generateSprintPeriods, quarterEndFrom, addDaysISO, toISO, parseLocalDate,
+  generateSprintPeriods, quarterEndFrom, evaluationEndFrom, fyQuarterOptions,
+  addDaysISO, toISO, parseLocalDate,
   sanitizePdfText,
 } from "../src/utils.js";
 import { DEFAULT_CONFIG } from "../src/constants.js";
@@ -219,6 +220,28 @@ test("generateSprintPeriods: length exactly equal to the range yields one sprint
 test("generateSprintPeriods: length < 2 terminates (no infinite loop)", () => {
   const p = generateSprintPeriods("2026-04-01", "2026-04-05", 1);
   assert.ok(Array.isArray(p) && p.length >= 1);   // safety break fires; does not hang
+});
+
+test("evaluationEndFrom: start + 84 days = 6 fortnightly sprints", () => {
+  assert.equal(evaluationEndFrom("2026-05-27"), "2026-08-19");   // matches the real Q2 window
+  assert.equal(evaluationEndFrom("2026-08-19"), "2026-11-11");
+  assert.equal(evaluationEndFrom(""), "");
+});
+
+test("fortnightly division: an 84-day window yields exactly 6 sprints on the real boundaries", () => {
+  // 14-day cadence => inclusive length 15 (shared boundary day).
+  const p = generateSprintPeriods("2026-05-27", "2026-08-19", 15);
+  assert.equal(p.length, 6);
+  assert.deepEqual(p.map(s => s.startDate), ["2026-05-27","2026-06-10","2026-06-24","2026-07-08","2026-07-22","2026-08-05"]);
+  assert.equal(p[5].endDate, "2026-08-19");
+});
+
+test("fyQuarterOptions: labels from FY2026-27, four per year", () => {
+  const opts = fyQuarterOptions(2026, 6);
+  assert.equal(opts.length, 24);
+  assert.equal(opts[0], "Q1 FY2026-27");
+  assert.equal(opts[4], "Q1 FY2027-28");
+  assert.equal(opts[23], "Q4 FY2031-32");
 });
 
 /* =================================================================

@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { createSprint } from "./constants.js";
-import { countWorkingDays, countWorkingDaysInWindow, parseLocalDate, toISO, generateSprintPeriods, quarterEndFrom, effectiveCountStart, isWeekend, formatDate } from "./utils.js";
+import { countWorkingDays, countWorkingDaysInWindow, parseLocalDate, toISO, generateSprintPeriods, evaluationEndFrom, effectiveCountStart, isWeekend, formatDate } from "./utils.js";
 import { computeSprintResult, computeQuarterlySummary } from "./scoring.js";
 import { devKeyOf, yearOf, canonicalEmpId } from "./restrictedHolidays.js";
 import { useConfig } from "./configStore.jsx";
@@ -108,7 +108,6 @@ function KpiCard({ label, value, detail, tone = "default" }) {
 const REPORT_FIELDS = [
   { key: "devName", label: "Developer full name", type: "text", placeholder: "e.g. Jordan Rivera" },
   { key: "empId", label: "Employee ID", type: "text", placeholder: "e.g. PT-1042" },
-  { key: "quarterLabel", label: "Quarter", type: "text", placeholder: "e.g. Q2 FY2026-27" },
   { key: "doj", label: "Date of joining", type: "date", placeholder: "" },
 ];
 
@@ -118,7 +117,7 @@ function ReportDetails({ meta, onChange }) {
       <div className="report-details__head">
         <div>
           <div className="eyebrow">Report Details</div>
-          <h2>Developer &amp; Quarter (Optional)</h2>
+          <h2>Developer Details (Optional)</h2>
         </div>
         <span className="report-details__hint">Included in the PDF report header</span>
       </div>
@@ -141,7 +140,7 @@ function ReportDetails({ meta, onChange }) {
   );
 }
 
-const SPRINT_LENGTH_DAYS = 14;
+const SPRINT_LENGTH_DAYS = 14; // fortnightly cadence: each sprint starts 14 days after the previous
 
 // A sprint the user hasn't touched — safe to replace with auto-generated drafts.
 // Also treats a renamed sprint or a changed code-quality grade as "touched" so
@@ -177,11 +176,11 @@ export default function DevEvaluationCalculator() {
   const totalWorkingDays = useMemo(() => countWorkingDays(quarterStart, quarterEnd, holidays), [quarterStart, quarterEnd, holidays]);
   const dailyRate = totalWorkingDays > 0 ? quarterBase / totalWorkingDays : 0;
 
-  // Entering the period start auto-suggests the end (a quarter later) until the
-  // user edits the end themselves; always editable before the period is locked.
+  // Entering the evaluation start auto-suggests the end (84 days = 6 fortnightly
+  // sprints) until the user edits the end themselves; always editable before lock.
   const handleQuarterStartChange = (v) => {
     setQuarterStart(v);
-    if (!endEdited && v) setQuarterEnd(quarterEndFrom(v));
+    if (!endEdited && v) setQuarterEnd(evaluationEndFrom(v));
   };
   const handleQuarterEndChange = (v) => {
     setQuarterEnd(v);
@@ -351,14 +350,20 @@ export default function DevEvaluationCalculator() {
       return;
     }
     if (!quarterStart || !quarterEnd) return;
+    if (!reportMeta.quarterLabel) {
+      setToast({ type: "error", message: "Select the financial quarter before locking the evaluation period." });
+      return;
+    }
     if (parseLocalDate(quarterStart) > parseLocalDate(quarterEnd)) {
-      setToast({ type: "error", message: "Quarter start date is after the end date." });
+      setToast({ type: "error", message: "Evaluation start date is after the end date." });
       return;
     }
     // On first lock, scaffold the period into 14-day draft sprints — but only when
     // the sprint list is untouched, so we never clobber work the user already entered.
     if (sprints.every(isPristineSprint)) {
-      const periods = generateSprintPeriods(quarterStart, quarterEnd, SPRINT_LENGTH_DAYS);
+      // +1: generateSprintPeriods lengths are inclusive of the shared boundary day,
+      // so a 14-day fortnightly cadence spans 15 calendar dates (start..start+14).
+      const periods = generateSprintPeriods(quarterStart, quarterEnd, SPRINT_LENGTH_DAYS + 1);
       if (periods.length > 0) {
         setSprints(periods.map(p => createSprint({ ...p, draft: true })));
         setToast({
@@ -492,12 +497,14 @@ export default function DevEvaluationCalculator() {
           <QuarterConfig
             quarterStart={quarterStart} quarterEnd={quarterEnd}
             quarterBase={quarterBase} dailyCapacity={dailyCapacity}
+            quarterLabel={reportMeta.quarterLabel}
             quarterLocked={quarterLocked}
             totalWorkingDays={totalWorkingDays} dailyRate={dailyRate}
             sprintCount={sprints.length}
             holidays={holidays}
             onChangeStart={handleQuarterStartChange} onChangeEnd={handleQuarterEndChange}
             onChangeBase={setQuarterBase} onChangeCapacity={setDailyCapacity}
+            onChangeQuarterLabel={(v) => setReportMeta(m => ({ ...m, quarterLabel: v }))}
             onToggleLock={handleQuarterLock}
           />
 
