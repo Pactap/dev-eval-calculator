@@ -435,6 +435,9 @@ button {
 }
 
 .btn--primary:hover {
+  /* Re-assert the gradient: the generic .btn:hover sets a light background that
+     would otherwise win, leaving white text on a white button. */
+  background: var(--gradient-brand);
   filter: brightness(1.07) saturate(1.05);
   box-shadow: 0 4px 14px -3px rgba(37, 99, 235, 0.5);
   color: #ffffff;
