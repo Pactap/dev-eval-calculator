@@ -74,6 +74,27 @@ function ThemeToggle({ theme }) {
   );
 }
 
+// Live India-Standard-Time clock. Uses the Asia/Kolkata zone regardless of the
+// viewer's locale; tabular-nums keeps the width fixed as seconds tick (no reflow).
+function Clock() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const zone = { timeZone: "Asia/Kolkata" };
+  const time = now.toLocaleTimeString("en-GB", { ...zone, hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+  const date = now.toLocaleDateString("en-GB", { ...zone, weekday: "short", day: "2-digit", month: "short", year: "numeric" });
+  return (
+    <div className="clock" role="timer" aria-label={`Current time ${time} India Standard Time`}>
+      <span className="clock__time">{time}</span>
+      <span className="clock__div" aria-hidden="true" />
+      <span className="clock__date">{date}</span>
+      <span className="clock__zone">IST</span>
+    </div>
+  );
+}
+
 function KpiCard({ label, value, detail, tone = "default" }) {
   return (
     <div className={`kpi-card kpi-card--${tone}`}>
@@ -420,6 +441,7 @@ export default function DevEvaluationCalculator() {
               <p className="topbar__subtitle">Pro-rata scoring, sprint accountability, and quarterly rollup in one workspace.</p>
             </div>
           </div>
+          <Clock />
           <div className="topbar__actions">
             <div className="view-tabs" role="tablist" aria-label="View">
               <button
