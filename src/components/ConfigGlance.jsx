@@ -15,7 +15,7 @@ export function ConfigGlance() {
     ["Efficiency", pct(w.eff)],
     ["Issue Persist", pct(w.ip)],
     ["Company holidays", `${(config.holidays || []).length}`],
-    ["Restricted pool", `${(config.restrictedHolidayPool || []).length}`],
+    ["Restricted days", `${(config.restrictedHolidayPool || []).length}`],
   ];
   return (
     <section className="card config-glance" aria-label="Active configuration">

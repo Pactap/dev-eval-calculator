@@ -1,0 +1,9 @@
+{
+  "type": "developerUsage",
+  "version": 1,
+  "usage": [
+    { "employeeId": "PT-1042", "date": "2026-03-06", "day": "Friday", "name": "Holi", "year": "2026" },
+    { "employeeId": "PT-2087", "date": "2026-08-28", "day": "Friday", "name": "Raksha Bandhan", "year": "2026" },
+    { "employeeId": "ENG-315", "date": "2026-04-03", "day": "Friday", "name": "Good Friday", "year": "2026" }
+  ]
+}

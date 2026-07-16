@@ -93,6 +93,32 @@ export function exportDeveloperUsage(ledger = {}) {
   return { type: "developerUsage", version: 1, usage };
 }
 
+/* ---------------- Sample templates (multi-entry, for admins to follow) ---------------- */
+
+const SAMPLE_COMPANY = [
+  ["2026-01-01", "New Year's Day"], ["2026-01-26", "Republic Day"], ["2026-08-15", "Independence Day"],
+  ["2026-10-02", "Gandhi Jayanti"], ["2026-11-09", "Diwali"], ["2026-12-25", "Christmas"],
+];
+const SAMPLE_RESTRICTED = [
+  ["2026-03-06", "Holi"], ["2026-04-03", "Good Friday"], ["2026-08-28", "Raksha Bandhan"], ["2026-11-10", "Bhai Dooj"],
+];
+const SAMPLE_USAGE = [
+  ["PT-1042", "2026-03-06", "Holi"], ["PT-2087", "2026-08-28", "Raksha Bandhan"], ["ENG-315", "2026-04-03", "Good Friday"],
+];
+
+export const sampleCompanyHolidays = () => ({
+  type: "companyHolidays", version: 1,
+  holidays: SAMPLE_COMPANY.map(([date, name]) => ({ date, day: dayName(date), name })),
+});
+export const sampleRestrictedHolidays = () => ({
+  type: "restrictedHolidayPool", version: 1,
+  restrictedHolidays: SAMPLE_RESTRICTED.map(([date, name]) => ({ date, day: dayName(date), name })),
+});
+export const sampleDeveloperUsage = () => ({
+  type: "developerUsage", version: 1,
+  usage: SAMPLE_USAGE.map(([employeeId, date, name]) => ({ employeeId, date, day: dayName(date), name, year: date.slice(0, 4) })),
+});
+
 export function importDeveloperUsage(json) {
   const arr = Array.isArray(json) ? json : (json && json.usage);
   if (!Array.isArray(arr)) throw new Error("Expected a developer-usage file with a `usage` array.");

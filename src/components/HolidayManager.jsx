@@ -119,10 +119,10 @@ export function HolidayManager({ defaultYear }) {
         {/* Restricted holiday pool ------------------------------------------ */}
         <div className="holiday-manager__col">
           <div className="holiday-manager__col-head">
-            <h3>Restricted holiday pool</h3>
+            <h3>Restricted holidays</h3>
             <span className="holiday-manager__count">{poolThisYear.length}</span>
           </div>
-          <p className="holiday-manager__desc">Optional holidays the admin offers. A developer may avail <strong>one per calendar year</strong>, chosen per sprint.</p>
+          <p className="holiday-manager__desc">Optional holidays the admin declares. Each developer may avail <strong>one per calendar year</strong>, chosen per sprint — independently, so more than one developer can take the same day.</p>
 
           {unlocked && (
             <div className="holiday-manager__add">

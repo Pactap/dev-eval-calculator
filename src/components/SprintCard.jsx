@@ -247,8 +247,8 @@ export function SprintCard({
               : s.restrictedHoliday
                 ? `${availedRh ? availedRh.label + " — " : ""}excluded from this sprint's productive hours. Pro-rata, so it lowers the target proportionally, not the developer's score.`
                 : rhOptions.length
-                  ? "If the developer availed an optional (restricted) holiday this sprint, pick it from the admin's pool. One per calendar year."
-                  : "No pool restricted holidays fall in this sprint. Admins declare them in the Holiday calendar."}
+                  ? "If the developer availed an optional (restricted) holiday this sprint, pick it from the declared list. One per calendar year, independent of other developers."
+                  : "No declared restricted holidays fall in this sprint. Admins declare them in the Holiday calendar."}
           </p>
         </div>
       )}

@@ -1,0 +1,10 @@
+{
+  "type": "restrictedHolidayPool",
+  "version": 1,
+  "restrictedHolidays": [
+    { "date": "2026-03-06", "day": "Friday", "name": "Holi" },
+    { "date": "2026-04-03", "day": "Friday", "name": "Good Friday" },
+    { "date": "2026-08-28", "day": "Friday", "name": "Raksha Bandhan" },
+    { "date": "2026-11-10", "day": "Tuesday", "name": "Bhai Dooj" }
+  ]
+}

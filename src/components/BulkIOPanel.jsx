@@ -4,6 +4,7 @@ import {
   exportCompanyHolidays, importCompanyHolidays,
   exportRestrictedPool, importRestrictedPool,
   exportDeveloperUsage, importDeveloperUsage,
+  sampleCompanyHolidays, sampleRestrictedHolidays, sampleDeveloperUsage,
 } from "../bulkIO.js";
 
 function download(obj, filename) {
@@ -17,7 +18,7 @@ function download(obj, filename) {
 }
 
 // One import/export row for a dataset. `onImport` may be async (server writes).
-function IoRow({ title, desc, count, unlocked, onExport, onImport, setStatus }) {
+function IoRow({ title, desc, count, unlocked, onExport, onSample, onImport, setStatus }) {
   const fileRef = useRef(null);
   const handleFile = (e) => {
     const file = e.target.files?.[0];
@@ -41,6 +42,7 @@ function IoRow({ title, desc, count, unlocked, onExport, onImport, setStatus }) 
         <div className="bulk-io__row-desc">{desc}</div>
       </div>
       <div className="bulk-io__row-actions">
+        <button className="btn btn--sm btn--ghost" onClick={onSample}>Sample</button>
         <button className="btn btn--sm" onClick={onExport}>Download</button>
         {unlocked && (
           <>
@@ -84,6 +86,7 @@ export function BulkIOPanel() {
         <IoRow
           title="Company holidays" count={holidays.length} unlocked={unlocked} setStatus={setStatus}
           desc="Dates excluded from productive days for everyone (name optional)."
+          onSample={() => download(sampleCompanyHolidays(), "company-holidays-sample.json")}
           onExport={() => download(exportCompanyHolidays(holidays, holidayNames), "company-holidays.json")}
           onImport={(json) => {
             const { holidays: h, holidayNames: n } = importCompanyHolidays(json);
@@ -91,14 +94,16 @@ export function BulkIOPanel() {
           }}
         />
         <IoRow
-          title="Restricted-holiday pool" count={pool.length} unlocked={unlocked} setStatus={setStatus}
-          desc="Named optional holidays a developer may avail one of per year."
-          onExport={() => download(exportRestrictedPool(pool), "restricted-holiday-pool.json")}
+          title="Restricted holidays" count={pool.length} unlocked={unlocked} setStatus={setStatus}
+          desc="Named optional holidays each developer may avail one of per year (same day open to all)."
+          onSample={() => download(sampleRestrictedHolidays(), "restricted-holidays-sample.json")}
+          onExport={() => download(exportRestrictedPool(pool), "restricted-holidays.json")}
           onImport={(json) => updateKey("restrictedHolidayPool", importRestrictedPool(json))}
         />
         <IoRow
           title="Developer usage" count={usageCount} unlocked={unlocked} setStatus={setStatus}
           desc="Restricted holiday each developer has used (by employee ID, one per year)."
+          onSample={() => download(sampleDeveloperUsage(), "developer-usage-sample.json")}
           onExport={() => download(exportDeveloperUsage(rhLedger || {}), "developer-usage.json")}
           onImport={(json) => replaceRhLedger(importDeveloperUsage(json))}
         />

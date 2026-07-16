@@ -1,0 +1,12 @@
+{
+  "type": "companyHolidays",
+  "version": 1,
+  "holidays": [
+    { "date": "2026-01-01", "day": "Thursday", "name": "New Year's Day" },
+    { "date": "2026-01-26", "day": "Monday", "name": "Republic Day" },
+    { "date": "2026-08-15", "day": "Saturday", "name": "Independence Day" },
+    { "date": "2026-10-02", "day": "Friday", "name": "Gandhi Jayanti" },
+    { "date": "2026-11-09", "day": "Monday", "name": "Diwali" },
+    { "date": "2026-12-25", "day": "Friday", "name": "Christmas" }
+  ]
+}

@@ -311,9 +311,7 @@ button {
   transition: border-color var(--ease), background var(--ease);
 }
 
-.card:hover {
-  border-color: var(--border-strong);
-}
+/* Cards stay visually stable (no hover border shift) for a calmer, premium feel. */
 
 .panel-heading {
   display: flex;
@@ -428,6 +426,18 @@ button {
   filter: brightness(1.07) saturate(1.05);
   box-shadow: 0 4px 14px -3px rgba(37, 99, 235, 0.5);
   color: #ffffff;
+}
+
+.btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-tertiary);
+}
+
+.btn--ghost:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-subtle);
+  color: var(--text-secondary);
 }
 
 .btn--sm {
@@ -578,18 +588,18 @@ button {
 }
 
 .portfolio-panel__meter {
-  height: 8px;
+  height: 6px;
   margin-top: auto;
   overflow: hidden;
   border-radius: 999px;
-  background: var(--bg-overlay);
+  background: var(--border-subtle);
 }
 
 .portfolio-panel__meter span {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--accent);
+  background: var(--gradient-brand);
   transition: width var(--ease);
 }
 
@@ -1370,10 +1380,6 @@ button {
 
   .view-tabs__btn {
     flex: 1;
-  }
-
-  .btn--export {
-    flex: 1 1 auto;
   }
 
   .overview-grid {
