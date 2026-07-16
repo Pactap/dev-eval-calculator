@@ -74,7 +74,7 @@ export function BulkIOPanel() {
       <div className="panel-heading">
         <div>
           <div className="eyebrow">Bulk data</div>
-          <h2>Import &amp; export</h2>
+          <h2>Import &amp; Export</h2>
         </div>
       </div>
       <p className="bulk-io__note">
@@ -84,7 +84,7 @@ export function BulkIOPanel() {
 
       <div className="bulk-io__rows">
         <IoRow
-          title="Company holidays" count={holidays.length} unlocked={unlocked} setStatus={setStatus}
+          title="Company Holidays" count={holidays.length} unlocked={unlocked} setStatus={setStatus}
           desc="Dates excluded from productive days for everyone (name optional)."
           onSample={() => download(sampleCompanyHolidays(), "company-holidays-sample.json")}
           onExport={() => download(exportCompanyHolidays(holidays, holidayNames), "company-holidays.json")}
@@ -94,14 +94,14 @@ export function BulkIOPanel() {
           }}
         />
         <IoRow
-          title="Restricted holidays" count={pool.length} unlocked={unlocked} setStatus={setStatus}
+          title="Restricted Holidays" count={pool.length} unlocked={unlocked} setStatus={setStatus}
           desc="Named optional holidays each developer may avail one of per year (same day open to all)."
           onSample={() => download(sampleRestrictedHolidays(), "restricted-holidays-sample.json")}
           onExport={() => download(exportRestrictedPool(pool), "restricted-holidays.json")}
           onImport={(json) => updateKey("restrictedHolidayPool", importRestrictedPool(json))}
         />
         <IoRow
-          title="Developer usage" count={usageCount} unlocked={unlocked} setStatus={setStatus}
+          title="Developer Usage" count={usageCount} unlocked={unlocked} setStatus={setStatus}
           desc="Restricted holiday each developer has used (by employee ID, one per year)."
           onSample={() => download(sampleDeveloperUsage(), "developer-usage-sample.json")}
           onExport={() => download(exportDeveloperUsage(rhLedger || {}), "developer-usage.json")}

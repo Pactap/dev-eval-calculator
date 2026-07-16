@@ -29,7 +29,7 @@ export function QuarterConfig({
       <div className="panel-heading">
         <div>
           <div className="eyebrow">Quarter Control</div>
-          <h2>Evaluation period</h2>
+          <h2>Evaluation Period</h2>
         </div>
         <button
           className={`btn${quarterLocked ? " btn--primary" : ""}`}

@@ -311,6 +311,14 @@ button {
   transition: border-color var(--ease), background var(--ease);
 }
 
+/* Uniform generous padding for the main content panels (several set none). */
+.holiday-manager,
+.bulk-io,
+.dev-usage,
+.availability {
+  padding: 24px;
+}
+
 /* Cards stay visually stable (no hover border shift) for a calmer, premium feel. */
 
 .panel-heading {
@@ -490,7 +498,7 @@ button {
 }
 
 .quarter-config {
-  padding: 22px;
+  padding: 24px;
 }
 
 .quarter-config--locked {
@@ -535,7 +543,7 @@ button {
 }
 
 .portfolio-panel {
-  padding: 22px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
 }
@@ -1450,7 +1458,7 @@ button {
 
 /* Report details */
 .report-details {
-  padding: 22px 24px;
+  padding: 24px;
   margin-top: 20px;
 }
 
@@ -1491,7 +1499,7 @@ button {
 
 /* Settings panel */
 .settings-panel {
-  padding: 22px 24px;
+  padding: 24px;
   margin-top: 20px;
 }
 
@@ -2244,9 +2252,9 @@ button {
 .config-glance {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 24px;
   flex-wrap: wrap;
-  padding: 14px 20px;
+  padding: 16px 24px;
 }
 
 .config-glance__label {
@@ -2259,7 +2267,7 @@ button {
 
 .config-glance__items {
   display: flex;
-  gap: 22px;
+  gap: 30px;
   flex-wrap: wrap;
   flex: 1;
 }
@@ -2267,7 +2275,7 @@ button {
 .config-glance__item {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 3px;
 }
 
 .config-glance__k {

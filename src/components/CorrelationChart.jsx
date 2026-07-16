@@ -118,7 +118,7 @@ export function CorrelationChart({ sprintResults, theme }) {
       <div className="panel-heading">
         <div>
           <div className="eyebrow">Performance Analytics</div>
-          <h2>Score composition by sprint</h2>
+          <h2>Score Composition by Sprint</h2>
         </div>
       </div>
       {hasData ? (

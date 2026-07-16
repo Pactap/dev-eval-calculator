@@ -9,9 +9,9 @@ const WEIGHT_KEYS = [
 ];
 
 const BAND_GROUPS = [
-  { key: "plannedHoursBands", label: "Planned Hours bands" },
-  { key: "efficiencyBands", label: "Efficiency bands" },
-  { key: "issuePersistBands", label: "Issue Persist bands" },
+  { key: "plannedHoursBands", label: "Planned Hours Bands" },
+  { key: "efficiencyBands", label: "Efficiency Bands" },
+  { key: "issuePersistBands", label: "Issue Persist Bands" },
 ];
 
 const num = (v) => (v === "" ? 0 : parseFloat(v));
@@ -106,7 +106,7 @@ function RulesView({ config, weightSumPct, weightsValid }) {
       </div>
 
       <div className="rules-view__block">
-        <h3>Code Quality grades</h3>
+        <h3>Code Quality Grades</h3>
         <div className="rules-view__grades">
           {config.codeQualityOptions.map((o, i) => (
             <div key={i} className="rules-view__grade">
@@ -225,7 +225,7 @@ export function SettingsPanel() {
       <div className="settings-panel__header">
         <div>
           <div className="eyebrow">Scoring rules</div>
-          <h2>Evaluation parameters</h2>
+          <h2>Evaluation Parameters</h2>
           <p className="settings-panel__desc">
             Weights: PH {(config.weights.ph * 100).toFixed(0)}% ·
             CQ {(config.weights.cq * 100).toFixed(0)}% ·
@@ -288,7 +288,7 @@ export function SettingsPanel() {
           {unlocked ? (
             <>
               <div className="settings-panel__section">
-                <h3>Weights (must sum to 100%)</h3>
+                <h3>Weights (Must Sum to 100%)</h3>
                 <div className="settings-panel__weights">
                   {WEIGHT_KEYS.map(w => (
                     <label key={w.key} className="settings-panel__weight-field">
@@ -307,7 +307,7 @@ export function SettingsPanel() {
               </div>
 
               <ListEditor
-                title="Code Quality grades" addLabel="+ Add grade"
+                title="Code Quality Grades" addLabel="+ Add grade"
                 items={config.codeQualityOptions}
                 onChange={items => updateKey("codeQualityOptions", items)}
                 newItem={() => ({ label: "New grade", multiplier: 1.0 })}

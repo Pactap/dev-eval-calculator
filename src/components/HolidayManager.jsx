@@ -66,7 +66,7 @@ export function HolidayManager({ defaultYear }) {
       <div className="holiday-manager__head">
         <div>
           <div className="eyebrow">Holiday calendar</div>
-          <h2>Company &amp; restricted holidays</h2>
+          <h2>Company &amp; Restricted Holidays</h2>
         </div>
         <label className="holiday-manager__year">
           <span className="label">Year</span>
@@ -85,7 +85,7 @@ export function HolidayManager({ defaultYear }) {
         {/* Company holidays -------------------------------------------------- */}
         <div className="holiday-manager__col">
           <div className="holiday-manager__col-head">
-            <h3>Company holidays</h3>
+            <h3>Company Holidays</h3>
             <span className="holiday-manager__count">{holidaysThisYear.length}</span>
           </div>
           <p className="holiday-manager__desc">Excluded from productive days for everyone. Weekend dates are recorded but have no additional impact.</p>
@@ -119,7 +119,7 @@ export function HolidayManager({ defaultYear }) {
         {/* Restricted holiday pool ------------------------------------------ */}
         <div className="holiday-manager__col">
           <div className="holiday-manager__col-head">
-            <h3>Restricted holidays</h3>
+            <h3>Restricted Holidays</h3>
             <span className="holiday-manager__count">{poolThisYear.length}</span>
           </div>
           <p className="holiday-manager__desc">Optional holidays the admin declares. Each developer may avail <strong>one per calendar year</strong>, chosen per sprint — independently, so more than one developer can take the same day.</p>

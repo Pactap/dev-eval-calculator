@@ -10,7 +10,7 @@ export function QuarterlySummary({ sprints, sprintResults, summary, totalWorking
       <div className="q-summary__header">
         <div>
           <div className="eyebrow">Quarter Summary</div>
-          <h2 className="q-summary__title">Executive rollup</h2>
+          <h2 className="q-summary__title">Executive Rollup</h2>
         </div>
         <div className={`q-summary__total-value ${summary.ta >= summary.tb ? "q-summary__total-value--positive" : "q-summary__total-value--negative"}`}>
           {summary.ta.toFixed(2)}

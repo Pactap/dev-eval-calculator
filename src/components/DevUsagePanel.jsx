@@ -25,7 +25,7 @@ export function DevUsagePanel() {
       <div className="panel-heading">
         <div>
           <div className="eyebrow">Developer usage</div>
-          <h2>Restricted holidays taken</h2>
+          <h2>Restricted Holidays Taken</h2>
         </div>
         <span className="panel-heading__meta">{rows.length} record{rows.length === 1 ? "" : "s"}</span>
       </div>

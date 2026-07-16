@@ -29,7 +29,7 @@ export function AvailabilityPanel({ quarterStart, quarterEnd, holidays, holidayN
       <div className="availability__head">
         <div>
           <div className="eyebrow">Availability &amp; time off</div>
-          <h2>Holidays &amp; approved leave</h2>
+          <h2>Holidays &amp; Approved Leave</h2>
         </div>
         <span className="availability__hint">Context for the score — not a deduction against the developer</span>
       </div>

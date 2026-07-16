@@ -53,7 +53,7 @@ export function Framework() {
 
   return (
     <div className="framework">
-      <DocSection eyebrow="Framework" title="What this is">
+      <DocSection eyebrow="Framework" title="What This Is">
         <p className="doc-p">
           The Performance Evaluation Centre is a client-side tool that turns a developer's
           sprint activity into a transparent, pro-rata quarterly score. Every calculation runs
@@ -148,7 +148,7 @@ export function Framework() {
         </ul>
       </DocSection>
 
-      <DocSection eyebrow="Why it's built this way" title="Thought process">
+      <DocSection eyebrow="Why it's built this way" title="Thought Process">
         <p className="doc-p">
           The framework favours <strong>transparency over convenience</strong>: pro-rata weighting
           keeps short and long sprints comparable; separating whole-sprint metrics from in-quarter
@@ -159,7 +159,7 @@ export function Framework() {
         </p>
       </DocSection>
 
-      <DocSection eyebrow="Transparency" title="Version history">
+      <DocSection eyebrow="Transparency" title="Version History">
         <div className="doc-versions">
           {CHANGELOG.map((v) => (
             <div key={v.version} className="doc-version">

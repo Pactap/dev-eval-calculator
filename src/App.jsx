@@ -96,7 +96,7 @@ function ReportDetails({ meta, onChange }) {
       <div className="report-details__head">
         <div>
           <div className="eyebrow">Report Details</div>
-          <h2>Developer &amp; quarter (optional)</h2>
+          <h2>Developer &amp; Quarter (Optional)</h2>
         </div>
         <span className="report-details__hint">Included in the PDF report header</span>
       </div>
@@ -483,7 +483,7 @@ export default function DevEvaluationCalculator() {
             <div className="panel-heading">
               <div>
                 <div className="eyebrow">Portfolio Snapshot</div>
-                <h2>Quarter position</h2>
+                <h2>Quarter Position</h2>
               </div>
               <span className="panel-heading__meta">{lockedCount} locked</span>
             </div>
@@ -524,7 +524,7 @@ export default function DevEvaluationCalculator() {
           <div className="section-heading">
             <div>
               <div className="eyebrow">Sprint Ledger</div>
-              <h2>Evaluation workspace</h2>
+              <h2>Evaluation Workspace</h2>
             </div>
             <button className="add-sprint-btn" onClick={addSprint}>Add sprint</button>
           </div>
@@ -582,7 +582,7 @@ export default function DevEvaluationCalculator() {
             <div className="section-heading">
               <div>
                 <div className="eyebrow">Administration</div>
-                <h2>Evaluation parameters &amp; calendar</h2>
+                <h2>Evaluation Parameters &amp; Calendar</h2>
               </div>
             </div>
             <SettingsPanel />
